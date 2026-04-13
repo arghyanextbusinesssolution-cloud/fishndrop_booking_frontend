@@ -1,6 +1,7 @@
 "use client";
 
-import { User, Users, Group, Landmark } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface StepGuestCountProps {
@@ -8,68 +9,122 @@ interface StepGuestCountProps {
   selectedGuests: number;
 }
 
-const guestOptions = [
-  { value: 1, label: "Soloist", desc: "A moment for quiet reflection", icon: User },
-  { value: 2, label: "Duo", desc: "The intimacy of conversation", icon: Users },
-  { value: 3, label: "Trio", desc: "A gathering of kin", icon: Group },
-  { value: 4, label: "Quartet", desc: "The richness of a shared table", icon: Landmark },
-];
+const MAX_GUESTS = 8;
+const MIN_GUESTS = 2;
+
+const getTableNote = (guests: number): string => {
+  if (guests === 2) return "1 x 2-Seater Table";
+  if (guests === 3 || guests === 4) return "1 x 4-Seater Table";
+  if (guests === 5) return "1 x 4-Seater (Plus chair arrangement)";
+  if (guests === 6) return "1 x 4-Seater + 1 x 2-Seater";
+  if (guests === 7 || guests === 8) return "2 x 4-Seater Tables";
+  return "";
+};
 
 export const StepGuestCount = ({ onNext, selectedGuests }: StepGuestCountProps) => {
+  const [count, setCount] = useState(selectedGuests >= MIN_GUESTS ? selectedGuests : MIN_GUESTS);
+
+  const decrement = () => setCount(prev => Math.max(MIN_GUESTS, prev - 1));
+  const increment = () => setCount(prev => Math.min(MAX_GUESTS, prev + 1));
+
   return (
     <div className="space-y-12">
       <div className="text-center md:text-left space-y-4">
-        <h2 className="font-headline text-5xl md:text-7xl italic text-on-surface">
-          03. <span className="text-gold-gradient">The Ensemble</span>
-        </h2>
-        <p className="text-secondary font-body text-lg font-light max-w-xl">
-          Whether seeking the intimacy of a solo retreat or the warmth of a shared quartet.
+        <span className="font-label tracking-[0.2em] text-primary text-[10px] uppercase mb-2 block font-bold transition-all animate-in fade-in slide-in-from-left-4 duration-500">
+          Reservation Journey
+        </span>
+        <h1 className="font-headline italic text-5xl md:text-7xl mb-6 tracking-tight text-on-surface">
+          03. The Ensemble
+        </h1>
+        <p className="font-body text-secondary text-lg md:text-xl max-w-2xl font-light">
+          How many guests will be joining this evening? We accommodate intimate duos to grand parties of eight.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {guestOptions.map(option => {
-          const Icon = option.icon;
-          const isSelected = selectedGuests === option.value || (option.value === 4 && selectedGuests >= 4);
+      {/* Counter */}
+      <div className="flex flex-col items-center gap-12 py-8">
+        <div className="flex items-center gap-12">
+          <button
+            onClick={decrement}
+            disabled={count <= MIN_GUESTS}
+            className={cn(
+              "w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all duration-300",
+              count <= MIN_GUESTS
+                ? "border-outline-variant/20 text-outline/30 cursor-not-allowed"
+                : "border-outline-variant/40 text-secondary hover:border-primary hover:text-primary hover:scale-110"
+            )}
+          >
+            <Minus className="w-5 h-5" />
+          </button>
 
-          return (
-            <button 
-              key={option.value}
-              onClick={() => onNext({ guests: option.value })}
+          <div className="text-center min-w-[160px]">
+            <span className="font-headline text-[9rem] italic leading-none text-gold-gradient block">
+              {count}
+            </span>
+            <p className="font-label text-[10px] tracking-[0.3em] uppercase text-outline font-bold -mt-2">
+              {count === 1 ? "Guest" : "Guests"}
+            </p>
+          </div>
+
+          <button
+            onClick={increment}
+            disabled={count >= MAX_GUESTS}
+            className={cn(
+              "w-16 h-16 rounded-full border-2 flex items-center justify-center transition-all duration-300",
+              count >= MAX_GUESTS
+                ? "border-outline-variant/20 text-outline/30 cursor-not-allowed"
+                : "border-outline-variant/40 text-secondary hover:border-primary hover:text-primary hover:scale-110"
+            )}
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Table note */}
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-px w-24 bg-primary-container/50" />
+          <p className="font-body text-sm text-secondary italic font-light text-center">
+            {getTableNote(count)}
+          </p>
+          <p className="font-label text-[9px] tracking-[0.2em] uppercase text-outline/50 font-bold">
+            ${count * 40}.00 Deposit · Subject to availability
+          </p>
+        </div>
+
+        {/* Quick select dots */}
+        <div className="flex items-center gap-3">
+          {Array.from({ length: MAX_GUESTS - MIN_GUESTS + 1 }, (_, i) => i + MIN_GUESTS).map(n => (
+            <button
+              key={n}
+              onClick={() => setCount(n)}
               className={cn(
-                "group relative bg-surface-container-low rounded-xl p-8 cursor-pointer transition-all duration-500 ambient-glow flex flex-col items-center justify-between min-h-[360px] border",
-                isSelected 
-                  ? "bg-surface-container-lowest border-primary-container/30 shadow-2xl shadow-primary-container/10" 
-                  : "border-transparent hover:bg-surface-container-lowest hover:border-outline-variant/20"
+                "transition-all duration-300 rounded-full font-label text-[9px] font-bold flex items-center justify-center",
+                count === n
+                  ? "w-9 h-9 bg-primary text-on-primary shadow-lg shadow-primary/20"
+                  : "w-7 h-7 bg-surface-container-low text-outline hover:bg-surface-container hover:text-on-surface"
               )}
             >
-              <div className="w-full flex justify-end">
-                <Icon className={cn(
-                  "w-5 h-5 transition-colors duration-500",
-                  isSelected ? "text-primary" : "text-outline-variant group-hover:text-primary"
-                )} />
-              </div>
-              
-              <div className="text-center">
-                <span className={cn(
-                  "font-headline text-8xl italic block mb-4 transition-colors duration-500",
-                  isSelected ? "text-gold-gradient" : "text-outline-variant/20 group-hover:text-primary-container/40"
-                )}>
-                  {option.value}{option.value === 4 ? "+" : ""}
-                </span>
-                <h3 className="font-label text-xs uppercase tracking-[0.2em] text-on-surface mb-2 font-bold">{option.label}</h3>
-                <p className="text-[10px] text-secondary font-light font-body tracking-wider">{option.desc}</p>
-              </div>
-
-              <div className="h-4 flex items-center">
-                <div className={cn(
-                  "h-px bg-primary transition-all duration-500",
-                  isSelected ? "w-12" : "w-0 group-hover:w-12"
-                )}></div>
-              </div>
+              {n}
             </button>
-          );
-        })}
+          ))}
+        </div>
+
+        {count === MAX_GUESTS && (
+          <p className="font-body text-[11px] text-outline italic text-center max-w-sm font-light">
+            For parties larger than 8, please contact us directly for a private dining arrangement.
+          </p>
+        )}
+      </div>
+
+      {/* Confirm CTA */}
+      <div className="flex justify-center">
+        <button
+          onClick={() => onNext({ guests: count })}
+          className="group relative inline-flex items-center gap-4 bg-gold-gradient text-on-primary font-label text-[10px] tracking-[0.25em] uppercase py-5 px-12 rounded-lg shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-500 font-bold"
+        >
+          Confirm {count} {count === 1 ? "Guest" : "Guests"}
+          <div className="w-5 h-px bg-on-primary/60 group-hover:w-8 transition-all" />
+        </button>
       </div>
     </div>
   );

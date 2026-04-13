@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import api from "@/lib/axios";
-import { BookingResponse, Table, TableStats } from "@/types";
+import { BookingResponse, Table, TableStats, Booking } from "@/types";
 
 interface StatsResponse {
   success: boolean;
@@ -13,6 +13,22 @@ interface TablesResponse {
   success: boolean;
   tables: Table[];
   counts: { twoSeaters: number; fourSeaters: number };
+}
+
+export interface SlotLockItem {
+  _id: string;
+  bookingDate: string;
+  bookingTime: string;
+  isLocked: boolean;
+  reason?: string;
+}
+
+export interface PaymentSummary {
+  totalRevenue: number;
+  pendingRevenue: number;
+  totalBookings: number;
+  paidCount: number;
+  unpaidCount: number;
 }
 
 export function useAdmin() {
@@ -33,12 +49,19 @@ export function useAdmin() {
     }
   }, []);
 
-  const getAllBookings = useCallback(async (page = 1, status = "all") => {
+  const getAllBookings = useCallback(async (page = 1, status = "all", date?: string, limit = 10) => {
     setLoading(true);
     setError(null);
     try {
+      const params = { 
+        page, 
+        limit, 
+        status: status === "all" ? undefined : status,
+        date: date || undefined
+      };
+      console.log("[useAdmin] getAllBookings request params:", params);
       const { data } = await api.get<BookingResponse>("/admin/bookings", {
-        params: { page, limit: 10, status: status === "all" ? undefined : status },
+        params,
       });
       return data;
     } catch {
@@ -49,11 +72,13 @@ export function useAdmin() {
     }
   }, []);
 
-  const getAllTables = useCallback(async () => {
+  const getAllTables = useCallback(async (date?: string) => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get<TablesResponse>("/admin/tables");
+      const { data } = await api.get<TablesResponse>("/admin/tables", {
+        params: { date }
+      });
       return data.tables;
     } catch {
       setError("Failed to load tables");
@@ -103,11 +128,11 @@ export function useAdmin() {
     }
   }, []);
 
-  const setTableAvailability = useCallback(async (tableId: string, isAvailable: boolean) => {
+  const setTableAvailability = useCallback(async (tableId: string, isAvailable: boolean, date?: string) => {
     setLoading(true);
     setError(null);
     try {
-      await api.patch(`/admin/tables/${tableId}/availability`, { isAvailable });
+      await api.patch(`/admin/tables/${tableId}/availability`, { isAvailable, date });
     } catch {
       setError("Failed to update table availability");
       throw new Error("Failed to update table availability");
@@ -129,6 +154,48 @@ export function useAdmin() {
     }
   }, []);
 
+  const getSlotLocks = useCallback(async (): Promise<SlotLockItem[]> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.get<{ success: boolean; locks: SlotLockItem[] }>("/admin/slot-locks");
+      return data.locks;
+    } catch {
+      setError("Failed to load slot locks");
+      throw new Error("Failed to load slot locks");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getPaymentSummary = useCallback(async (): Promise<{ summary: PaymentSummary; recentBookings: Booking[] }> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.get<{ success: boolean; summary: PaymentSummary; recentBookings: Booking[] }>("/admin/payments/summary");
+      return { summary: data.summary, recentBookings: data.recentBookings };
+    } catch {
+      setError("Failed to load payment summary");
+      throw new Error("Failed to load payment summary");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const deleteTable = useCallback(async (tableId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await api.delete(`/admin/tables/${tableId}`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Failed to delete table";
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     getStats,
     getAllBookings,
@@ -138,6 +205,9 @@ export function useAdmin() {
     setTableAvailability,
     setSlotLock,
     adminCancelBooking,
+    getSlotLocks,
+    getPaymentSummary,
+    deleteTable,
     loading,
     error
   };

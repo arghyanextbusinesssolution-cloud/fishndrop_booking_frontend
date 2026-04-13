@@ -28,15 +28,24 @@ export function useAuth() {
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async ({ name, email, phone, password }: { name: string; email: string; phone?: string; password: string }) => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post("/auth/register", { name, email, password });
+      const { data } = await api.post<AuthResponse>("/auth/register", { name, email, phone, password });
+      if (data.token) {
+        setAuth(data.user, data.token);
+      }
       return data;
-    } catch (err) {
-      const apiError = err as { response?: { data?: ApiError } };
-      setError(apiError.response?.data?.message ?? "Registration failed");
+    } catch (err: any) {
+      const data = err.response?.data;
+      let message = data?.message || "Registration failed";
+
+      if (data?.errors && Array.isArray(data.errors)) {
+        message = data.errors.map((e: any) => e.message).join(". ");
+      }
+      
+      setError(message);
       throw err;
     } finally {
       setLoading(false);

@@ -6,7 +6,8 @@ import toast from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  // Backend is currently running on 5002, process.env isn't hot-reloadable
+  baseURL: (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"),
   timeout: 15000,
 });
 

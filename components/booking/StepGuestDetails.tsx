@@ -9,7 +9,31 @@ const guestSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(10, "Invalid phone number"),
-  password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal("")),
+  password: z.string().optional(),
+  confirmPassword: z.string().optional(),
+  emailExists: z.boolean().optional(),
+  isLoggedIn: z.boolean().optional()
+}).refine((data) => {
+  // If logged in, password is not required
+  if (data.isLoggedIn) return true;
+
+  // If email exists (returning guest), password is required
+  if (data.emailExists && (!data.password || data.password.length < 8)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Password (min 8 chars) is required for existing accounts",
+  path: ["password"]
+}).refine((data) => {
+  // Confirm password matching for new accounts (email does not exist and not logged in)
+  if (!data.isLoggedIn && !data.emailExists && data.password) {
+    return data.password === data.confirmPassword;
+  }
+  return true;
+}, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"]
 });
 
 interface StepGuestDetailsProps {
@@ -17,11 +41,47 @@ interface StepGuestDetailsProps {
   initialData: any;
 }
 
+import { useState, useEffect } from "react";
+import api from "@/lib/axios";
+import { Loader2, Eye, EyeOff } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
+
 export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps) => {
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { user } = useAuthStore();
+  const [emailExists, setEmailExists] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(guestSchema),
-    defaultValues: initialData,
+    defaultValues: { 
+      ...initialData, 
+      emailExists: false, 
+      isLoggedIn: !!user 
+    },
   });
+
+  const emailValue = watch("email");
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (emailValue && emailValue.includes("@") && emailValue.includes(".")) {
+        setIsChecking(true);
+        try {
+          const { data } = await api.post("/auth/check-email", { email: emailValue });
+          setEmailExists(data.exists);
+          setValue("emailExists", data.exists);
+        } catch (error) {
+          console.error("Email check failed", error);
+        } finally {
+          setIsChecking(false);
+        }
+      }
+    }, 800);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [emailValue, setValue]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
@@ -42,7 +102,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
               <img 
                 className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" 
                 alt="Concierge"
-                src="https://images.unsplash.com/photo-1550966841-3bc2ad03d04c?auto=format&fit=crop&q=80&w=200"
+                src="https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=200"
               />
             </div>
             <div>
@@ -77,15 +137,27 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
             <label className="block font-headline italic text-2xl text-on-surface-variant transition-all duration-300 group-focus-within:text-primary">
               Email Address
             </label>
-            <input 
-              {...register("email")}
-              placeholder="guest@fishndrop.com"
-              className={cn(
-                "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface",
-                errors.email ? "border-error" : "border-outline-variant/40 focus:border-primary"
+            <div className="relative">
+              <input 
+                {...register("email")}
+                placeholder="guest@fishndrop.com"
+                className={cn(
+                  "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface",
+                  errors.email ? "border-error" : "border-outline-variant/40 focus:border-primary"
+                )}
+              />
+              {isChecking && (
+                <div className="absolute right-0 top-3">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary opacity-50" />
+                </div>
               )}
-            />
+            </div>
             {errors.email && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.email.message as string}</p>}
+            {emailExists && !isChecking && (
+              <p className="text-[9px] uppercase tracking-widest text-primary font-bold animate-fade-in">
+                Welcome back! Please verify your account below.
+              </p>
+            )}
           </div>
 
           {/* Input: Phone Number */}
@@ -104,26 +176,77 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
              {errors.phone && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.phone.message as string}</p>}
           </div>
 
-          {/* Input: Password (Account Creation) */}
-          <div className="group relative space-y-2 pt-4">
-            <div className="flex justify-between items-end">
-              <label className="block font-headline italic text-2xl text-on-surface-variant transition-all duration-300 group-focus-within:text-primary">
-                Create Portal Password
-              </label>
-              <span className="text-[9px] uppercase tracking-widest text-outline font-bold">Optional</span>
-            </div>
-            <input 
-              type="password"
-              {...register("password")}
-              placeholder="••••••••"
-              className={cn(
-                "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface",
-                errors.password ? "border-error" : "border-outline-variant/40 focus:border-primary"
+          {/* Input: Password Section (Only for non-logged-in users) */}
+          {!user && (
+            <div className="space-y-10">
+              {/* Password field */}
+              <div className="group relative space-y-2 pt-4">
+                <div className="flex justify-between items-end">
+                  <label className="block font-headline italic text-2xl text-on-surface-variant transition-all duration-300 group-focus-within:text-primary">
+                    {emailExists ? "Portal Password" : "Create Password"}
+                  </label>
+                  <span className={cn(
+                    "text-[9px] uppercase tracking-widest font-bold",
+                    emailExists ? "text-primary" : "text-outline"
+                  )}>
+                    {emailExists ? "Required" : "Optional"}
+                  </span>
+                </div>
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"}
+                    {...register("password")}
+                    placeholder="••••••••"
+                    className={cn(
+                      "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface pr-10",
+                      errors.password ? "border-error" : "border-outline-variant/40 focus:border-primary"
+                    )}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-0 top-3 text-outline/60 hover:text-primary transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {!emailExists && (
+                  <p className="text-[9px] text-secondary font-body font-light italic">Enter a password to automatically create your Fishndrop portal account.</p>
+                )}
+                {errors.password && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.password.message as string}</p>}
+              </div>
+
+              {/* Confirm Password field (Only for new accounts) */}
+              {!emailExists && (
+                 <div className="group relative space-y-2 pt-4">
+                  <div className="flex justify-between items-end">
+                    <label className="block font-headline italic text-2xl text-on-surface-variant transition-all duration-300 group-focus-within:text-primary">
+                      Confirm Password
+                    </label>
+                  </div>
+                  <div className="relative">
+                    <input 
+                      type={showConfirmPassword ? "text" : "password"}
+                      {...register("confirmPassword")}
+                      placeholder="••••••••"
+                      className={cn(
+                        "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface pr-10",
+                        errors.confirmPassword ? "border-error" : "border-outline-variant/40 focus:border-primary"
+                      )}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-0 top-3 text-outline/60 hover:text-primary transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.confirmPassword && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.confirmPassword.message as string}</p>}
+                </div>
               )}
-            />
-            <p className="text-[9px] text-secondary font-body font-light italic">Enter a password to automatically create your Fishndrop portal account.</p>
-             {errors.password && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.password.message as string}</p>}
-          </div>
+            </div>
+          )}
 
           <div className="pt-8 flex flex-col sm:flex-row items-center gap-8">
             <button 

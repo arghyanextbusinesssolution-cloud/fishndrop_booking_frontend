@@ -41,13 +41,57 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
+
   .bg-gold-gradient {
     background: linear-gradient(135deg, #735c00 0%, #d4af37 100%);
   }
+
   .ambient-shadow {
     box-shadow: 0 40px 40px -15px rgba(27, 28, 26, 0.04);
   }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite ease-in-out;
+  }
+
+  .animate-shimmer-slow {
+    animation: shimmer 3s infinite ease-in-out;
+  }
+
+  .animate-fade-in-slow {
+    animation: fadeIn 2.5s ease-out forwards;
+  }
 }
+
+@keyframes shimmer {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.95);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  100% {
+    opacity: 0.3;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 
 html {
   scroll-behavior: smooth;
@@ -57,7 +101,11 @@ body {
   @apply bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container;
 }
 
-h1, h2, h3, h4, .font-headline {
+h1,
+h2,
+h3,
+h4,
+.font-headline {
   font-family: var(--font-newsreader), serif;
 }
 

@@ -24,11 +24,11 @@ const addonOptions = [
     img: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&q=80&w=400"
   },
   {
-    id: "cake",
-    label: "Signature Birthday Cake",
-    desc: "A bespoke creation from our head pastry chef, personalized with your choice of flavor and message.",
-    price: 65,
-    img: "https://images.unsplash.com/photo-1535141192574-5d48bb7af09b?auto=format&fit=crop&q=80&w=400"
+    id: "custom_cake",
+    label: "Custom Celebration Cake",
+    desc: "A bespoke creation from our head pastry chef, designed entirely to your specifications.",
+    price: 0, // Computed dynamically in the cake details step
+    img: "https://images.unsplash.com/photo-1585645187768-b6c10786fa14?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fGJpcnRoZGF5Y2FrZXxlbnwwfHwwfHx8MA%3D%3D"
   },
   {
     id: "flowers",

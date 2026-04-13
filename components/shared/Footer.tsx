@@ -3,8 +3,12 @@ import Link from "next/link";
 export const Footer = () => {
   return (
     <footer className="bg-surface-container-low flex flex-col md:flex-row justify-between items-center px-6 md:px-12 py-16 w-full mt-auto">
-      <div className="font-headline italic text-lg text-primary mb-8 md:mb-0">
-        Fishndrop
+      <div className="mb-8 md:mb-0">
+        <img 
+          src="https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png" 
+          alt="Fishndrop" 
+          className="h-10 w-auto object-contain brightness-0 grayscale invert"
+        />
       </div>
       
       <div className="flex flex-wrap justify-center gap-8 mb-8 md:mb-0">
