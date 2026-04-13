@@ -370,7 +370,7 @@ export const BookingWizard = () => {
       <main className="flex-grow flex flex-col items-center overflow-hidden">
         <div 
           ref={scrollContainerRef}
-          className="w-full flex-grow flex flex-col items-center pt-16 md:pt-32 pb-10 px-4 md:px-12 overflow-y-auto scrollbar-hide"
+          className="w-full flex-grow flex flex-col items-center pt-28 md:pt-32 pb-10 px-4 md:px-12 overflow-y-auto scrollbar-hide"
         >
           {/* Step Indicator */}
           <div className="max-w-4xl w-full mb-12 md:mb-16 px-4 shrink-0">
