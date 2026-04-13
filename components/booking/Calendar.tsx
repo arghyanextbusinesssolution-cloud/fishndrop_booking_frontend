@@ -106,7 +106,7 @@ export const Calendar = ({ onSelect, selectedDate }: CalendarProps) => {
             <div
               key={i}
               className={cn(
-                "text-center font-headline italic text-xl md:text-2xl py-3 relative transition-all duration-300",
+                "text-center font-headline italic text-lg md:text-2xl py-1 md:py-3 relative transition-all duration-300",
                 isDisabled
                   ? "text-outline/20 cursor-not-allowed"
                   : "cursor-pointer hover:text-primary-container",
@@ -118,9 +118,9 @@ export const Calendar = ({ onSelect, selectedDate }: CalendarProps) => {
               <div className="flex items-center justify-center relative">
                 <div
                   className={cn(
-                    "w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-all duration-500",
+                    "w-9 h-9 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-all duration-500",
                     isSelected
-                      ? "bg-primary-container shadow-xl shadow-primary-container/30 ring-8 ring-primary-container/10 scale-110"
+                      ? "bg-primary-container shadow-xl shadow-primary-container/30 ring-4 md:ring-8 ring-primary-container/10 scale-110"
                       : isToday
                         ? "bg-primary/10 ring-2 ring-primary/30"
                         : "bg-transparent",

@@ -18,6 +18,9 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   title: "Fishndrop | Table Reservations",
   description: "Reserve your table, arrive in style.",
+  icons: {
+    icon: "https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png",
+  },
 };
 
 export default function RootLayout({

@@ -68,7 +68,7 @@ export const StepTimeSelection = ({ onNext, selectedTime, date, guests }: StepTi
             onClick={() => isAvailable && onNext({ time: slot })}
             disabled={!isAvailable}
             className={cn(
-              "p-8 rounded-xl border transition-all duration-500 flex flex-col items-center justify-center gap-2 group relative overflow-hidden",
+              "p-4 md:p-8 rounded-xl border transition-all duration-500 flex flex-col items-center justify-center gap-1 md:gap-2 group relative overflow-hidden",
               selectedTime === slot 
                 ? "bg-primary-container border-transparent shadow-xl shadow-primary-container/20" 
                 : isAvailable
@@ -77,7 +77,7 @@ export const StepTimeSelection = ({ onNext, selectedTime, date, guests }: StepTi
             )}
           >
             <span className={cn(
-              "font-headline text-3xl italic transition-colors duration-500",
+              "font-headline text-2xl md:text-3xl italic transition-colors duration-500",
               selectedTime === slot ? "text-on-primary-container" : "text-on-surface group-hover:text-gold-gradient"
             )}>
               {slot}

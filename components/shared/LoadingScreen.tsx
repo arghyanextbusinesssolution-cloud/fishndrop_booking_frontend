@@ -38,11 +38,11 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
   useEffect(() => {
     if (!isLoading && progress >= 100) {
       setIsExiting(true);
-      // Wait for the longest animation delay + duration
+      // Duration (800ms) + Stagger Delay (9 * 80ms) + Safety Margin (100ms)
       const timer = setTimeout(() => {
         setShouldRender(false);
         if (onFinished) onFinished();
-      }, 1000 + SLAT_COUNT * 100);
+      }, 1620);
       return () => clearTimeout(timer);
     }
   }, [isLoading, progress, onFinished]);
@@ -57,11 +57,11 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
           <div
             key={i}
             className={cn(
-              "h-full flex-1 bg-[#1C1917] transition-transform duration-1000 ease-[cubic-bezier(0.7,0,0.3,1)]",
-              isExiting ? "translate-x-full" : "translate-x-0"
+              "h-full flex-1 bg-[#1C1917] transition-transform duration-800 ease-[cubic-bezier(0.85,0,0.15,1)]",
+              isExiting ? "-translate-y-full" : "translate-y-0"
             )}
             style={{
-              transitionDelay: `${i * 100}ms`,
+              transitionDelay: `${i * 80}ms`,
             }}
           />
         ))}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { NavBar } from "@/components/shared/NavBar";
 import { Footer } from "@/components/shared/Footer";
@@ -44,6 +44,7 @@ export const BookingWizard = () => {
   const { user, setAuth } = useAuthStore();
 
   const STORAGE_KEY = "fishndrop_wizard_progress";
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(2);
   const [isRestoring, setIsRestoring] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -232,7 +233,7 @@ export const BookingWizard = () => {
       } else {
         setStep(nextStep);
       }
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       handleFinalSubmit(false);
     }
@@ -259,7 +260,7 @@ export const BookingWizard = () => {
 
     if (step > 2) {
       setStep(prevStep);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     }
     else router.push("/");
   };
@@ -367,7 +368,10 @@ export const BookingWizard = () => {
       <NavBar />
 
       <main className="flex-grow flex flex-col items-center overflow-hidden">
-        <div className="w-full flex-grow flex flex-col items-center pt-24 md:pt-32 pb-10 px-4 md:px-12 overflow-y-auto scrollbar-hide">
+        <div 
+          ref={scrollContainerRef}
+          className="w-full flex-grow flex flex-col items-center pt-16 md:pt-32 pb-10 px-4 md:px-12 overflow-y-auto scrollbar-hide"
+        >
           {/* Step Indicator */}
           <div className="max-w-4xl w-full mb-12 md:mb-16 px-4 shrink-0">
             {/* ... (step indicator code remains same) ... */}

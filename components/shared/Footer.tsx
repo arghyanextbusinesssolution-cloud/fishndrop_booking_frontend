@@ -7,7 +7,7 @@ export const Footer = () => {
         <img 
           src="https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png" 
           alt="Fishndrop" 
-          className="h-10 w-auto object-contain brightness-0 grayscale invert"
+          className="h-16 w-auto object-contain brightness-0 grayscale invert opacity-90"
         />
       </div>
       
