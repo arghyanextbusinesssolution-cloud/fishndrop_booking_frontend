@@ -1,6 +1,4 @@
-"use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -10,10 +8,24 @@ interface CalendarProps {
 }
 
 export const Calendar = ({ onSelect, selectedDate }: CalendarProps) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
+  const [mounted, setMounted] = useState(false);
+  const [today, setToday] = useState<Date>(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  useEffect(() => {
+    setMounted(true);
+    const date = new Date();
+    date.setHours(0, 0, 0, 0);
+    setToday(date);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className="w-full flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 rounded-full border-4 border-primary/10 border-t-primary animate-spin" />
+      </div>
+    );
+  }
 
   // Helper to generate days for the month
   const daysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();

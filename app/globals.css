@@ -1,38 +1,33 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-  --color-background: #faf9f5;
-  --color-surface: #faf9f5;
-  --color-surface-container: #efeeea;
-  --color-surface-container-low: #f4f4f0;
-  --color-surface-container-high: #e9e8e4;
-  --color-surface-container-highest: #e3e2df;
-  --color-surface-container-lowest: #ffffff;
-  --color-primary: #735c00;
-  --color-primary-container: #d4af37;
-  --color-on-primary: #ffffff;
-  --color-on-primary-container: #554300;
-  --color-secondary: #5f5e5e;
-  --color-secondary-container: #e4e2e1;
-  --color-on-secondary: #ffffff;
-  --color-on-secondary-container: #656464;
-  --color-tertiary: #665d52;
-  --color-tertiary-container: #bdb1a4;
-  --color-on-tertiary: #ffffff;
-  --color-on-surface: #1b1c1a;
-  --color-on-surface-variant: #4d4635;
-  --color-outline: #7f7663;
-  --color-outline-variant: #d0c5af;
-  --color-error: #ba1a1a;
-
-  --radius-default: 0.125rem;
-  --radius-lg: 0.25rem;
-  --radius-xl: 0.5rem;
-  --radius-full: 0.75rem;
-
-  --font-headline: var(--font-newsreader), serif;
-  --font-body: var(--font-manrope), sans-serif;
-  --font-label: var(--font-manrope), sans-serif;
+@layer base {
+  :root {
+    --background: #faf9f5;
+    --surface: #faf9f5;
+    --surface-container: #efeeea;
+    --surface-container-low: #f4f4f0;
+    --surface-container-high: #e9e8e4;
+    --surface-container-highest: #e3e2df;
+    --surface-container-lowest: #ffffff;
+    --primary: #735c00;
+    --primary-container: #d4af37;
+    --on-primary: #ffffff;
+    --on-primary-container: #554300;
+    --secondary: #5f5e5e;
+    --secondary-container: #e4e2e1;
+    --on-secondary: #ffffff;
+    --on-secondary-container: #656464;
+    --tertiary: #665d52;
+    --tertiary-container: #bdb1a4;
+    --on-tertiary: #ffffff;
+    --on-surface: #1b1c1a;
+    --on-surface-variant: #4d4635;
+    --outline: #7f7663;
+    --outline-variant: #d0c5af;
+    --error: #ba1a1a;
+  }
 }
 
 @layer utilities {

@@ -6,8 +6,7 @@ import toast from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
 
 const api = axios.create({
-  // Backend is currently running on 5002, process.env isn't hot-reloadable
-  baseURL: (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"),
+  baseURL: (process.env.NEXT_PUBLIC_API_URL || "/api"),
   timeout: 15000,
 });
 
@@ -31,15 +30,25 @@ api.interceptors.response.use(
     }
     return response;
   },
-  (error) => {
+  async (error) => {
     if (process.env.NODE_ENV !== "production") {
       console.error("[API ERROR]", {
         method: error.config?.method?.toUpperCase(),
         url: error.config?.url,
-        status: error.response?.status,
-        data: error.response?.data,
+        // Check backend health using relative or env URL
+        healthUrl: process.env.NEXT_PUBLIC_API_URL 
+          ? process.env.NEXT_PUBLIC_API_URL.replace("/api", "/api/health")
+          : "/api/health",
         message: error.message
       });
+      try {
+        const healthUrl = process.env.NEXT_PUBLIC_API_URL 
+          ? process.env.NEXT_PUBLIC_API_URL.replace("/api", "/api/health")
+          : "/api/health";
+        await fetch(healthUrl);
+      } catch (e) {
+        console.error("Health check failed", e);
+      }
     }
 
     if (!error.response) {

@@ -16,6 +16,7 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [partySize, setPartySize] = useState(2);
   const [isLoading, setIsLoading] = useState(true);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
     // Artificial delay to show the beautiful loading experience 
@@ -24,7 +25,8 @@ export default function Home() {
       try {
         const startTime = Date.now();
         // Use port 5002 where our verified backend is running
-        await fetch("http://localhost:5000/api/health");
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || "/api";
+        await fetch(`${apiBase}/health`);
         const elapsed = Date.now() - startTime;
         const minTime = 3000; // 3 seconds min to show animation
 
@@ -55,6 +57,7 @@ export default function Home() {
 
   const handleDateSelect = (date: Date) => {
     try {
+      setIsNavigating(true);
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
@@ -62,6 +65,7 @@ export default function Home() {
       router.push(`/book-table?date=${dateString}`);
     } catch (e) {
       console.error("Date selection error:", e);
+      setIsNavigating(false);
     }
   };
 
@@ -85,19 +89,6 @@ export default function Home() {
               <p className="text-secondary font-body tracking-[0.15em] uppercase text-xs">
                 A curated journey begins with a moment in time.
               </p>
-            </div>
-
-            <div className="pt-4 flex justify-center">
-              <button
-                onClick={() => {
-                  const calendar = document.querySelector("section");
-                  calendar?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className="bg-gold-gradient px-12 py-5 rounded-full text-on-primary font-label tracking-[0.3em] uppercase text-[11px] font-bold shadow-2xl shadow-primary/30 hover:scale-[1.05] hover:shadow-primary/40 transition-all active:scale-95 group"
-              >
-                Book a Reservation
-                <ChevronRight className="inline-block ml-3 w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </button>
             </div>
           </header>
 
@@ -152,8 +143,17 @@ export default function Home() {
             </div>
 
             {/* Main Calendar Canvas */}
-            <div className="lg:col-span-8 bg-surface-container-lowest p-8 md:p-12 rounded-xl ambient-shadow border border-outline-variant/10 order-1 lg:order-2">
-              <Calendar selectedDate={selectedDate} onSelect={handleDateSelect} />
+            <div className="lg:col-span-8 bg-surface-container-lowest p-8 md:p-12 rounded-xl ambient-shadow border border-outline-variant/10 order-1 lg:order-2 relative min-h-[500px]">
+              {isNavigating ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface-container-lowest/80 backdrop-blur-sm z-20 transition-all duration-500 animate-in fade-in">
+                  <div className="w-16 h-16 rounded-full border-4 border-primary/10 border-t-primary animate-spin" />
+                  <p className="mt-6 font-headline text-2xl italic text-on-surface animate-pulse">
+                    Preparing your journey...
+                  </p>
+                </div>
+              ) : (
+                <Calendar selectedDate={selectedDate} onSelect={handleDateSelect} />
+              ) }
             </div>
           </section>
         </main>

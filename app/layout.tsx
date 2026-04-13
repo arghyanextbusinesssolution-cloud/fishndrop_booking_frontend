@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   description: "Reserve your table, arrive in style.",
   icons: {
     icon: "https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png",
+    shortcut: "https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png",
+    apple: "https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png",
   },
 };
 
@@ -32,6 +34,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${newsreader.variable} ${manrope.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-[#faf9f5]">
         <AuthInitializer />
