@@ -79,12 +79,14 @@ export const Calendar = ({ onSelect, selectedDate }: CalendarProps) => {
       </div>
 
       {/* Current Date Display */}
-      <div className="flex items-center justify-center gap-3 mb-8 py-3 px-6 bg-primary/5 rounded-full border border-primary/10 mx-auto w-fit">
-        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-        <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-primary">
-          Today is {today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-        </span>
-      </div>
+      {mounted && (
+        <div className="flex items-center justify-center gap-3 mb-8 py-3 px-6 bg-primary/5 rounded-full border border-primary/10 mx-auto w-fit" suppressHydrationWarning>
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-primary">
+            Today is {today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+          </span>
+        </div>
+      )}
 
       {/* Day Headers */}
       <div className="grid grid-cols-7 gap-y-6 md:gap-y-8">

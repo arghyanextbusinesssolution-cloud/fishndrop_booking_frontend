@@ -36,6 +36,9 @@ export default function RootLayout({
       className={`${newsreader.variable} ${manrope.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="icon" href="https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png" sizes="any" />
+      </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-[#faf9f5]">
         <AuthInitializer />
         {children}
