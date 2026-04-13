@@ -145,7 +145,27 @@ export const BookingWizard = () => {
         } else {
           toast.success("Reservation confirmed!");
         }
+        
+        // Clear progress and redirect
         localStorage.removeItem(STORAGE_KEY);
+        // We also want to clear the local state to prevent any re-renders from re-saving
+        setStep(2); 
+        setBookingData({
+          date: initialDate,
+          time: null,
+          guests: 2,
+          table: null,
+          guestDetails: {
+            name: user?.name || "",
+            email: user?.email || "",
+            phone: user?.phone || "",
+            password: ""
+          },
+          occasion: "other",
+          addons: [],
+          totalPrice: 200
+        });
+        
         router.push(`/book-table/confirmed?id=${data.booking._id}`);
       }
     } catch (error: any) {
