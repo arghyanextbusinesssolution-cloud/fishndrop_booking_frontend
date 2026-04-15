@@ -113,9 +113,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-surface-container-low border-b border-outline-variant/10 z-40 flex items-center justify-between px-6 backdrop-blur-md bg-opacity-80">
         <Link
           href="/"
-          className="text-xl font-headline italic text-on-surface tracking-tight"
+          className="flex items-center"
         >
-          Fishndrop
+          <img 
+            src="https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png" 
+            alt="Fishndrop" 
+            className="h-8 w-auto object-contain"
+          />
         </Link>
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -150,9 +154,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <div className="px-8 mb-16 hidden lg:block">
           <Link
             href="/"
-            className="text-2xl font-headline italic text-on-surface tracking-tight block"
+            className="flex items-center block"
           >
-            Fishndrop
+            <img 
+              src="https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png" 
+              alt="Fishndrop" 
+              className="h-10 w-auto object-contain"
+            />
           </Link>
         </div>
 

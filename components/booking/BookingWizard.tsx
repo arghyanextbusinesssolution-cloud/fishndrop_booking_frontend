@@ -373,7 +373,7 @@ export const BookingWizard = () => {
           className="w-full flex-grow flex flex-col items-center pt-28 md:pt-32 pb-10 px-4 md:px-12 overflow-y-auto scrollbar-hide"
         >
           {/* Step Indicator */}
-          <div className="max-w-4xl w-full mb-12 md:mb-16 px-4 shrink-0">
+          <div className="max-w-4xl w-full mb-12 md:mb-16 shrink-0 overflow-x-auto scrollbar-hide px-2">
             {/* ... (step indicator code remains same) ... */}
             <div className="flex justify-between items-center min-w-[600px] md:min-w-0 relative gap-4 md:gap-8 pb-4">
               {steps.map((label, index) => (

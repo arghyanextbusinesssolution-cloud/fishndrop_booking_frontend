@@ -22,9 +22,9 @@ export default function AdminSettingsPage() {
       title: "Operating Hours",
       description: "Restaurant time slot configuration",
       items: [
-        { label: "Dinner Service", value: "18:00 – 22:00" },
-        { label: "Time Slots", value: "18:00, 19:00, 20:00, 21:00" },
-        { label: "Slot Duration", value: "1 Hour" },
+        { label: "All Day Service", value: "10:00 – 22:00" },
+        { label: "Time Slots", value: "10:00, 12:00, 14:00, 16:00, 18:00, 20:00, 22:00" },
+        { label: "Slot Duration", value: "2 Hours" },
       ],
     },
     {

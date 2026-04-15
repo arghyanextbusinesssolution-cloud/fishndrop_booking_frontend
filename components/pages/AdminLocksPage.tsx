@@ -16,7 +16,7 @@ function formatDate(dateStr: string) {
   });
 }
 
-const TIME_SLOTS = ["18:00", "19:00", "20:00", "21:00"];
+const TIME_SLOTS = ["10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00"];
 
 export default function AdminLocksPage() {
   const { getSlotLocks, setSlotLock, loading } = useAdmin();
@@ -133,7 +133,11 @@ export default function AdminLocksPage() {
                           : "bg-surface-container-low text-secondary border-outline-variant/20 hover:border-outline-variant/40"
                       )}
                     >
-                      {slot}
+                      {(() => {
+                        const h = parseInt(slot.split(":")[0], 10);
+                        const ampm = h >= 12 ? "PM" : "AM";
+                        return `${h % 12 || 12}:00 ${ampm}`;
+                      })()}
                     </button>
                   ))}
                 </div>
@@ -196,7 +200,11 @@ export default function AdminLocksPage() {
                           {formatDate(lock.bookingDate)}
                         </span>
                         <span className="px-2.5 py-0.5 rounded-full bg-surface-container border border-outline-variant/20 text-[9px] uppercase tracking-widest font-bold text-outline">
-                          {lock.bookingTime}
+                          {(() => {
+                            const h = parseInt(lock.bookingTime.split(":")[0], 10);
+                            const ampm = h >= 12 ? "PM" : "AM";
+                            return `${h % 12 || 12}:00 ${ampm}`;
+                          })()}
                         </span>
                       </div>
                       {lock.reason && (

@@ -17,8 +17,8 @@ export const NavBar = () => {
   }, []);
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl flex flex-col md:flex-row justify-center md:justify-between items-center px-6 md:px-12 py-4 md:py-6 shadow-sm shadow-on-surface/5">
-      <Link href="/" className="flex items-center mb-0 md:mb-0">
+    <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl flex flex-row justify-between items-center px-6 md:px-12 py-4 md:py-6 shadow-sm shadow-on-surface/5">
+      <Link href="/" className="flex items-center">
         <img 
           src="https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png" 
           alt="Fishndrop" 
@@ -42,7 +42,7 @@ export const NavBar = () => {
         </Link>
       </div>
 
-      <div className="absolute right-6 md:static flex items-center gap-6">
+      <div className="flex items-center gap-6">
         {!mounted ? (
           <div className="w-24 h-9 rounded-full bg-surface-container-low animate-pulse" />
         ) : isAuthenticated ? (

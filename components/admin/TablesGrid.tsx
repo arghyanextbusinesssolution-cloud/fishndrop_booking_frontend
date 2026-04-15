@@ -79,10 +79,13 @@ export function TablesGrid({ tables, onSeed, onUpdateConfig, onToggleAvailabilit
         <div>
           <p className="text-xs text-[var(--text-secondary)]">Time</p>
           <select name="slotTime" className="mt-1 w-full rounded-lg border border-[var(--border)] bg-transparent p-2 text-sm">
-            <option value="18:00">18:00</option>
-            <option value="19:00">19:00</option>
-            <option value="20:00">20:00</option>
-            <option value="21:00">21:00</option>
+            <option value="10:00">10:00 AM</option>
+            <option value="12:00">12:00 PM</option>
+            <option value="14:00">2:00 PM</option>
+            <option value="16:00">4:00 PM</option>
+            <option value="18:00">6:00 PM</option>
+            <option value="20:00">8:00 PM</option>
+            <option value="22:00">10:00 PM</option>
           </select>
         </div>
         <div>
@@ -115,10 +118,13 @@ export function TablesGrid({ tables, onSeed, onUpdateConfig, onToggleAvailabilit
         <div>
           <p className="text-xs text-[var(--text-secondary)]">Time</p>
           <select name="slotTimeUnlock" className="mt-1 w-full rounded-lg border border-[var(--border)] bg-transparent p-2 text-sm">
-            <option value="18:00">18:00</option>
-            <option value="19:00">19:00</option>
-            <option value="20:00">20:00</option>
-            <option value="21:00">21:00</option>
+            <option value="10:00">10:00 AM</option>
+            <option value="12:00">12:00 PM</option>
+            <option value="14:00">2:00 PM</option>
+            <option value="16:00">4:00 PM</option>
+            <option value="18:00">6:00 PM</option>
+            <option value="20:00">8:00 PM</option>
+            <option value="22:00">10:00 PM</option>
           </select>
         </div>
         <Button type="submit" variant="outline" disabled={seeding}>Unlock Slot</Button>

@@ -80,7 +80,11 @@ export const StepTimeSelection = ({ onNext, selectedTime, date, guests }: StepTi
               "font-headline text-2xl md:text-3xl italic transition-colors duration-500",
               selectedTime === slot ? "text-on-primary-container" : "text-on-surface group-hover:text-gold-gradient"
             )}>
-              {slot}
+              {(() => {
+                const h = parseInt(slot.split(":")[0], 10);
+                const ampm = h >= 12 ? "PM" : "AM";
+                return `${h % 12 || 12}:00 ${ampm}`;
+              })()}
             </span>
             <span className={cn(
               "text-[9px] uppercase tracking-widest font-bold",
