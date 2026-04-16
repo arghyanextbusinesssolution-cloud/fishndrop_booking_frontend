@@ -79,10 +79,7 @@ export default function UserDashboardPage() {
                   : "None Scheduled"}
               </p>
             </div>
-            <div className="space-y-1">
-              <p className="text-[8px] uppercase tracking-widest text-outline font-bold">Concierge Status</p>
-              <p className="font-headline text-2xl italic text-primary">Priority Gold</p>
-            </div>
+
             <div className="pt-2">
               <Link href="/book-table" className="text-[9px] uppercase tracking-[0.3em] font-bold text-primary border border-primary/20 px-6 py-3 rounded-full hover:bg-primary hover:text-white transition-all">
                 Book a journey
@@ -117,7 +114,7 @@ export default function UserDashboardPage() {
       {/* Cards Grid */}
       <section className="grid grid-cols-1 xl:grid-cols-12 gap-12">
         {/* Upcoming Reservation Card */}
-        <div className="xl:col-span-8 bg-surface-container-lowest p-10 md:p-16 rounded-xl ambient-shadow flex flex-col justify-between min-h-[480px]">
+        <div className="xl:col-span-12 bg-surface-container-lowest p-10 md:p-16 rounded-xl ambient-shadow flex flex-col justify-between min-h-[480px]">
           <div className="flex justify-between items-start mb-16">
             <div className="space-y-2">
               <h3 className="font-headline text-4xl italic text-on-surface">
@@ -177,35 +174,7 @@ export default function UserDashboardPage() {
           </div>
         </div>
 
-        {/* Dining Profile Side Card */}
-        <div className="xl:col-span-4 bg-surface-container-low p-10 rounded-xl flex flex-col h-full">
-          <div className="mb-12">
-            <h3 className="font-headline text-3xl italic mb-4 text-on-surface">Dining Profile</h3>
-            <p className="text-sm text-secondary leading-relaxed font-body font-light italic">
-              Your preferences are the blueprint of your experience.
-            </p>
-          </div>
 
-          <div className="space-y-6 flex-grow">
-            {[
-              { label: "Private Preferences", href: "/user/preferences" },
-              { label: "Dietary Sensitivities", href: "/user/preferences" },
-              { label: "The Wine Cellar", href: "/user/preferences" }
-            ].map(item => (
-              <Link key={item.label} href={item.href} className="p-6 bg-surface-container-lowest rounded-lg group cursor-pointer hover:ambient-shadow transition-all duration-500 flex justify-between items-center">
-                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-on-surface group-hover:text-primary transition-colors">{item.label}</span>
-                <ChevronRight className="w-4 h-4 text-outline/30 group-hover:text-primary transition-colors" strokeWidth={1} />
-              </Link>
-            ))}
-          </div>
-
-          <div className="pt-12">
-            <div className="p-6 bg-primary/5 rounded-lg border border-primary/10">
-              <p className="text-[9px] uppercase tracking-widest text-primary font-bold mb-2">Concierge Tip</p>
-              <p className="text-xs text-secondary italic font-light">"The 1995 Bordeaux has been decanted in anticipation of your arrival."</p>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* Past Journeys Section */}

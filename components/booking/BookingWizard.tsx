@@ -373,9 +373,8 @@ export const BookingWizard = () => {
           className="w-full flex-grow flex flex-col items-center pt-28 md:pt-32 pb-10 px-4 md:px-12 overflow-y-auto scrollbar-hide"
         >
           {/* Step Indicator */}
-          <div className="max-w-4xl w-full mb-12 md:mb-16 shrink-0 overflow-x-auto scrollbar-hide px-2">
-            {/* ... (step indicator code remains same) ... */}
-            <div className="flex justify-between items-center min-w-[600px] md:min-w-0 relative gap-4 md:gap-8 pb-4">
+          <div className="max-w-4xl w-full mb-8 md:mb-16 px-4 shrink-0">
+            <div className="flex flex-wrap justify-center md:justify-between items-center relative gap-y-6 gap-x-4 md:gap-8 pb-4">
               {steps.map((label, index) => (
                 <div key={label} className="flex flex-col items-center gap-3 md:gap-4 min-w-[60px] md:min-w-[70px] relative z-10">
                   <div className={cn(
@@ -394,7 +393,7 @@ export const BookingWizard = () => {
                   </span>
                   {index < steps.length - 1 && (
                     <div className={cn(
-                      "absolute top-4 md:top-5 left-[calc(50%+16px)] md:left-[calc(50%+20px)] w-[calc(100%+16px)] md:w-[calc(100%+32px)] h-[1px] -z-10 transition-colors duration-1000",
+                      "hidden md:block absolute top-4 md:top-5 left-[calc(50%+16px)] md:left-[calc(50%+20px)] w-[calc(100%+16px)] md:w-[calc(100%+32px)] h-[1px] -z-10 transition-colors duration-1000",
                       step > index + 1 ? "bg-primary-container" : "bg-outline-variant/20"
                     )} />
                   )}

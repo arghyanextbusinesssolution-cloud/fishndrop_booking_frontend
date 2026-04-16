@@ -55,10 +55,10 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(guestSchema),
-    defaultValues: { 
-      ...initialData, 
-      emailExists: false, 
-      isLoggedIn: !!user 
+    defaultValues: {
+      ...initialData,
+      emailExists: false,
+      isLoggedIn: !!user
     },
   });
 
@@ -99,8 +99,8 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
         <div className="pt-8 border-t border-outline-variant/20">
           <div className="flex items-center gap-4 group">
             <div className="w-12 h-12 rounded-full overflow-hidden ambient-shadow">
-              <img 
-                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" 
+              <img
+                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
                 alt="Concierge"
                 src="https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=200"
               />
@@ -121,7 +121,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
             <label className="block font-headline italic text-2xl text-on-surface-variant transition-all duration-300 group-focus-within:text-primary">
               Full Name
             </label>
-            <input 
+            <input
               {...register("name")}
               placeholder="E.g. Alexander Sterling"
               className={cn(
@@ -138,7 +138,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
               Email Address
             </label>
             <div className="relative">
-              <input 
+              <input
                 {...register("email")}
                 placeholder="guest@fishndrop.com"
                 className={cn(
@@ -165,7 +165,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
             <label className="block font-headline italic text-2xl text-on-surface-variant transition-all duration-300 group-focus-within:text-primary">
               Phone Number
             </label>
-            <input 
+            <input
               {...register("phone")}
               placeholder="+1 (555) 000 0000"
               className={cn(
@@ -173,7 +173,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
                 errors.phone ? "border-error" : "border-outline-variant/40 focus:border-primary"
               )}
             />
-             {errors.phone && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.phone.message as string}</p>}
+            {errors.phone && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.phone.message as string}</p>}
           </div>
 
           {/* Input: Password Section (Only for non-logged-in users) */}
@@ -193,7 +193,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
                   </span>
                 </div>
                 <div className="relative">
-                  <input 
+                  <input
                     type={showPassword ? "text" : "password"}
                     {...register("password")}
                     placeholder="••••••••"
@@ -218,14 +218,14 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
 
               {/* Confirm Password field (Only for new accounts) */}
               {!emailExists && (
-                 <div className="group relative space-y-2 pt-4">
+                <div className="group relative space-y-2 pt-4">
                   <div className="flex justify-between items-end">
                     <label className="block font-headline italic text-2xl text-on-surface-variant transition-all duration-300 group-focus-within:text-primary">
                       Confirm Password
                     </label>
                   </div>
                   <div className="relative">
-                    <input 
+                    <input
                       type={showConfirmPassword ? "text" : "password"}
                       {...register("confirmPassword")}
                       placeholder="••••••••"
@@ -249,7 +249,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
           )}
 
           <div className="pt-8 flex flex-col sm:flex-row items-center gap-8">
-            <button 
+            <button
               type="submit"
               className="w-full sm:w-auto bg-gold-gradient text-on-primary font-body text-xs tracking-[0.2em] uppercase px-16 py-5 rounded-lg shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-500 font-bold"
             >

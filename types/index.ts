@@ -28,7 +28,7 @@ export interface Booking {
   customerEmail: string;
   customerPhone: string;
   notes?: string;
-  occasion: "birthday" | "anniversary" | "graduation" | "other";
+  occasion: "birthday" | "anniversary" | "graduation" | "business" | "quiet" | "other";
   cakeDetails?: string;
   cakePrice?: number;
   totalAmount: number;
@@ -63,7 +63,7 @@ export interface CreateBookingPayload {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  occasion: "birthday" | "anniversary" | "graduation" | "other";
+  occasion: "birthday" | "anniversary" | "graduation" | "business" | "quiet" | "other";
   notes?: string;
   cakeDetails?: string;
   cakePrice?: number;

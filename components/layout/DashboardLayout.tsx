@@ -95,7 +95,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { icon: LayoutDashboard, label: "Dashboard", href: "/user" },
     { icon: CalendarDays, label: "Reservations", href: "/user/bookings" },
     { icon: User, label: "Dining Profile", href: "/user/profile" },
-    { icon: Settings, label: "Preferences", href: "/user/preferences" },
   ];
 
   const navItems = isAdmin ? adminNavItems : userNavItems;

@@ -21,7 +21,7 @@ const schema = z.object({
   customerName: z.string().min(2, "Name is required"),
   customerEmail: z.string().email("Valid email is required"),
   customerPhone: z.string().min(7, "Valid phone is required"),
-  occasion: z.enum(["birthday", "anniversary", "graduation", "other"]),
+  occasion: z.enum(["birthday", "anniversary", "graduation", "business", "quiet", "other"]),
   notes: z.string().max(500).optional(),
   cakeDetails: z.string().max(500).optional(),
   cakePrice: z.number().min(0).optional(),
