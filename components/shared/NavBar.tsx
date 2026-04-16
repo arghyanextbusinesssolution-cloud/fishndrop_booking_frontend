@@ -27,10 +27,6 @@ export const NavBar = () => {
       </Link>
       
       <div className="hidden md:flex gap-12 items-center">
-        {/* Navigation Links omitted/truncated for brevity in TargetContent */}
-        <Link href="#" className="font-body tracking-widest uppercase text-[10px] text-secondary hover:text-primary transition-colors duration-500">Le Menu</Link>
-        <Link href="#" className="font-body tracking-widest uppercase text-[10px] text-secondary hover:text-primary transition-colors duration-500">The Experience</Link>
-        <Link href="#" className="font-body tracking-widest uppercase text-[10px] text-secondary hover:text-primary transition-colors duration-500">Private Dining</Link>
         <Link 
           href="/" 
           className={cn(
