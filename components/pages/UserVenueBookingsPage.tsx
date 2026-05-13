@@ -149,7 +149,9 @@ export default function UserVenueBookingsPage() {
                       Total Investment: ${booking.totalAmount}
                     </span>
                   </div>
-                  <Info className="w-4 h-4 text-outline/30 cursor-help" title="Private event bookings include full venue access and dedicated service." />
+                  <span title="Private event bookings include full venue access and dedicated service.">
+                    <Info className="w-4 h-4 text-outline/30 cursor-help" />
+                  </span>
                 </div>
               </div>
             </div>
