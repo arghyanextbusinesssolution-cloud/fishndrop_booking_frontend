@@ -90,15 +90,15 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
         <header className="space-y-4">
           <span className="font-label text-[10px] tracking-widest text-primary uppercase font-bold">Step 05 of 08</span>
           <h1 className="font-headline text-5xl md:text-6xl text-on-surface leading-tight tracking-tight">
-            05. <span className="font-headline italic">Confirm Your</span> Presence
+            05. <span className="font-headline italic text-gold-gradient">The Guest</span> Register
           </h1>
         </header>
-        <p className="text-secondary font-body text-lg leading-relaxed max-w-sm font-light">
+        <p className="text-on-surface/70 font-body text-lg leading-relaxed max-w-sm font-light">
           The beauty of hospitality lies in the anticipation of our guests&apos; needs. Creating an account allows us to curate your future journeys.
         </p>
         <div className="pt-8 border-t border-outline-variant/20">
           <div className="flex items-center gap-4 group">
-            <div className="w-12 h-12 rounded-full overflow-hidden ambient-shadow">
+            <div className="w-12 h-12 rounded-full overflow-hidden glass-card border-primary/20">
               <img
                 className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
                 alt="Concierge"
@@ -106,7 +106,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
               />
             </div>
             <div>
-              <p className="font-label text-[10px] uppercase tracking-widest text-secondary font-bold">Your Concierge</p>
+              <p className="font-label text-[10px] uppercase tracking-widest text-primary font-bold">Your Concierge</p>
               <p className="font-headline italic text-on-surface text-xl">Jean-Luc</p>
             </div>
           </div>
@@ -114,144 +114,168 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
       </div>
 
       {/* Form Right Column */}
-      <div className="lg:col-span-7 bg-surface-container-low p-8 md:p-12 rounded-xl ambient-shadow border border-outline-variant/10">
+      <div className="lg:col-span-7 glass-card p-8 md:p-12 rounded-2xl relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gold-gradient" />
         <form onSubmit={handleSubmit((data) => onNext({ guestDetails: data }))} className="space-y-10">
-          {/* Input: Full Name */}
-          <div className="group relative space-y-2">
-            <label className="block font-headline italic text-2xl text-on-surface-variant transition-all duration-300 group-focus-within:text-primary">
-              Full Name
-            </label>
-            <input
-              {...register("name")}
-              placeholder="E.g. Alexander Sterling"
-              className={cn(
-                "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface",
-                errors.name ? "border-error" : "border-outline-variant/40 focus:border-primary"
-              )}
-            />
-            {errors.name && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.name.message as string}</p>}
-          </div>
-
-          {/* Input: Email Address */}
-          <div className="group relative space-y-2">
-            <label className="block font-headline italic text-2xl text-on-surface-variant transition-all duration-300 group-focus-within:text-primary">
-              Email Address
-            </label>
-            <div className="relative">
-              <input
-                {...register("email")}
-                placeholder="guest@fishndrop.com"
-                className={cn(
-                  "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface",
-                  errors.email ? "border-error" : "border-outline-variant/40 focus:border-primary"
-                )}
-              />
-              {isChecking && (
-                <div className="absolute right-0 top-3">
-                  <Loader2 className="w-4 h-4 animate-spin text-primary opacity-50" />
+          
+          {user ? (
+            /* AUTHENTICATED STATE */
+            <div className="space-y-8 animate-in fade-in duration-700">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-1">
+                  <p className="font-label text-[9px] uppercase tracking-widest text-primary font-bold">Authenticated Guest</p>
+                  <p className="font-headline text-3xl italic text-on-surface">{user.name}</p>
                 </div>
-              )}
-            </div>
-            {errors.email && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.email.message as string}</p>}
-            {emailExists && !isChecking && (
-              <p className="text-[9px] uppercase tracking-widest text-primary font-bold animate-fade-in">
-                Welcome back! Please verify your account below.
-              </p>
-            )}
-          </div>
-
-          {/* Input: Phone Number */}
-          <div className="group relative space-y-2">
-            <label className="block font-headline italic text-2xl text-on-surface-variant transition-all duration-300 group-focus-within:text-primary">
-              Phone Number
-            </label>
-            <input
-              {...register("phone")}
-              placeholder="+1 (555) 000 0000"
-              className={cn(
-                "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface",
-                errors.phone ? "border-error" : "border-outline-variant/40 focus:border-primary"
-              )}
-            />
-            {errors.phone && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.phone.message as string}</p>}
-          </div>
-
-          {/* Input: Password Section (Only for non-logged-in users) */}
-          {!user && (
-            <div className="space-y-10">
-              {/* Password field */}
-              <div className="group relative space-y-2 pt-4">
-                <div className="flex justify-between items-end">
-                  <label className="block font-headline italic text-2xl text-on-surface-variant transition-all duration-300 group-focus-within:text-primary">
-                    {emailExists ? "Portal Password" : "Create Password"}
-                  </label>
-                  <span className={cn(
-                    "text-[9px] uppercase tracking-widest font-bold",
-                    emailExists ? "text-primary" : "text-outline"
-                  )}>
-                    {emailExists ? "Required" : "Optional"}
-                  </span>
+                <div className="space-y-1">
+                  <p className="font-label text-[9px] uppercase tracking-widest text-primary font-bold">Digital Identity</p>
+                  <p className="font-body text-sm text-on-surface/60 italic">{user.email}</p>
                 </div>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    {...register("password")}
-                    placeholder="••••••••"
-                    className={cn(
-                      "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface pr-10",
-                      errors.password ? "border-error" : "border-outline-variant/40 focus:border-primary"
-                    )}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-0 top-3 text-outline/60 hover:text-primary transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                {!emailExists && (
-                  <p className="text-[9px] text-secondary font-body font-light italic">Enter a password to automatically create your Fishndrop portal account.</p>
-                )}
-                {errors.password && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.password.message as string}</p>}
               </div>
 
-              {/* Confirm Password field (Only for new accounts) */}
-              {!emailExists && (
-                <div className="group relative space-y-2 pt-4">
-                  <div className="flex justify-between items-end">
-                    <label className="block font-headline italic text-2xl text-on-surface-variant transition-all duration-300 group-focus-within:text-primary">
-                      Confirm Password
-                    </label>
-                  </div>
+              <div className="group relative space-y-4 pt-8 border-t border-outline-variant/10">
+                <label className="block font-headline italic text-2xl text-on-surface/60 transition-all duration-300 group-focus-within:text-gold-gradient">
+                  Contact Number
+                </label>
+                <input
+                  {...register("phone")}
+                  placeholder="+1 (555) 000 0000"
+                  className={cn(
+                    "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-2xl text-on-surface",
+                    errors.phone ? "border-error" : "border-outline-variant/40 focus:border-primary"
+                  )}
+                />
+                <p className="text-[10px] text-on-surface/40 italic">We require a number to coordinate your arrival details.</p>
+                {errors.phone && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.phone.message as string}</p>}
+              </div>
+            </div>
+          ) : (
+            /* GUEST / REGISTRATION STATE */
+            <div className="space-y-10 animate-in fade-in duration-700">
+              {/* Input: Full Name */}
+              <div className="group relative space-y-2">
+                <label className="block font-headline italic text-2xl text-on-surface/60 transition-all duration-300 group-focus-within:text-gold-gradient">
+                  Full Name
+                </label>
+                <input
+                  {...register("name")}
+                  placeholder="E.g. Alexander Sterling"
+                  className={cn(
+                    "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface",
+                    errors.name ? "border-error" : "border-outline-variant/40 focus:border-primary"
+                  )}
+                />
+                {errors.name && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.name.message as string}</p>}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                {/* Input: Email Address */}
+                <div className="group relative space-y-2">
+                  <label className="block font-headline italic text-2xl text-on-surface/60 transition-all duration-300 group-focus-within:text-gold-gradient">
+                    Email
+                  </label>
                   <div className="relative">
                     <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      {...register("confirmPassword")}
-                      placeholder="••••••••"
+                      {...register("email")}
+                      placeholder="guest@tropica.com"
                       className={cn(
-                        "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface pr-10",
-                        errors.confirmPassword ? "border-error" : "border-outline-variant/40 focus:border-primary"
+                        "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface",
+                        errors.email ? "border-error" : "border-outline-variant/40 focus:border-primary"
                       )}
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-0 top-3 text-outline/60 hover:text-primary transition-colors"
-                    >
-                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
+                    {isChecking && (
+                      <div className="absolute right-0 top-3">
+                        <Loader2 className="w-4 h-4 animate-spin text-primary opacity-50" />
+                      </div>
+                    )}
                   </div>
-                  {errors.confirmPassword && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.confirmPassword.message as string}</p>}
+                  {errors.email && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.email.message as string}</p>}
                 </div>
-              )}
+
+                {/* Input: Phone Number */}
+                <div className="group relative space-y-2">
+                  <label className="block font-headline italic text-2xl text-on-surface/60 transition-all duration-300 group-focus-within:text-gold-gradient">
+                    Phone
+                  </label>
+                  <input
+                    {...register("phone")}
+                    placeholder="+1 (555) 000 0000"
+                    className={cn(
+                      "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface",
+                      errors.phone ? "border-error" : "border-outline-variant/40 focus:border-primary"
+                    )}
+                  />
+                  {errors.phone && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.phone.message as string}</p>}
+                </div>
+              </div>
+
+              {/* Password Section */}
+              <div className="space-y-8 pt-6 border-t border-outline-variant/10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div className="group relative space-y-2">
+                    <label className="block font-headline italic text-2xl text-on-surface/60 transition-all duration-300 group-focus-within:text-gold-gradient">
+                      {emailExists ? "Verify Password" : "Create Password"}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        {...register("password")}
+                        placeholder="••••••••"
+                        className={cn(
+                          "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface pr-10",
+                          errors.password ? "border-error" : "border-outline-variant/40 focus:border-primary"
+                        )}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-0 top-3 text-outline/60 hover:text-gold-gradient transition-colors"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    {errors.password && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.password.message as string}</p>}
+                  </div>
+
+                  {!emailExists && (
+                    <div className="group relative space-y-2">
+                      <label className="block font-headline italic text-2xl text-on-surface/60 transition-all duration-300 group-focus-within:text-gold-gradient">
+                        Confirm
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          {...register("confirmPassword")}
+                          placeholder="••••••••"
+                          className={cn(
+                            "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface pr-10",
+                            errors.confirmPassword ? "border-error" : "border-outline-variant/40 focus:border-primary"
+                          )}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-0 top-3 text-outline/60 hover:text-gold-gradient transition-colors"
+                        >
+                          {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                      {errors.confirmPassword && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.confirmPassword.message as string}</p>}
+                    </div>
+                  )}
+                </div>
+                {!emailExists && (
+                  <p className="text-[9px] text-on-surface/40 font-body font-light italic">
+                    Establish your digital portal for a seamless experience in your future visits.
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
           <div className="pt-8 flex flex-col sm:flex-row items-center gap-8">
             <button
               type="submit"
-              className="w-full sm:w-auto bg-gold-gradient text-on-primary font-body text-xs tracking-[0.2em] uppercase px-16 py-5 rounded-lg shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-500 font-bold"
+              className="w-full sm:w-auto bg-gold-gradient text-on-primary font-body text-xs tracking-[0.2em] uppercase px-16 py-5 rounded-lg shadow-2xl shadow-primary-container/40 hover:scale-[1.05] active:scale-95 transition-all duration-500 font-bold"
             >
               Continue to Finalize
             </button>

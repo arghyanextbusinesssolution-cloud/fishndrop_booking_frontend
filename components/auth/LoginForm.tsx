@@ -50,7 +50,12 @@ export function LoginForm() {
         {errors.password && <p className="mt-1 text-sm text-[var(--error)]">{errors.password.message}</p>}
       </div>
       {error && <p className="text-sm text-[var(--error)]">{error}</p>}
-      <Button type="submit" isLoading={loading} disabled={loading} className="w-full bg-[var(--accent)] text-black hover:bg-[var(--accent-hover)]">
+      <Button 
+        type="submit" 
+        isLoading={loading} 
+        disabled={loading} 
+        className="w-full bg-[#C8A96A] text-white hover:bg-[#b59858] transition-all duration-300 font-label text-[11px] tracking-[0.2em] uppercase font-bold py-6 shadow-lg shadow-[#C8A96A]/20"
+      >
         {loading ? "Signing in..." : "Sign In"}
       </Button>
     </form>

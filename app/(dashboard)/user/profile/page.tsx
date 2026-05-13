@@ -9,7 +9,7 @@ export default function ProfilePage() {
   return (
     <div className="max-w-7xl mx-auto p-6 md:p-12 lg:p-24 space-y-16 md:space-y-24 text-on-surface">
       <header className="space-y-4">
-        <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-primary block">Fishndrop Membership</span>
+        <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-primary block">Tropica Membership</span>
         <h2 className="text-5xl md:text-6xl lg:text-8xl font-headline italic tracking-tighter leading-[0.9] lg:leading-[0.85]">
           The curator <br className="hidden md:block" /> of taste.
         </h2>

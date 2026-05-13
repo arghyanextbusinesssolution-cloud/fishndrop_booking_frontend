@@ -4,11 +4,11 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { NavBar } from "@/components/shared/NavBar";
-import { Footer } from "@/components/shared/Footer";
 import { cn } from "@/lib/utils";
 import api from "@/lib/axios";
 import { useAuthStore } from "@/store/authStore";
 import toast from "react-hot-toast";
+import { ConfirmationModal } from "@/components/shared/ConfirmationModal";
 
 // Step Components
 import { StepTimeSelection } from "./StepTimeSelection";
@@ -35,6 +35,7 @@ interface BookingData {
   addons: string[];
   customCakeDetails?: any;
   totalPrice: number;
+  assignedNote?: string;
 }
 
 export const BookingWizard = () => {
@@ -43,7 +44,7 @@ export const BookingWizard = () => {
   const initialDate = searchParams.get("date");
   const { user, setAuth } = useAuthStore();
 
-  const STORAGE_KEY = "fishndrop_wizard_progress";
+  const STORAGE_KEY = "tropica_wizard_progress";
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(2);
   const [isRestoring, setIsRestoring] = useState(true);
@@ -51,6 +52,8 @@ export const BookingWizard = () => {
   const [splitDialogOpen, setSplitDialogOpen] = useState(false);
   const [splitDialogMessage, setSplitDialogMessage] = useState("");
   const [chairConsentOpen, setChairConsentOpen] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  
   const [bookingData, setBookingData] = useState<BookingData>({
     date: initialDate,
     time: null,
@@ -73,12 +76,10 @@ export const BookingWizard = () => {
     if (saved) {
       try {
         const { step: savedStep, data: savedData } = JSON.parse(saved);
-        // Only restore if the date hasn't changed in the URL
         if (initialDate === savedData.date) {
           setStep(savedStep);
           setBookingData(savedData);
         } else {
-          // If date changed, clear old progress
           localStorage.removeItem(STORAGE_KEY);
         }
       } catch (e) {
@@ -97,25 +98,6 @@ export const BookingWizard = () => {
       }));
     }
   }, [step, bookingData, isRestoring]);
-
-  // Sync auth state if user logs in midway
-  useEffect(() => {
-    if (user && !isRestoring) {
-      setBookingData(prev => ({
-        ...prev,
-        guestDetails: {
-          ...prev.guestDetails,
-          name: prev.guestDetails.name || user.name,
-          email: prev.guestDetails.email || user.email,
-          phone: prev.guestDetails.phone || user.phone || ""
-        }
-      }));
-    }
-  }, [user, isRestoring]);
-
-  const steps = [
-    "Date", "Time", "Guests", "Table", "Details", "Occasion", "Add-ons", "Payment"
-  ];
 
   const handleFinalSubmit = async (allowSplit = false) => {
     setIsSubmitting(true);
@@ -142,49 +124,35 @@ export const BookingWizard = () => {
       if (data.success) {
         if (data.token && data.user) {
           setAuth(data.user, data.token);
-          toast.success("Reservation confirmed & Account created!");
-        } else {
-          toast.success("Reservation confirmed!");
         }
         
-        // Clear progress and redirect
-        localStorage.removeItem(STORAGE_KEY);
-        // We also want to clear the local state to prevent any re-renders from re-saving
-        setStep(2); 
-        setBookingData({
-          date: initialDate,
-          time: null,
-          guests: 2,
-          table: null,
-          guestDetails: {
-            name: user?.name || "",
-            email: user?.email || "",
-            phone: user?.phone || "",
-            password: ""
-          },
-          occasion: "other",
-          addons: [],
-          totalPrice: 200
-        });
-        
-        router.push(`/book-table/confirmed?id=${data.booking._id}`);
+        // Initiate Stripe Checkout
+        try {
+          const { data: stripeData } = await api.post("/payments/checkout-session", {
+            bookingId: data.booking._id
+          });
+          
+          if (stripeData.success && stripeData.url) {
+            localStorage.removeItem(STORAGE_KEY);
+            window.location.href = stripeData.url;
+            return;
+          }
+        } catch (stripeErr) {
+          console.error("Stripe initiation failed", stripeErr);
+          // Fallback to confirmed page if Stripe fails but booking was created
+          localStorage.removeItem(STORAGE_KEY);
+          router.push(`/book-table/confirmed?id=${data.booking._id}`);
+        }
       }
     } catch (error: any) {
       setIsSubmitting(false);
       const responseData = error.response?.data;
-      // Special case: backend needs user approval to split tables
       if (responseData?.code === "SPLIT_APPROVAL_REQUIRED") {
         setSplitDialogMessage(responseData.message || "No single table available. Would you like to join multiple tables?");
         setSplitDialogOpen(true);
         return;
       }
-      if (responseData?.errors && Array.isArray(responseData.errors)) {
-        responseData.errors.forEach((err: any) => {
-          toast.error(`${err.msg}`);
-        });
-      } else {
-        toast.error(responseData?.message || "Something went wrong with your reservation.");
-      }
+      toast.error(responseData?.message || "Something went wrong with your reservation.");
     }
   };
 
@@ -193,21 +161,13 @@ export const BookingWizard = () => {
     handleFinalSubmit(true);
   };
 
-  const handleSplitCancel = () => {
-    setSplitDialogOpen(false);
-    toast("Please choose a different date or time slot.");
-  };
-
   const handleNext = (data: any) => {
     const updatedData = { ...bookingData, ...data };
-
-    // Calculate total price based on guests ($40 per person)
     const basePrice = updatedData.guests * 40;
     const oldCakePrice = updatedData.addons.includes("cake") ? 50 : 0;
     const customCakePrice = updatedData.addons.includes("custom_cake") && updatedData.customCakeDetails ? updatedData.customCakeDetails.retailPrice : 0;
     const finalPrice = basePrice + oldCakePrice + customCakePrice;
 
-    // Check for 5-guest consent in Step 2 (Guest Count)
     if (step === 2 && updatedData.guests === 5 && !chairConsentOpen) {
       setBookingData({ ...updatedData, totalPrice: finalPrice });
       setChairConsentOpen(true);
@@ -215,48 +175,27 @@ export const BookingWizard = () => {
     }
 
     setBookingData({ ...updatedData, totalPrice: finalPrice });
-
     let nextStep = step + 1;
-
-    // SKIP Step 5 (Details) if user is logged in and we have their phone
-    if (nextStep === 5 && user && updatedData.guestDetails.phone) {
-      nextStep = 6;
-    }
-
-    // Determine if we need to show Cake Details step (Step 8)
+    if (nextStep === 5 && user && updatedData.guestDetails.phone) nextStep = 6;
+    
     const needsCakeStep = updatedData.addons.includes("custom_cake");
     const maxSteps = needsCakeStep ? 9 : 8;
 
     if (step < maxSteps) {
-      if (step === 7 && !needsCakeStep) {
-        setStep(maxSteps); // Skip to payment if no custom cake
-      } else {
-        setStep(nextStep);
-      }
+      if (step === 7 && !needsCakeStep) setStep(maxSteps);
+      else setStep(nextStep);
       scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       handleFinalSubmit(false);
     }
   };
 
-  const handleChairConsentConfirm = () => {
-    setChairConsentOpen(false);
-    setStep(3); // Go to Time Selection after consent
-  };
-
   const handleBack = () => {
     let prevStep = step - 1;
-
-    // SKIP Step 5 if going back and user is logged in with phone
-    if (prevStep === 5 && user && bookingData.guestDetails.phone) {
-      prevStep = 4;
-    }
-
-    // Calculate needsCakeStep for back navigation from Payment
+    if (prevStep === 5 && user && bookingData.guestDetails.phone) prevStep = 4;
+    
     const needsCakeStep = bookingData.addons.includes("custom_cake");
-    if (step === (needsCakeStep ? 9 : 8)) {
-       prevStep = needsCakeStep ? 8 : 7;
-    }
+    if (step === (needsCakeStep ? 9 : 8)) prevStep = needsCakeStep ? 8 : 7;
 
     if (step > 2) {
       setStep(prevStep);
@@ -265,178 +204,131 @@ export const BookingWizard = () => {
     else router.push("/");
   };
 
+  const confirmCancel = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    router.push("/");
+  };
+
+  const steps = ["Date", "Time", "Guests", "Table", "Details", "Occasion", "Add-ons", "Payment"];
+
   const renderStep = () => {
     switch (step) {
-      case 2:
-        return <StepGuestCount onNext={handleNext} selectedGuests={bookingData.guests} />;
-      case 3:
-        return <StepTimeSelection onNext={handleNext} selectedTime={bookingData.time} date={bookingData.date} guests={bookingData.guests} />;
-      case 4:
-        return <StepTableSelection onNext={handleNext} selectedTable={bookingData.table} guests={bookingData.guests} />;
-      case 5:
-        return <StepGuestDetails onNext={handleNext} initialData={bookingData.guestDetails} />;
-      case 6:
-        return <StepOccasionSelection onNext={handleNext} selectedOccasion={bookingData.occasion} />;
-      case 7:
-        return <StepAddons onNext={handleNext} selectedAddons={bookingData.addons} />;
+      case 2: return <StepGuestCount onNext={handleNext} selectedGuests={bookingData.guests} />;
+      case 3: return <StepTimeSelection onNext={handleNext} selectedTime={bookingData.time} date={bookingData.date} guests={bookingData.guests} />;
+      case 4: return <StepTableSelection onNext={handleNext} selectedTable={bookingData.table} guests={bookingData.guests} assignedNote={bookingData.assignedNote} />;
+      case 5: return <StepGuestDetails onNext={handleNext} initialData={bookingData.guestDetails} />;
+      case 6: return <StepOccasionSelection onNext={handleNext} selectedOccasion={bookingData.occasion} />;
+      case 7: return <StepAddons onNext={handleNext} selectedAddons={bookingData.addons} />;
       case 8:
         if (bookingData.addons.includes("custom_cake")) {
           return <StepCakeDetails onNext={handleNext} onBack={handleBack} initialData={bookingData.customCakeDetails} />;
         }
-        return <StepSummaryPayment onNext={() => handleNext({})} bookingData={bookingData} />;
+        return <StepSummaryPayment onBack={handleBack} goToStep={setStep} bookingData={bookingData} />;
       case 9:
-        return <StepSummaryPayment onNext={() => handleNext({})} bookingData={bookingData} />;
-      default:
-        return null;
+        return <StepSummaryPayment onBack={handleBack} goToStep={setStep} bookingData={bookingData} />;
+      default: return null;
     }
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden selection:bg-primary/30" style={{backgroundColor: '#1a4a35'}}>
+      <NavBar />
+      
+      <ConfirmationModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={confirmCancel}
+        title="Abandon Journey?"
+        description="Are you sure you want to cancel your reservation? All progress in crafting your bespoke culinary experience will be lost."
+        confirmText="Yes, Abandon"
+        cancelText="No, Continue"
+        variant="danger"
+      />
+
       {/* Split Table Approval Dialog */}
       {splitDialogOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-background/80 backdrop-blur-md">
-          <div className="bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-10 max-w-md w-full space-y-8 shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-background/90 backdrop-blur-xl">
+          <div className="p-10 max-w-md w-full space-y-8 relative overflow-hidden rounded-2xl" style={{backgroundColor: '#111412', border: '1px solid rgba(200,169,106,0.15)'}}>
+            <div className="absolute top-0 left-0 w-full h-1 bg-gold-gradient" />
             <div className="space-y-3">
               <span className="font-label text-[9px] tracking-[0.3em] uppercase text-primary font-bold block">Table Availability Notice</span>
               <h2 className="font-headline text-3xl italic text-on-surface leading-tight">
-                Alternative Arrangement
+                Alternative <span className="text-gold-gradient">Arrangement</span>
               </h2>
-              <p className="font-body text-secondary text-sm font-light leading-relaxed">
+              <p className="font-body text-on-surface/70 text-sm font-light leading-relaxed">
                 {splitDialogMessage}
               </p>
             </div>
             <div className="flex flex-col gap-4">
-              <button
-                onClick={handleSplitConfirm}
-                className="w-full bg-gold-gradient text-on-primary font-label text-[10px] tracking-[0.2em] uppercase py-4 rounded-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 font-bold"
-              >
-                Yes, Arrange Multiple Tables
-              </button>
-              <button
-                onClick={handleSplitCancel}
-                className="w-full border border-outline-variant/30 text-secondary font-label text-[10px] tracking-[0.2em] uppercase py-4 rounded-lg hover:border-outline-variant/60 hover:text-on-surface transition-all duration-300 font-bold"
-              >
-                Choose Different Slot
-              </button>
+              <button onClick={handleSplitConfirm} className="w-full bg-gold-gradient text-on-primary font-label text-[10px] tracking-[0.2em] uppercase py-4 rounded-lg shadow-2xl shadow-primary/30 font-bold">Yes, Arrange Multiple Tables</button>
+              <button onClick={() => setSplitDialogOpen(false)} className="w-full border border-outline-variant/20 text-on-surface/60 font-label text-[10px] tracking-[0.2em] uppercase py-4 rounded-lg font-bold">Choose Different Slot</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Chair Arrangement Consent Dialog (for 5 guests) */}
+      {/* Chair Arrangement Consent Dialog */}
       {chairConsentOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-background/80 backdrop-blur-md">
-          <div className="bg-surface-container-lowest border border-outline-variant/20 rounded-xl p-10 max-w-md w-full space-y-8 shadow-2xl relative overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-background/90 backdrop-blur-xl">
+          <div className="p-10 max-w-md w-full space-y-8 relative overflow-hidden rounded-2xl" style={{backgroundColor: '#111412', border: '1px solid rgba(200,169,106,0.15)'}}>
             <div className="absolute top-0 left-0 w-full h-1 bg-gold-gradient" />
             <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                <span className="font-label text-[9px] tracking-[0.3em] uppercase text-primary font-bold block">Seating Arrangement</span>
-              </div>
-              <h2 className="font-headline text-3xl italic text-on-surface leading-tight">
-                Party of Five
-              </h2>
-              <p className="font-body text-secondary text-sm font-light leading-relaxed">
-                To accommodate your party of five, we will utilize one of our premium 4-seater tables and add a complementary <span className="font-bold text-on-surface italic">special corner chair arrangement</span>.
-              </p>
-              <p className="font-body text-outline text-[11px] italic font-light">
-                By proceeding, you acknowledge and consent to this specific seating configuration.
-              </p>
+              <h2 className="font-headline text-3xl italic text-on-surface leading-tight">Party of <span className="text-gold-gradient">Five</span></h2>
+              <p className="font-body text-on-surface/70 text-sm font-light leading-relaxed">To accommodate your party of five, we will utilize one of our premium 4-seater tables and add a complementary special corner chair arrangement.</p>
             </div>
             <div className="flex flex-col gap-4">
-              <button
-                onClick={handleChairConsentConfirm}
-                className="w-full bg-gold-gradient text-on-primary font-label text-[10px] tracking-[0.2em] uppercase py-4 rounded-lg shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 font-bold"
-              >
-                I Understand & Consent
-              </button>
-              <button
-                onClick={() => {
-                  setChairConsentOpen(false);
-                  setStep(3);
-                }}
-                className="w-full border border-outline-variant/30 text-secondary font-label text-[10px] tracking-[0.2em] uppercase py-4 rounded-lg hover:border-outline-variant/60 hover:text-on-surface transition-all duration-300 font-bold"
-              >
-                Change Guest Count
-              </button>
+              <button onClick={() => setChairConsentOpen(false)} className="w-full bg-gold-gradient text-on-primary font-label text-[10px] tracking-[0.2em] uppercase py-4 rounded-lg font-bold">I Understand & Consent</button>
             </div>
           </div>
         </div>
       )}
 
-      <NavBar />
-
       <main className="flex-grow flex flex-col items-center overflow-hidden">
-        <div 
-          ref={scrollContainerRef}
-          className="w-full flex-grow flex flex-col items-center pt-28 md:pt-32 pb-10 px-4 md:px-12 overflow-y-auto scrollbar-hide"
-        >
-          {/* Step Indicator */}
-          <div className="max-w-4xl w-full mb-8 md:mb-16 px-4 shrink-0">
-            <div className="flex flex-wrap justify-center md:justify-between items-center relative gap-y-6 gap-x-4 md:gap-8 pb-4">
-              {steps.map((label, index) => (
-                <div key={label} className="flex flex-col items-center gap-3 md:gap-4 min-w-[60px] md:min-w-[70px] relative z-10">
-                  <div className={cn(
-                    "w-8 h-8 md:w-10 md:h-10 rounded-full border-2 flex items-center justify-center text-[9px] md:text-[10px] font-bold transition-all duration-700",
-                    step === index + 1 ? "bg-primary border-primary text-on-primary scale-110 shadow-xl shadow-primary/20" :
-                      step > index + 1 ? "bg-primary-container border-primary-container text-on-primary-container" :
-                        "bg-surface border-outline-variant/30 text-outline"
-                  )}>
-                    {index + 1}
-                  </div>
-                  <span className={cn(
-                    "text-[8px] md:text-[9px] uppercase tracking-[0.2em] font-bold transition-colors duration-700",
-                    step === index + 1 ? "text-primary" : "text-outline/60"
-                  )}>
-                    {label}
-                  </span>
-                  {index < steps.length - 1 && (
-                    <div className={cn(
-                      "hidden md:block absolute top-4 md:top-5 left-[calc(50%+16px)] md:left-[calc(50%+20px)] w-[calc(100%+16px)] md:w-[calc(100%+32px)] h-[1px] -z-10 transition-colors duration-1000",
-                      step > index + 1 ? "bg-primary-container" : "bg-outline-variant/20"
-                    )} />
-                  )}
-                </div>
-              ))}
+        <div ref={scrollContainerRef} className="w-full flex-grow flex flex-col items-center pt-28 md:pt-32 pb-10 px-4 md:px-12 overflow-y-auto scrollbar-hide">
+          {/* Progress Stepper */}
+          <div className="max-w-4xl w-full mb-16 px-4 shrink-0">
+            <div className="flex items-center justify-between mb-4">
+              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] font-bold">Step {step} of 8</span>
+              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] font-bold">{Math.round((step / 8) * 100)}%</span>
+            </div>
+            <div className="h-1 w-full bg-[#333534] rounded-full overflow-hidden">
+              <div className="h-full bg-[#C8A96A] transition-all duration-1000 ease-out" style={{ width: `${(step / 8) * 100}%` }}></div>
             </div>
           </div>
 
           {/* Wizard Content */}
-          <div className={cn(
-            "w-full max-w-6xl relative pb-20",
-            (isSubmitting || isRestoring) && "opacity-50 pointer-events-none transition-opacity"
-          )}>
+          <div className={cn("w-full max-w-6xl relative pb-20", (isSubmitting || isRestoring) && "opacity-50 pointer-events-none")}>
             {(isSubmitting || isRestoring) && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/20 backdrop-blur-[2px]">
+              <div className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md" style={{backgroundColor: 'rgba(26,74,53,0.6)'}}>
                 <div className="flex flex-col items-center gap-6">
-                  <div className="w-16 h-16 rounded-full border-4 border-primary-container border-t-primary animate-spin" />
-                  <p className="font-headline text-2xl italic animate-pulse">
-                    {isRestoring ? "Restoring your journey..." : "Crafting your experience..."}
-                  </p>
+                  <div className="w-20 h-20 rounded-full border-2 border-primary/10 border-t-primary animate-spin" />
+                  <p className="font-headline text-3xl italic animate-pulse text-gold-gradient">{isRestoring ? "Restoring journey..." : "Crafting experience..."}</p>
                 </div>
               </div>
             )}
+            
             <AnimatePresence mode="wait">
               <motion.div
                 key={step}
-                initial={{ opacity: 0, y: 30, scale: 0.99 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -30, scale: 1.01 }}
-                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                initial={{ opacity: 0, y: 30, filter: "blur(10px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={{ opacity: 0, y: -30, filter: "blur(10px)" }}
+                transition={{ duration: 0.8 }}
               >
                 {renderStep()}
               </motion.div>
             </AnimatePresence>
 
-            {/* Persistent Back Action */}
-            <div className="mt-12 pt-8 border-t border-outline-variant/10">
-              <button
-                onClick={handleBack}
-                className="text-secondary hover:text-on-surface font-body text-[10px] tracking-widest uppercase font-bold transition-colors flex items-center gap-3 group"
-              >
-                <div className="w-6 h-px bg-secondary group-hover:bg-primary group-hover:w-8 transition-all" />
+            {/* Persistent Navigation */}
+            <div className="mt-12 pt-8 border-t border-outline-variant/10 flex flex-col sm:flex-row justify-between items-center gap-6">
+              <button onClick={handleBack} className="text-[#E5E7EB]/40 hover:text-[#E5E7EB] font-body text-[10px] tracking-widest uppercase font-bold transition-all flex items-center gap-3 group">
+                <div className="w-6 h-px bg-[#E5E7EB]/20 group-hover:bg-[#E5E7EB] group-hover:w-10 transition-all" />
                 Go Back
+              </button>
+
+              <button onClick={() => setShowCancelModal(true)} className="text-[#E5E7EB]/20 hover:text-red-400/70 font-body text-[10px] tracking-widest uppercase font-bold transition-all flex items-center gap-3 group">
+                Cancel Journey
+                <div className="w-6 h-px bg-[#E5E7EB]/10 group-hover:bg-red-400/40 group-hover:w-10 transition-all" />
               </button>
             </div>
           </div>

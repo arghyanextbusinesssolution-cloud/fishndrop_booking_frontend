@@ -15,7 +15,7 @@ export default function UserPaymentConfirmedPage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id") || "";
   const bookingIdFallback = searchParams.get("bookingId") || "";
-  const { verifyCheckoutSession, loading } = useBookings();
+  const { verifyCheckoutSession, getBookingById, loading } = useBookings();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const attempted = useRef(false);
@@ -24,21 +24,26 @@ export default function UserPaymentConfirmedPage() {
     if (attempted.current) return;
     attempted.current = true;
     try {
-      const b = await verifyCheckoutSession(sessionId);
-      setBooking(b);
+      if (sessionId) {
+        const b = await verifyCheckoutSession(sessionId);
+        setBooking(b);
+      } else if (bookingIdFallback) {
+        const b = await getBookingById(bookingIdFallback);
+        setBooking(b);
+      }
     } catch {
       attempted.current = false;
       setError("We could not confirm this payment. Your card may have been declined, or the session expired.");
     }
-  }, [sessionId, verifyCheckoutSession]);
+  }, [sessionId, bookingIdFallback, verifyCheckoutSession, getBookingById]);
 
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId && !bookingIdFallback) return;
     const t = window.setTimeout(() => {
       void runVerify();
     }, 0);
     return () => window.clearTimeout(t);
-  }, [sessionId, runVerify]);
+  }, [sessionId, bookingIdFallback, runVerify]);
 
   const ctaClass = cn(
     buttonVariants({ variant: "default" }),
@@ -46,7 +51,7 @@ export default function UserPaymentConfirmedPage() {
   );
   const outlineClass = cn(buttonVariants({ variant: "outline" }));
 
-  if (!sessionId) {
+  if (!sessionId && !bookingIdFallback) {
     return (
       <div className="mx-auto max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 text-center">
         <p className="font-semibold text-[var(--text-primary)]">Invalid confirmation link</p>

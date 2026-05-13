@@ -4,41 +4,87 @@
 
 @layer base {
   :root {
-    --background: #faf9f5;
-    --surface: #faf9f5;
-    --surface-container: #efeeea;
-    --surface-container-low: #f4f4f0;
-    --surface-container-high: #e9e8e4;
-    --surface-container-highest: #e3e2df;
-    --surface-container-lowest: #ffffff;
-    --primary: #735c00;
-    --primary-container: #d4af37;
-    --on-primary: #ffffff;
-    --on-primary-container: #554300;
-    --secondary: #5f5e5e;
-    --secondary-container: #e4e2e1;
-    --on-secondary: #ffffff;
-    --on-secondary-container: #656464;
-    --tertiary: #665d52;
-    --tertiary-container: #bdb1a4;
-    --on-tertiary: #ffffff;
-    --on-surface: #1b1c1a;
-    --on-surface-variant: #4d4635;
-    --outline: #7f7663;
-    --outline-variant: #d0c5af;
-    --error: #ba1a1a;
+    --background: 250 249 245;
+    --surface: 250 249 245;
+    --surface-container: 239 238 234;
+    --surface-container-low: 244 244 240;
+    --surface-container-high: 233 232 228;
+    --surface-container-highest: 227 226 223;
+    --surface-container-lowest: 255 255 255;
+    --primary: 115 92 0;
+    --primary-container: 212 175 55;
+    --on-primary: 255 255 255;
+    --on-primary-container: 85 67 0;
+    --secondary: 95 94 94;
+    --secondary-container: 228 226 225;
+    --on-secondary: 255 255 255;
+    --on-secondary-container: 101 100 100;
+    --tertiary: 102 93 82;
+    --tertiary-container: 189 177 164;
+    --on-tertiary: 255 255 255;
+    --on-surface: 27 28 26;
+    --on-surface-variant: 77 70 53;
+    --outline: 127 118 99;
+    --outline-variant: 208 197 175;
+    --error: 186 26 26;
+  }
+
+  .theme-astral {
+    --background: 15 61 46;        /* #0F3D2E - Deep Forest Emerald */
+    --surface: 15 61 46;
+    --surface-container-lowest: 10 45 34;
+    --surface-container-low: 18 75 58;
+    --surface-container: 22 85 66;
+    --surface-container-high: 28 100 80;
+    --surface-container-highest: 35 115 95;
+    --on-surface: 255 255 255;    /* Pure White for maximum contrast */
+    --on-surface-variant: 212 225 218;
+    --outline: 200 180 140;        /* Muted Gold */
+    --outline-variant: 45 90 70;
+    --primary: 227 194 129;        /* Gold as primary action color */
+    --on-primary: 15 61 46;        /* Green on gold */
+    --primary-container: 15 61 46; 
+    --on-primary-container: 227 194 129;
+    --secondary: 162 209 187;      
+    --on-secondary: 15 61 46;
+    --secondary-container: 22 85 66;
+    --on-secondary-container: 162 209 187;
+    --tertiary: 227 194 129;       /* Branded Gold */
+    --on-tertiary: 64 45 0;
+    --tertiary-container: 70 50 0;
+    --on-tertiary-container: 227 194 129;
   }
 }
 
 @layer utilities {
+  .glass-card {
+    background-color: rgba(15, 61, 46, 0.6);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    @apply border border-white/10 shadow-2xl;
+  }
+
+  .glass-card-high {
+    background-color: rgba(10, 45, 34, 0.85);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    @apply border border-white/20 shadow-2xl;
+  }
+
+  .glass-nav {
+    @apply bg-[#0F3D2E]/90 backdrop-blur-xl border-b border-white/5;
+  }
+
   .text-gold-gradient {
-    background: linear-gradient(135deg, #735c00 0%, #d4af37 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    @apply bg-gradient-to-br from-[#e3c281] via-[#c8a96a] to-[#b89a5d] bg-clip-text text-transparent;
   }
 
   .bg-gold-gradient {
-    background: linear-gradient(135deg, #735c00 0%, #d4af37 100%);
+    @apply bg-gradient-to-br from-[#e3c281] via-[#c8a96a] to-[#b89a5d];
+  }
+
+  .bg-emerald-gradient {
+    @apply bg-gradient-to-br from-[#2E7D5A] to-[#0F3D2E];
   }
 
   .ambient-shadow {

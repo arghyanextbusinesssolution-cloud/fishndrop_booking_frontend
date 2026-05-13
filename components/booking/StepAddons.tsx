@@ -52,8 +52,8 @@ export const StepAddons = ({ onNext, selectedAddons }: StepAddonsProps) => {
     <div className="space-y-12">
       <div className="text-center md:text-left space-y-4">
         <span className="font-label tracking-[0.2em] text-primary text-[10px] uppercase mb-2 block font-bold transition-all animate-in fade-in slide-in-from-left-4 duration-500">Bespoke Enhancements</span>
-        <h1 className="font-headline italic text-5xl md:text-7xl mb-6 tracking-tight text-on-surface">07. The Adornments</h1>
-        <p className="font-body text-secondary text-lg md:text-xl max-w-2xl font-light">Subtle details that elevate an evening into a lifetime memory.</p>
+        <h1 className="font-headline italic text-5xl md:text-7xl mb-6 tracking-tight text-on-surface">07. <span className="text-gold-gradient">The Adornments</span></h1>
+        <p className="font-body text-on-surface/70 text-lg md:text-xl max-w-2xl font-light">Subtle details that elevate an evening into a lifetime memory.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -67,27 +67,36 @@ export const StepAddons = ({ onNext, selectedAddons }: StepAddonsProps) => {
                 onNext({ addons: [option.id] });
               }}
               className={cn(
-                "group relative flex items-center gap-6 p-6 transition-all duration-500 rounded-xl border text-left",
+                "group relative flex items-center gap-6 p-6 transition-all duration-500 rounded-2xl border text-left",
                 isSelected 
-                  ? "bg-surface-container-lowest border-primary-container/30 shadow-2xl shadow-primary-container/10" 
-                  : "bg-surface-container-low border-transparent hover:bg-surface-container-lowest hover:border-outline-variant/20"
+                  ? "bg-[#E5E7EB] border-[#E5E7EB] shadow-2xl shadow-black/40" 
+                  : "glass-card border-transparent hover:bg-[#E5E7EB]/8 hover:border-[#E5E7EB]/20"
               )}
             >
-              <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden border border-outline-variant/10">
-                <img src={option.img} alt={option.label} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+              <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden border border-[#E5E7EB]/10">
+                <img src={option.img} alt={option.label} className="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-700" />
               </div>
 
               <div className="flex-grow space-y-2">
                 <div className="flex justify-between items-start">
-                   <h3 className="font-headline italic text-2xl text-on-surface leading-none">{option.label}</h3>
-                   {isSelected && <Check className="w-4 h-4 text-primary" />}
+                   <h3 className={cn(
+                     "font-headline italic text-2xl leading-none",
+                     isSelected ? "text-[#111412]" : "text-[#E5E7EB]/80"
+                   )}>{option.label}</h3>
+                   {isSelected && <Check className="w-4 h-4 text-[#111412]/60" />}
                 </div>
-                <p className="font-body text-secondary text-xs leading-relaxed font-light italic line-clamp-2">{option.desc}</p>
-                <p className="font-label text-[10px] tracking-widest text-primary font-bold uppercase">+ ${option.price}.00</p>
+                <p className={cn(
+                  "font-body text-xs leading-relaxed font-light italic line-clamp-2",
+                  isSelected ? "text-[#111412]/60" : "text-[#E5E7EB]/40"
+                )}>{option.desc}</p>
+                <p className={cn(
+                  "font-label text-[10px] tracking-widest font-bold uppercase",
+                  isSelected ? "text-[#111412]/60" : "text-[#C8A96A]/70"
+                )}>+ ${option.price}.00</p>
               </div>
 
               {isSelected && (
-                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary" />
+                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-gold-gradient" />
               )}
             </button>
           );
@@ -97,7 +106,7 @@ export const StepAddons = ({ onNext, selectedAddons }: StepAddonsProps) => {
       <div className="pt-12 flex justify-center">
          <button 
           onClick={() => onNext({ addons: [] })}
-          className="text-secondary hover:text-primary font-label text-[10px] uppercase tracking-[0.3em] font-bold transition-all duration-500"
+          className="text-[#E5E7EB]/30 hover:text-[#E5E7EB]/70 font-label text-[10px] uppercase tracking-[0.3em] font-bold transition-all duration-500"
          >
            Skip Enhancements
          </button>

@@ -110,7 +110,7 @@ export default function AdminDashboardPage() {
         <img
           src={"https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=1600"}
           // src={HERO_IMG}
-          alt="Fishndrop Restaurant Interior"
+          alt="Tropica Restaurant Interior"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-on-surface/80 via-on-surface/40 to-transparent" />
@@ -119,7 +119,7 @@ export default function AdminDashboardPage() {
             Command Centre
           </span>
           <h1 className="font-headline text-4xl md:text-5xl italic text-surface leading-tight mb-2">
-            Fishndrop <span className="font-normal not-italic text-primary-container">Dashboard</span>
+            Tropica <span className="font-normal not-italic text-primary-container">Dashboard</span>
           </h1>
           <p className="font-body text-surface-dim max-w-md text-sm font-light">
             Welcome back, {user?.name || "Manager"}. Here is the pulse of the dining room.

@@ -13,7 +13,7 @@ export default function AdminSettingsPage() {
       description: "Manage your admin account details",
       items: [
         { label: "Name", value: user?.name || "Admin" },
-        { label: "Email", value: user?.email || "admin@fishndrop.com" },
+        { label: "Email", value: user?.email || "admin@tropica.com" },
         { label: "Role", value: "System Administrator" },
       ],
     },

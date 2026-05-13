@@ -67,8 +67,8 @@ export default function UserDashboardPage() {
           </div>
           <p className="text-base md:text-lg text-secondary leading-relaxed font-body font-light max-w-md italic">
             {upcomingBooking
-              ? "Your table at the heart of Fishndrop is prepared. We have noted your preferences and special occasion."
-              : "Every journey begins with a single selection. We look forward to your next visit to Fishndrop."}
+              ? "Your table at the heart of Tropica is prepared. We have noted your preferences and special occasion."
+              : "Every journey begins with a single selection. We look forward to your next visit to Tropica."}
           </p>
           <div className="flex flex-wrap items-center gap-8 md:gap-12 pt-4">
             <div className="space-y-1">
@@ -120,7 +120,7 @@ export default function UserDashboardPage() {
               <h3 className="font-headline text-4xl italic text-on-surface">
                 {upcomingBooking ? "Upcoming Journey" : "Begin a New Journey"}
               </h3>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-secondary font-bold">FISHNDROP SANCTUARY</p>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-secondary font-bold">TROPICA SANCTUARY</p>
             </div>
             {upcomingBooking && (
               <div className="flex items-center gap-3 bg-surface-container-low px-4 py-2 rounded-full border border-primary/10">
@@ -149,7 +149,7 @@ export default function UserDashboardPage() {
               <CalendarDays className="w-12 h-12 text-outline/20" strokeWidth={1} />
               <div className="space-y-2 text-center">
                 <p className="font-headline text-2xl italic text-secondary">No reservations currently scheduled.</p>
-                <p className="text-xs text-outline font-body font-light italic">Fishndrop awaits your presence.</p>
+                <p className="text-xs text-outline font-body font-light italic">Tropica awaits your presence.</p>
               </div>
               <Link href="/book-table" className="bg-gold-gradient px-10 py-3 rounded-lg text-on-primary font-label tracking-widest uppercase text-[10px] font-bold shadow-xl shadow-primary/10 hover:scale-[1.05] transition-all">
                 Secure your table

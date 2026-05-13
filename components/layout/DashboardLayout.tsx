@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   LogOut,
   LayoutDashboard,
@@ -39,8 +40,8 @@ const SidebarItem = ({
     className={cn(
       "flex items-center gap-4 px-8 py-4 w-full transition-all duration-500 group relative",
       active
-        ? "bg-surface-container-low text-primary"
-        : "text-secondary hover:text-on-surface hover:bg-surface-container-lowest/50"
+        ? "bg-[#0a2e21] text-[#C8A96A]"
+        : "text-[#C8A96A]/50 hover:text-[#C8A96A] hover:bg-[#0a2e21]/60"
     )}
   >
     {active && (
@@ -49,14 +50,14 @@ const SidebarItem = ({
     <Icon
       className={cn(
         "w-4 h-4 transition-colors duration-500",
-        active ? "text-primary" : "text-secondary group-hover:text-primary"
+        active ? "text-[#C8A96A]" : "text-[#C8A96A]/40 group-hover:text-[#C8A96A]"
       )}
       strokeWidth={1.5}
     />
     <span
       className={cn(
         "text-[9px] uppercase tracking-[0.2em] font-bold",
-        active ? "text-primary" : "text-secondary"
+        active ? "text-[#C8A96A]" : "text-[#C8A96A]/50"
       )}
     >
       {label}
@@ -94,6 +95,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const userNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/user" },
     { icon: CalendarDays, label: "Reservations", href: "/user/bookings" },
+    { icon: TableProperties, label: "Venue Bookings", href: "/user/venue-bookings" },
     { icon: User, label: "Dining Profile", href: "/user/profile" },
   ];
 
@@ -107,18 +109,22 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-background relative overflow-x-hidden">
+    <div className="flex min-h-screen relative overflow-x-hidden" style={{backgroundColor: '#0F3D2E'}}>
       {/* Mobile Top Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-surface-container-low border-b border-outline-variant/10 z-40 flex items-center justify-between px-6 backdrop-blur-md bg-opacity-80">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 border-b border-[#C8A96A]/10 z-40 flex items-center justify-between px-6 backdrop-blur-md" style={{backgroundColor: '#0a2e21'}}>
         <Link
           href="/"
           className="flex items-center"
         >
-          <img 
-            src="https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png" 
-            alt="Fishndrop" 
-            className="h-8 w-auto object-contain"
-          />
+          <div className="relative w-56 h-20 -ml-4">
+            <Image
+              src="/tropica-logo.png"
+              alt="Tropica"
+              fill
+              className="object-contain object-left"
+              priority
+            />
+          </div>
         </Link>
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -146,20 +152,25 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "w-64 bg-surface-container-low flex flex-col py-12 fixed h-screen overflow-y-auto border-r border-outline-variant/5 z-50 transition-transform duration-500 lg:translate-x-0 tracking-tight",
+          "w-64 flex flex-col py-12 fixed h-screen overflow-y-auto z-50 transition-transform duration-500 lg:translate-x-0 tracking-tight border-r border-[#C8A96A]/10",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        style={{backgroundColor: '#0a2e21'}}
       >
         <div className="px-8 mb-16 hidden lg:block">
           <Link
             href="/"
-            className="flex items-center block"
+            className="flex items-center"
           >
-            <img 
-              src="https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png" 
-              alt="Fishndrop" 
-              className="h-10 w-auto object-contain"
-            />
+            <div className="relative w-72 h-24 hover:brightness-110 transition-all">
+              <Image
+                src="/tropica-logo.png"
+                alt="Tropica"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
           </Link>
         </div>
 
@@ -171,11 +182,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             />
           </div>
           <div className="space-y-0.5">
-            <p className="font-headline text-lg italic leading-none truncate max-w-[120px]">
+            <p className="font-headline text-lg italic leading-none truncate max-w-[120px] text-[#C8A96A]">
               {isAdmin ? "The Concierge" : (user?.name || "Guest")}
             </p>
-            <p className="text-[8px] uppercase tracking-widest text-primary font-bold truncate max-w-[120px]">
-              {isAdmin ? "System Admin" : "Fishndrop Guest"}
+            <p className="text-[8px] uppercase tracking-widest text-[#C8A96A]/50 font-bold truncate max-w-[120px]">
+              {isAdmin ? "System Admin" : "Tropica Guest"}
             </p>
           </div>
         </div>
@@ -205,7 +216,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <div className="px-8 mt-auto pt-12 border-t border-outline-variant/10">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-4 text-secondary hover:text-error group transition-colors duration-500 w-full"
+            className="flex items-center gap-4 text-[#C8A96A]/40 hover:text-error group transition-colors duration-500 w-full"
           >
             <LogOut className="w-4 h-4" strokeWidth={1.5} />
             <span className="text-[9px] uppercase tracking-widest font-bold">

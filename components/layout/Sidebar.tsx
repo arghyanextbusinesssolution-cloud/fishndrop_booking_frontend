@@ -15,7 +15,7 @@ export function Sidebar({ closeMobile }: { closeMobile?: () => void }) {
 
   return (
     <aside className="flex h-full w-64 flex-col bg-[var(--surface)] p-4">
-      <p className="mb-8 font-heading text-2xl text-[var(--accent)]">Fish & Drop</p>
+      <p className="mb-8 font-heading text-2xl text-[var(--accent)]">Tropica</p>
       <nav className="space-y-2">
         {links.map((link) => (
           <Link

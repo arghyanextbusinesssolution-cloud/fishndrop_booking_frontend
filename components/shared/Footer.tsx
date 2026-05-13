@@ -1,45 +1,31 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export const Footer = () => {
   return (
-    <footer className="bg-surface-container-low flex flex-col md:flex-row justify-between items-center px-6 md:px-12 py-16 w-full mt-auto">
-      <div className="mb-8 md:mb-0">
-        <img 
-          src="https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png" 
-          alt="Fishndrop" 
-          className="h-16 w-auto object-contain brightness-0 grayscale invert opacity-90"
+    <footer className="w-full py-16 flex flex-col items-center gap-8 mt-auto border-t border-[#C8A96A]/10 bg-[#0F3D2E]">
+      <Link href="/" className="relative w-56 h-20 hover:brightness-110 transition-all">
+        <Image
+          src="/tropica-logo.png"
+          alt="Tropica Sanctuary"
+          fill
+          className="object-contain opacity-60 hover:opacity-100 transition-opacity"
         />
-      </div>
-      
-      <div className="flex flex-wrap justify-center gap-8 mb-8 md:mb-0">
-        <Link 
-          href="#" 
-          className="font-body text-[10px] tracking-widest uppercase text-secondary hover:text-on-surface transition-colors"
-        >
-          Privacy Policy
-        </Link>
-        <Link 
-          href="#" 
-          className="font-body text-[10px] tracking-widest uppercase text-secondary hover:text-on-surface transition-colors"
-        >
-          Terms of Service
-        </Link>
-        <Link 
-          href="#" 
-          className="font-body text-[10px] tracking-widest uppercase text-secondary hover:text-on-surface transition-colors"
-        >
-          Accessibility
-        </Link>
-        <Link 
-          href="#" 
-          className="font-body text-[10px] tracking-widest uppercase text-secondary hover:text-on-surface transition-colors"
-        >
-          Contact
-        </Link>
-      </div>
+      </Link>
 
-      <p className="font-body text-[10px] tracking-widest uppercase text-secondary">
-        © 2024 Fishndrop. A Modern Culinary Journey.
+      <div className="flex flex-wrap justify-center gap-10">
+        {["Privacy Policy", "Terms of Service", "Sustainability"].map((link) => (
+          <Link 
+            key={link}
+            href="#" 
+            className="font-label text-[10px] uppercase tracking-[0.25em] text-[#C8A96A]/40 hover:text-[#C8A96A] transition-colors font-bold"
+          >
+            {link}
+          </Link>
+        ))}
+      </div>
+      <p className="font-label text-[10px] uppercase tracking-[0.25em] text-[#C8A96A]/30 font-bold text-center">
+        © 2024 Tropica Sanctuary. All rights reserved.
       </p>
     </footer>
   );

@@ -7,18 +7,17 @@ import { getStripe } from "@/lib/stripe";
 import { StripePaymentForm } from "./StripePaymentForm";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/axios";
-import { Loader2, Calendar, Users, Wine, UtensilsCrossed, Cake, Flower2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
-interface StepSummaryPaymentProps {
+interface StepPrivateSummaryProps {
   bookingData: any;
   onBack: () => void;
-  goToStep: (step: number) => void;
 }
 
 const stripePromise = getStripe();
 
-export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummaryPaymentProps) => {
-  const { totalPrice } = bookingData;
+export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateSummaryProps) {
+  const router = useRouter();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,32 +27,28 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
     const init = async () => {
       try {
         const payload = {
-          partySize: bookingData.guests,
-          bookingDate: bookingData.date,
-          bookingTime: bookingData.time,
           customerName: bookingData.guestDetails.name,
           customerEmail: bookingData.guestDetails.email,
           customerPhone: bookingData.guestDetails.phone,
           password: bookingData.guestDetails.password || undefined,
+          bookingDate: bookingData.date,
+          bookingTime: bookingData.time || "19:00",
+          partySize: bookingData.guests,
+          durationHours: bookingData.durationHours || 1,
           occasion: bookingData.occasion || "other",
-          notes: "",
-          cakeDetails: bookingData.addons.includes("cake") ? "Signature Birthday Cake" : "",
-          customCakeDetails: bookingData.addons.includes("custom_cake") ? bookingData.customCakeDetails : undefined,
-          cakePrice: bookingData.addons.includes("custom_cake") && bookingData.customCakeDetails
-            ? bookingData.customCakeDetails.retailPrice
-            : bookingData.addons.includes("cake") ? 50 : 0,
+          notes: bookingData.notes || "",
         };
 
-        const { data } = await api.post("/bookings/reserve", payload);
+        const res = await api.post("/bookings/reserve-private", payload);
 
-        if (data.success) {
-          if (data.token && data.user) {
-            setAuth(data.user, data.token);
+        if (res.data.success) {
+          if (res.data.token && res.data.user) {
+            setAuth(res.data.user, res.data.token);
           }
-          setBookingId(data.booking._id);
+          setBookingId(res.data.booking._id);
 
           const { data: piData } = await api.post("/payments/create-payment-intent", {
-            bookingId: data.booking._id,
+            bookingId: res.data.booking._id
           });
 
           if (piData.success && piData.clientSecret) {
@@ -62,7 +57,7 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
             setError("Failed to initialize payment. Please try again.");
           }
         } else {
-          setError(data.message || "Failed to create booking.");
+          setError(res.data.message || "Failed to create booking.");
         }
       } catch (err) {
         console.error("Payment init failed:", err);
@@ -73,25 +68,9 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
     init();
   }, []);
 
-  const router = useRouter();
-
   const handlePaymentSuccess = () => {
     if (bookingId) {
       router.push(`/user/payment/confirmed?bookingId=${bookingId}`);
-    }
-  };
-
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
-
-  const getAddonInfo = (addon: string) => {
-    switch (addon) {
-      case "krug": return { label: "Vintage Krug Pairings", icon: Wine };
-      case "truffle": return { label: "Winter Truffle Supplement", icon: UtensilsCrossed };
-      case "cake": return { label: "Signature Birthday Cake", icon: Cake };
-      case "custom_cake": return { label: "Custom Celebration Cake", icon: Cake };
-      case "flowers": return { label: "Floral Arrangement", icon: Flower2 };
-      default: return { label: addon, icon: Wine };
     }
   };
 
@@ -99,7 +78,7 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
     <div className="max-w-md mx-auto space-y-6 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="bg-[#f7f6f2] rounded-xl p-6 flex justify-between items-center shadow-lg">
         <p className="font-label text-[10px] tracking-[0.3em] uppercase text-[#1a1c1b]/60 font-bold max-w-[80px] leading-tight">Total Amount</p>
-        <p className="font-headline text-5xl text-[#C8A96A] font-bold tracking-tighter">${totalPrice?.toFixed(2) || totalPrice}</p>
+        <p className="font-headline text-5xl text-[#C8A96A] font-bold tracking-tighter">${bookingData.totalPrice?.toFixed(2) || bookingData.totalPrice}</p>
       </div>
 
       {error && (
@@ -109,7 +88,7 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
       )}
 
       {clientSecret && bookingId ? (
-        <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
+        <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe' } }}>
           <StripePaymentForm bookingId={bookingId} onSuccess={handlePaymentSuccess} />
         </Elements>
       ) : !error ? (
@@ -128,4 +107,4 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
       ) : null}
     </div>
   );
-};
+}

@@ -10,7 +10,9 @@ export default function BookTablePage() {
         <div className="w-12 h-12 rounded-full border-4 border-primary-container border-t-primary animate-spin" />
       </div>
     }>
-      <BookingWizard />
+      <div className="theme-astral min-h-screen bg-background">
+        <BookingWizard />
+      </div>
     </Suspense>
   );
 }

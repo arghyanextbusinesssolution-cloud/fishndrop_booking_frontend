@@ -14,6 +14,7 @@ import {
   subMonths
 } from "date-fns";
 import { useBookings } from "@/hooks/useBookings";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -55,30 +56,44 @@ export function HomeReservationPreview() {
   }, [date, partySize, getAvailability]);
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-3xl font-semibold text-[var(--text-primary)]">Reservation</h2>
-        <p className="text-xs text-[var(--text-secondary)]">Step 1 of 3</p>
+    <div className="glass-card-high rounded-2xl p-6 relative overflow-hidden">
+      {/* Top embellishment */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gold-gradient" />
+      
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="font-headline italic text-3xl text-on-surface">Reservations</h2>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span className="font-label text-[10px] tracking-widest uppercase text-primary font-bold">Step 1 of 3</span>
+        </div>
       </div>
-      <p className="text-sm text-[var(--text-secondary)]">Select date, then choose a time slot and guests.</p>
+      <p className="font-body text-xs text-on-surface/50 mb-8">Select your preferred date, then choose a time slot and guests to begin your journey.</p>
 
-      <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <button type="button" onClick={() => setMonthCursor(subMonths(monthCursor, 1))} className="rounded-md border border-[var(--border)] p-2 text-[var(--text-secondary)]">
+      <div className="mt-4 rounded-xl border border-outline-variant/10 glass-card p-4">
+        <div className="mb-4 flex items-center justify-between">
+          <button 
+            type="button" 
+            onClick={() => setMonthCursor(subMonths(monthCursor, 1))} 
+            className="w-10 h-10 flex items-center justify-center rounded-full border border-outline-variant/20 text-on-surface/60 hover:text-primary hover:border-primary transition-all"
+          >
             <ChevronLeft size={16} />
           </button>
-          <p className="text-sm font-semibold text-[var(--text-primary)]">{format(monthCursor, "MMMM yyyy")}</p>
-          <button type="button" onClick={() => setMonthCursor(addMonths(monthCursor, 1))} className="rounded-md border border-[var(--border)] p-2 text-[var(--text-secondary)]">
+          <p className="font-headline italic text-lg text-on-surface">{format(monthCursor, "MMMM yyyy")}</p>
+          <button 
+            type="button" 
+            onClick={() => setMonthCursor(addMonths(monthCursor, 1))} 
+            className="w-10 h-10 flex items-center justify-center rounded-full border border-outline-variant/20 text-on-surface/60 hover:text-primary hover:border-primary transition-all"
+          >
             <ChevronRight size={16} />
           </button>
         </div>
-        <div className="grid grid-cols-7 gap-2 text-center text-[11px] text-[var(--text-secondary)]">
+        <div className="grid grid-cols-7 gap-2 text-center text-[10px] uppercase tracking-widest font-bold text-on-surface/30 mb-2">
           {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((weekday) => <p key={weekday}>{weekday}</p>)}
         </div>
-        <div className="mt-2 grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 gap-2">
           {dateCells.map((cell, index) => {
             if (cell.type === "blank") {
-              return <div key={`blank-${index}`} className="h-9 rounded-md" />;
+              return <div key={`blank-${index}`} className="h-10 rounded-lg" />;
             }
             const isSelected = date ? isSameDay(new Date(date), cell.value) : false;
             const isCurrentMonth = isSameMonth(cell.value, monthCursor);
@@ -89,7 +104,13 @@ export function HomeReservationPreview() {
                 type="button"
                 disabled={!isCurrentMonth || isPast}
                 onClick={() => setDate(format(cell.value, "yyyy-MM-dd"))}
-                className={`h-9 rounded-md text-xs ${isSelected ? "border border-pink-500 bg-pink-500/20 text-pink-700" : "border border-[var(--border)] text-[var(--text-primary)]"} ${isPast ? "cursor-not-allowed opacity-40" : ""}`}
+                className={cn(
+                  "h-10 rounded-lg text-[11px] font-headline italic transition-all border duration-500",
+                  isSelected 
+                    ? "bg-emerald-gradient border-primary text-on-primary shadow-xl shadow-primary/30 scale-105" 
+                    : "border-outline-variant/10 text-on-surface/60 hover:border-primary/40 hover:text-on-surface",
+                  isPast && "cursor-not-allowed opacity-10"
+                )}
               >
                 {format(cell.value, "d")}
               </button>
@@ -98,30 +119,55 @@ export function HomeReservationPreview() {
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
-        <div>
-          <p className="mb-1 text-xs text-[var(--text-secondary)]">Selected Date</p>
-          <Input id="home-date" type="text" readOnly value={date ? format(new Date(date), "PPP") : "Pick a date from calendar"} />
-        </div>
-        <div>
-          <p className="mb-1 text-xs text-[var(--text-secondary)]">Guests</p>
-          <Input id="home-party" type="number" min={2} value={partySize} onChange={(event) => setPartySize(Number(event.target.value || 2))} />
-        </div>
-      </div>
-      <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
-        {slots.map((slot) => (
-          <div key={slot.slot} className={`rounded-md border px-2 py-2 text-xs ${slot.isAvailable ? "border-emerald-500/40 bg-emerald-500/10" : "border-red-500/40 bg-red-500/10"}`}>
-            <p className="font-medium">{slot.slot}</p>
-            <p>{slot.isAvailable ? "Available" : "Fully booked"}</p>
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="space-y-1.5">
+          <p className="font-label text-[10px] uppercase tracking-widest text-primary font-bold">Selected Date</p>
+          <div className="bg-surface-container/30 border border-outline-variant/20 text-on-surface text-sm rounded-lg p-3 italic">
+            {date ? format(new Date(date), "PPP") : "Pick a date..."}
           </div>
-        ))}
+        </div>
+        <div className="space-y-1.5">
+          <p className="font-label text-[10px] uppercase tracking-widest text-primary font-bold">Guests</p>
+          <input 
+            type="number" 
+            min={2} 
+            max={8}
+            value={partySize} 
+            onChange={(event) => setPartySize(Number(event.target.value || 2))}
+            className="w-full bg-surface-container/30 border border-outline-variant/20 text-on-surface text-sm rounded-lg p-3 focus:outline-none focus:border-primary transition-all"
+          />
+        </div>
       </div>
-      <div className="mt-5 flex gap-3">
-        <Link href="/login" className="w-full">
-          <Button className="w-full bg-[var(--accent)] text-black hover:bg-[var(--accent-hover)]">Continue Reservation</Button>
+
+      {slots.length > 0 && (
+        <div className="mt-6 grid grid-cols-2 gap-2 md:grid-cols-4">
+          {slots.map((slot) => (
+            <div key={slot.slot} className={cn(
+              "rounded-lg border px-3 py-2 text-center transition-all duration-500",
+              slot.isAvailable 
+                ? "border-primary/20 bg-primary/5 text-primary" 
+                : "border-error/10 bg-error/5 text-on-surface/30 grayscale"
+            )}>
+              <p className="font-headline italic text-sm">{slot.slot}</p>
+              <p className="text-[9px] uppercase tracking-widest font-bold">{slot.isAvailable ? "Available" : "Full"}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-8">
+        <Link href={`/book-table?date=${date}`} className="w-full">
+          <button className="w-full py-4 bg-gold-gradient text-on-primary font-label text-[10px] tracking-[0.25em] uppercase font-bold rounded-lg shadow-2xl shadow-primary/40 hover:scale-[1.02] active:scale-95 transition-all duration-700">
+            Continue Bespoke Reservation
+          </button>
         </Link>
       </div>
-      {loading ? <p className="mt-2 text-xs text-[var(--text-secondary)]">Loading slots...</p> : null}
+      {loading && (
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <div className="w-3 h-3 rounded-full border-2 border-primary/20 border-t-primary animate-spin" />
+          <span className="text-[10px] uppercase tracking-widest text-on-surface/30 italic">Curating availability...</span>
+        </div>
+      )}
     </div>
   );
 }

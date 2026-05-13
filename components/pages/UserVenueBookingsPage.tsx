@@ -3,18 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useBookings } from "@/hooks/useBookings";
 import { Booking } from "@/types";
-import { CalendarDays, Loader2, Info } from "lucide-react";
+import { CalendarDays, Loader2, Info, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-const OCCASION_IMAGES = {
-  birthday: "https://images.unsplash.com/photo-1484659619207-9165d119dafe?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHJlc3R1cmFudHxlbnwwfHwwfHx8MA%3D%3D",
-  anniversary: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=600",
-  graduation: "https://images.unsplash.com/photo-1523050853063-bd8012fec046?auto=format&fit=crop&q=80&w=600",
-  other: "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=600"
-};
+const VENUE_IMAGE = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=1200";
 
-export default function UserBookingsPage() {
+export default function UserVenueBookingsPage() {
   const { getMyBookings } = useBookings();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [status, setStatus] = useState("all");
@@ -25,7 +20,8 @@ export default function UserBookingsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getMyBookings(page, status);
+      // Pass 'private_event' as the type
+      const data = await getMyBookings(page, status, "private_event");
       setBookings(data.bookings);
       setTotalPages(data.totalPages);
     } catch {
@@ -52,12 +48,15 @@ export default function UserBookingsPage() {
     <div className="max-w-7xl mx-auto p-6 md:p-12 lg:p-24 space-y-16 md:space-y-24">
       {/* Header */}
       <header className="space-y-4">
-        <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-primary block">Your Chronicle</span>
+        <div className="flex items-center gap-3">
+          <Star className="w-4 h-4 text-primary" fill="currentColor" />
+          <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-primary block">Elite Experiences</span>
+        </div>
         <h2 className="text-5xl md:text-6xl lg:text-8xl font-headline italic tracking-tighter text-on-surface leading-[0.9] lg:leading-[0.85]">
-          A record of <br className="hidden md:block" /> shared moments.
+          Your Private <br className="hidden md:block" /> Sanctuary.
         </h2>
         <p className="text-base md:text-lg text-secondary leading-relaxed font-body font-light max-w-sm italic pt-2 md:pt-4">
-          Tropica remembers every detail. Your past journeys and upcoming arrivals, curated in one archive.
+          A history of your exclusive venue buyouts. Revisit the moments when Tropica was yours alone.
         </p>
       </header>
 
@@ -85,29 +84,33 @@ export default function UserBookingsPage() {
         <div className="py-32 flex flex-col items-center justify-center space-y-8 bg-surface-container-low/30 rounded-2xl border border-dashed border-outline-variant/20">
           <CalendarDays className="w-12 h-12 text-outline/20" strokeWidth={1} />
           <div className="text-center space-y-2">
-            <p className="font-headline text-3xl italic text-secondary">The archive is silent.</p>
-            <p className="text-sm text-outline font-body font-light italic">No reservations match your current selection.</p>
+            <p className="font-headline text-3xl italic text-secondary">No exclusive events yet.</p>
+            <p className="text-sm text-outline font-body font-light italic">Your journey towards an exclusive buyout starts here.</p>
           </div>
-          <Link href="/book-table" className="bg-gold-gradient px-8 py-3 rounded-lg text-on-primary font-label tracking-widest uppercase text-[10px] font-bold">
-            Secure a new journey
+          <Link href="/private-booking" className="bg-gold-gradient px-8 py-3 rounded-lg text-on-primary font-label tracking-widest uppercase text-[10px] font-bold">
+            Reserve the Venue
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           {bookings.map((booking) => (
             <div key={booking._id} className="group space-y-8 relative">
-              <div className="bg-surface-container-lowest p-2 rounded-xl ambient-shadow ring-1 ring-outline-variant/10 transition-transform duration-700 group-hover:scale-[1.02]">
-                <div className="aspect-[16/10] rounded-lg overflow-hidden relative">
+              <div className="bg-surface-container-lowest p-2 rounded-xl ambient-shadow ring-1 ring-outline-variant/10 transition-transform duration-700 group-hover:scale-[1.01]">
+                <div className="aspect-[21/9] rounded-lg overflow-hidden relative">
                   <img
-                    src={OCCASION_IMAGES[booking.occasion as keyof typeof OCCASION_IMAGES] || OCCASION_IMAGES.other}
-                    alt={booking.occasion}
+                    src={VENUE_IMAGE}
+                    alt="Private Venue"
                     className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   <div className={cn(
                     "absolute top-4 right-4 px-3 py-1 rounded-full text-[8px] uppercase tracking-widest font-bold border backdrop-blur-md",
                     booking.status === 'confirmed' ? "bg-primary/20 border-primary/30 text-primary" : "bg-error/10 border-error/20 text-error"
                   )}>
                     {booking.status}
+                  </div>
+                  <div className="absolute bottom-4 left-4">
+                    <span className="text-[10px] text-white/80 font-label tracking-widest uppercase font-bold">Exclusive Buyout</span>
                   </div>
                 </div>
               </div>
@@ -115,45 +118,39 @@ export default function UserBookingsPage() {
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
                     <p className="text-[9px] uppercase tracking-widest font-bold text-primary opacity-60 uppercase">{booking.occasion}</p>
-                    <h4 className="font-headline text-3xl italic text-on-surface leading-tight transition-colors group-hover:text-primary">
+                    <h4 className="font-headline text-4xl italic text-on-surface leading-tight transition-colors group-hover:text-primary">
                       {new Date(booking.bookingDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                     </h4>
                   </div>
                   <div className="text-right">
-                    <p className="text-[9px] uppercase tracking-widest font-bold text-outline">Sanctuary</p>
-                    <p className="font-headline text-2xl italic text-on-surface">Table {booking.tables?.[0]?.tableNumber || "Salon"}</p>
+                    <p className="text-[9px] uppercase tracking-widest font-bold text-outline">Exclusive Access</p>
+                    <p className="font-headline text-3xl italic text-on-surface">Full Venue</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-outline-variant/10">
+                <div className="grid grid-cols-3 gap-8 pt-6 border-t border-outline-variant/10">
                   <div>
                     <p className="text-[8px] uppercase tracking-widest text-outline font-bold">Ensemble</p>
                     <p className="text-sm font-body font-light text-on-surface italic">{booking.partySize} Guests</p>
                   </div>
                   <div>
-                    <p className="text-[8px] uppercase tracking-widest text-outline font-bold">Moment</p>
+                    <p className="text-[8px] uppercase tracking-widest text-outline font-bold">Commence</p>
                     <p className="text-sm font-body font-light text-on-surface italic">{booking.bookingTime}</p>
+                  </div>
+                  <div>
+                    <p className="text-[8px] uppercase tracking-widest text-outline font-bold">Duration</p>
+                    <p className="text-sm font-body font-light text-on-surface italic">{booking.durationHours} Hours</p>
                   </div>
                 </div>
 
-                {/* Additional Details */}
-                {(booking.complimentaryDrinks > 0 || booking.cakeDetails) && (
-                  <div className="pt-4 flex items-center justify-between border-t border-outline-variant/10">
-                    <div className="flex gap-2">
-                      {booking.complimentaryDrinks > 0 && (
-                        <span className="text-[8px] px-2 py-0.5 rounded bg-primary/5 text-primary font-bold uppercase tracking-widest border border-primary/10 transition-all hover:bg-primary hover:text-white pointer-events-none">
-                          +{booking.complimentaryDrinks} Drinks
-                        </span>
-                      )}
-                      {booking.cakeDetails && (
-                        <span className="text-[8px] px-2 py-0.5 rounded bg-gold-gradient/10 text-primary font-bold uppercase tracking-widest border border-primary/10">
-                          Cake Incl.
-                        </span>
-                      )}
-                    </div>
-                    <Info className="w-3 h-3 text-outline/30" />
+                <div className="pt-4 flex items-center justify-between border-t border-outline-variant/10">
+                  <div className="flex gap-2">
+                    <span className="text-[9px] px-3 py-1 rounded bg-primary/10 text-primary font-bold uppercase tracking-widest border border-primary/20 transition-all">
+                      Total Investment: ${booking.totalAmount}
+                    </span>
                   </div>
-                )}
+                  <Info className="w-4 h-4 text-outline/30 cursor-help" title="Private event bookings include full venue access and dedicated service." />
+                </div>
               </div>
             </div>
           ))}
@@ -168,8 +165,7 @@ export default function UserBookingsPage() {
             onClick={() => setPage((p) => p - 1)}
             className="text-[10px] uppercase tracking-[0.4em] font-bold text-outline hover:text-primary disabled:opacity-20 transition-all group"
           >
-            <span className="hidden md:inline">Précédent</span>
-            <span className="md:hidden">PREV</span>
+            PREV
           </button>
 
           <div className="flex items-center gap-4">
@@ -183,8 +179,7 @@ export default function UserBookingsPage() {
             onClick={() => setPage((p) => p + 1)}
             className="text-[10px] uppercase tracking-[0.4em] font-bold text-outline hover:text-primary disabled:opacity-20 transition-all group"
           >
-            <span className="hidden md:inline">Suivant</span>
-            <span className="md:hidden">NEXT</span>
+            NEXT
           </button>
         </div>
       )}

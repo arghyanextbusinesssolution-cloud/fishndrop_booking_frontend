@@ -38,6 +38,8 @@ export interface Booking {
   status: "confirmed" | "cancelled";
   /** Omitted on older records — treated as paid in UI. */
   paymentStatus?: "pending_payment" | "paid";
+  bookingType: "standard" | "private_event";
+  durationHours?: number;
   createdAt: string;
 }
 

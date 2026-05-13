@@ -9,12 +9,17 @@ export function useBookings() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getMyBookings = useCallback(async (page = 1, status = "all") => {
+  const getMyBookings = useCallback(async (page = 1, status = "all", type?: string) => {
     setLoading(true);
     setError(null);
     try {
       const { data } = await api.get<BookingResponse>("/bookings/my", {
-        params: { page, limit: 10, status: status === "all" ? undefined : status },
+        params: { 
+          page, 
+          limit: 10, 
+          status: status === "all" ? undefined : status,
+          type: type || undefined
+        },
       });
       return data;
     } catch {
@@ -59,7 +64,7 @@ export function useBookings() {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get<{ success: boolean; booking: { _id: string; totalAmount: number; partySize: number; bookingDate: string; bookingTime: string; customerName: string; customerEmail: string; customerPhone: string; cakePrice?: number; occasion: string; notes?: string; cakeDetails?: string } }>(`/bookings/${id}`);
+      const { data } = await api.get<{ success: boolean; booking: Booking }>(`/bookings/${id}`);
       return data.booking;
     } catch {
       setError("Failed to fetch booking");

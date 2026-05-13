@@ -16,12 +16,10 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Fishndrop | Table Reservations",
+  title: "Tropica | Table Reservations",
   description: "Reserve your table, arrive in style.",
   icons: {
-    icon: "https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png",
-    shortcut: "https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png",
-    apple: "https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png",
+    icon: "/tropica-logo.png",
   },
 };
 
@@ -33,13 +31,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${newsreader.variable} ${manrope.variable} h-full antialiased`}
+      className={`${newsreader.variable} ${manrope.variable} h-full antialiased theme-astral`}
       suppressHydrationWarning
     >
       <head>
-        <link rel="icon" href="https://www.fishndrop.com/wp-content/uploads/2026/01/cropped-logo-1-1.png" sizes="any" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
       </head>
-      <body suppressHydrationWarning className="min-h-full flex flex-col bg-[#faf9f5]">
+      <body suppressHydrationWarning className="min-h-full flex flex-col">
         <AuthInitializer />
         {children}
         <Toaster position="top-right" />

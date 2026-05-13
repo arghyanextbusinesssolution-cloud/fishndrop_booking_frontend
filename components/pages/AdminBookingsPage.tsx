@@ -7,6 +7,7 @@ import { Booking } from "@/types";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { cn } from "@/lib/utils";
 import { CalendarDays, Search, ChevronLeft, ChevronRight, XCircle } from "lucide-react";
+import { CalendarDropdown } from "@/components/shared/CalendarDropdown";
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-US", {
@@ -42,6 +43,20 @@ function PaymentBadge({ status }: { status?: string }) {
   );
 }
 
+function TypeBadge({ type }: { type: string }) {
+  const isPrivate = type === "private_event";
+  return (
+    <span className={cn(
+      "px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold",
+      isPrivate
+        ? "bg-primary/10 text-primary border-primary/20"
+        : "bg-surface-container text-secondary border-outline-variant/20"
+    )}>
+      {isPrivate ? "Venue Buyout" : "Standard"}
+    </span>
+  );
+}
+
 const FILTER_TABS = [
   { key: "all", label: "All Bookings" },
   { key: "confirmed", label: "Confirmed" },
@@ -55,13 +70,14 @@ export default function AdminBookingsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [selectedDate, setSelectedDate] = useState("");
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getAllBookings(page, status);
+      const data = await getAllBookings(page, status, selectedDate);
       setBookings(data.bookings);
       setTotalPages(data.totalPages);
       setTotal(data.total);
@@ -71,7 +87,7 @@ export default function AdminBookingsPage() {
     } finally {
       setLoading(false);
     }
-  }, [getAllBookings, page, status]);
+  }, [getAllBookings, page, status, selectedDate]);
 
   useEffect(() => {
     void load();
@@ -129,15 +145,26 @@ export default function AdminBookingsPage() {
           ))}
         </div>
 
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" strokeWidth={1.5} />
-          <input
-            type="text"
-            placeholder="Search by name or email..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant/20 rounded-full text-sm font-body text-on-surface placeholder:text-outline/50 focus:outline-none focus:border-primary/40 transition-colors"
-          />
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+          {/* Custom Calendar Dropdown */}
+          <div className="w-full sm:w-52">
+            <CalendarDropdown
+              value={selectedDate}
+              onChange={(date) => { setSelectedDate(date); setPage(1); }}
+              placeholder="Filter by Date"
+            />
+          </div>
+
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" strokeWidth={1.5} />
+            <input
+              type="text"
+              placeholder="Search by name..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant/20 rounded-full text-sm font-body text-on-surface placeholder:text-outline/50 focus:outline-none focus:border-primary/40 transition-colors"
+            />
+          </div>
         </div>
       </div>
 
@@ -152,7 +179,7 @@ export default function AdminBookingsPage() {
             <table className="w-full text-left">
               <thead className="bg-surface-container border-b border-outline-variant/10">
                 <tr>
-                  {["#", "Guest Name", "Email", "Date", "Time", "Party", "Tables", "Amount", "Payment", "Status", "Actions"].map(h => (
+                  {["#", "Type", "Guest Name", "Email", "Date", "Time", "Party", "Tables", "Amount", "Payment", "Status", "Actions"].map(h => (
                     <th key={h} className="px-4 py-4 text-[9px] uppercase tracking-widest text-outline font-bold whitespace-nowrap">
                       {h}
                     </th>
@@ -163,6 +190,7 @@ export default function AdminBookingsPage() {
                 {filtered.map((b, i) => (
                   <tr key={b._id} className="hover:bg-surface-container/50 transition-colors">
                     <td className="px-4 py-4 font-body text-sm text-secondary">{(page - 1) * 10 + i + 1}</td>
+                    <td className="px-4 py-4"><TypeBadge type={b.bookingType} /></td>
                     <td className="px-4 py-4 font-headline text-base italic text-on-surface whitespace-nowrap">
                       {b.customerName || b.user?.name}
                     </td>
@@ -172,10 +200,23 @@ export default function AdminBookingsPage() {
                     <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap">
                       {formatDate(b.bookingDate)}
                     </td>
-                    <td className="px-4 py-4 font-body text-sm text-secondary">{b.bookingTime}</td>
+                    <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap">
+                      <div className="flex flex-col">
+                        <span>{b.bookingTime}</span>
+                        {b.bookingType === "private_event" && (
+                          <span className="text-[9px] text-primary font-bold uppercase tracking-widest">
+                            {b.durationHours} Hours
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-4 font-body text-sm text-secondary">{b.partySize} pax</td>
                     <td className="px-4 py-4 font-body text-sm font-bold text-primary italic whitespace-nowrap">
-                      {b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—"}
+                      {b.bookingType === "private_event" ? (
+                        <span className="text-[10px] uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded border border-primary/10">Full Venue</span>
+                      ) : (
+                        b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—"
+                      )}
                     </td>
                     <td className="px-4 py-4 font-headline text-base italic text-on-surface">${b.totalAmount}</td>
                     <td className="px-4 py-4"><PaymentBadge status={b.paymentStatus} /></td>

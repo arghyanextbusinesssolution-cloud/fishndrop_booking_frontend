@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface LoadingScreenProps {
@@ -57,7 +58,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
           <div
             key={i}
             className={cn(
-              "h-full flex-1 bg-[#1C1917] transition-transform duration-800 ease-[cubic-bezier(0.85,0,0.15,1)]",
+              "h-full flex-1 bg-[#0F3D2E] transition-transform duration-800 ease-[cubic-bezier(0.85,0,0.15,1)]",
               isExiting ? "-translate-y-full" : "translate-y-0"
             )}
             style={{
@@ -75,42 +76,48 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
         )}
       >
         {/* Elegant Brand Identity */}
-        <div className="animate-fade-in-slow space-y-2">
-          <h1 className="font-headline italic text-5xl md:text-7xl tracking-tighter text-[#D4AF37]">
-            Fish & Drop
-          </h1>
-          <p className="font-label uppercase tracking-[0.4em] text-[10px] text-stone-500 ml-1">
-            Exquisite Coastal Dining
+        <div className="animate-fade-in-slow flex flex-col items-center gap-6">
+          <div className="relative w-[600px] h-[200px]">
+            <Image
+              src="/tropica-logo.png"
+              alt="Tropica"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+          <p className="font-label uppercase tracking-[0.4em] text-[10px] text-[#E5E7EB]/40 ml-1">
+            Exquisite Tropical Dining
           </p>
         </div>
 
         {/* Minimalist Loading Indicator */}
-        <div className="w-64 h-[2px] bg-[#D4AF37]/10 relative overflow-hidden ring-1 ring-[#D4AF37]/5">
+        <div className="w-64 h-[2px] bg-[#E5E7EB]/10 relative overflow-hidden ring-1 ring-[#E5E7EB]/5">
           {/* Shimmer Effect */}
-          <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent w-full animate-shimmer"></div>
+          <div className="absolute top-0 left-0 h-full bg-gradient-to-r from-transparent via-[#E5E7EB] to-transparent w-full animate-shimmer"></div>
           {/* Progress Fill */}
           <div
-            className="absolute top-0 left-0 h-full bg-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.5)] transition-all duration-300 ease-out"
+            className="absolute top-0 left-0 h-full bg-[#E5E7EB] shadow-[0_0_10px_rgba(229,231,235,0.5)] transition-all duration-300 ease-out"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
 
         {/* Quote */}
         <div className="animate-fade-in-slow" style={{ animationDelay: "0.8s" }}>
-          <p className="font-headline italic text-lg md:text-xl font-extralight tracking-tight text-[#D4AF37]/70">
-            "Culinary excellence in every drop."
+          <p className="font-headline italic text-lg md:text-xl font-extralight tracking-tight text-[#E5E7EB]/70">
+            "Culinary excellence in every moment."
           </p>
         </div>
 
         {/* Dynamic Micro-Interactions */}
         <div className="flex gap-4 items-center justify-center mt-4">
-          <span className="animate-shimmer-slow w-1 h-1 rounded-full bg-[#473D1E]"></span>
+          <span className="animate-shimmer-slow w-1 h-1 rounded-full bg-[#E5E7EB]/20"></span>
           <span
-            className="animate-shimmer-slow w-1 h-1 rounded-full bg-[#473D1E]"
+            className="animate-shimmer-slow w-1 h-1 rounded-full bg-[#E5E7EB]/20"
             style={{ animationDelay: "0.5s" }}
           ></span>
           <span
-            className="animate-shimmer-slow w-1 h-1 rounded-full bg-[#473D1E]"
+            className="animate-shimmer-slow w-1 h-1 rounded-full bg-[#E5E7EB]/20"
             style={{ animationDelay: "1s" }}
           ></span>
         </div>
@@ -124,7 +131,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
         )}
         style={{ transitionDelay: "1.5s" }}
       >
-        <div className="text-4xl text-[#D4AF37]">
+        <div className="text-4xl text-[#E5E7EB]">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="40"
@@ -150,14 +157,14 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
         )}
         style={{ transitionDelay: "2s" }}
       >
-        <div className="h-8 w-[1px] bg-gradient-to-b from-stone-600 to-transparent"></div>
-        <span className="font-label text-[9px] uppercase tracking-[0.3em] text-stone-600">
+        <div className="h-8 w-[1px] bg-gradient-to-b from-[#E5E7EB]/30 to-transparent"></div>
+        <span className="font-label text-[9px] uppercase tracking-[0.3em] text-[#E5E7EB]/40">
           Est. 1924
         </span>
       </div>
 
       {/* Aesthetic Border Framing */}
-      <div className="fixed inset-0 border-[1.5rem] border-[#1C1917] pointer-events-none z-50"></div>
+      <div className="fixed inset-0 border-[1.5rem] border-[#0F3D2E] pointer-events-none z-50"></div>
     </div>
   );
 };

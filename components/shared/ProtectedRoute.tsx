@@ -17,15 +17,26 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!mounted || isLoading) return;
+    
+    // Only redirect if we're sure auth check is complete
     if (!isAuthenticated) {
       router.replace("/login");
       return;
     }
-    if (pathname.startsWith("/admin") && user?.role !== "admin") router.replace("/user");
-    if (pathname.startsWith("/user") && user?.role !== "user") router.replace("/admin");
+
+    // Only apply role redirect when we have full user data
+    if (user?.role) {
+      if (pathname.startsWith("/admin") && user.role !== "admin") {
+        router.replace("/user");
+      }
+      if (pathname.startsWith("/user") && user.role === "admin") {
+        router.replace("/admin");
+      }
+    }
   }, [isAuthenticated, isLoading, mounted, pathname, router, user?.role]);
 
-  if (!mounted || isLoading) return <LoadingSpinner fullPage message="Checking session..." />;
+  // Show spinner while hydrating or auth is being checked
+  if (!mounted || isLoading) return <LoadingSpinner fullPage message="Preparing your session..." />;
   if (!isAuthenticated) return null;
   return <>{children}</>;
 }
