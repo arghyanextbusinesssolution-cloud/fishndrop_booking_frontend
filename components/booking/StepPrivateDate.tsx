@@ -14,7 +14,7 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
     initialData.date ? new Date(initialData.date) : undefined
   );
   const [guests, setGuests] = useState<number>(initialData.guests || 2);
-  const [durationHours, setDurationHours] = useState<number>(initialData.durationHours || 3);
+  const [durationHours, setDurationHours] = useState<number>(initialData.durationHours || 4);
   const [maxCapacity, setMaxCapacity] = useState<number>(50);
 
   useEffect(() => {
@@ -111,14 +111,14 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
             </div>
             <input
               type="range"
-              min="2"
+              min="4"
               max="12"
               value={durationHours}
               onChange={(e) => setDurationHours(parseInt(e.target.value))}
               className="w-full accent-primary"
             />
             <div className="flex justify-between text-xs text-white/40 font-mono">
-              <span>2 Hours</span>
+              <span>4 Hours</span>
               <span>12 Hours</span>
             </div>
           </div>
@@ -127,11 +127,11 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
           <div className="glass-card rounded-xl p-6 border-primary/20 bg-primary/5">
             <h3 className="font-headline italic text-xl text-primary mb-2">Venue Buyout</h3>
             <p className="text-white/60 font-body text-sm mb-4">
-              Private venue bookings are charged at a flat rate of <span className="text-white font-medium">$500 per hour</span>, regardless of guest count.
+              Private venue bookings are charged at a flat rate of <span className="text-white font-medium">$250 per hour</span>, regardless of guest count.
             </p>
             <div className="flex items-center justify-between border-t border-white/10 pt-4">
               <span className="font-label uppercase text-[10px] tracking-widest text-white/50">Estimated Cost</span>
-              <span className="font-headline text-2xl text-white">${durationHours * 500}</span>
+              <span className="font-headline text-2xl text-white">${durationHours * 250}</span>
             </div>
           </div>
 

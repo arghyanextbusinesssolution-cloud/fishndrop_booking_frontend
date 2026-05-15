@@ -31,7 +31,7 @@ export const PrivateBookingWizard = () => {
   const [bookingData, setBookingData] = useState<PrivateBookingData>({
     date: null,
     guests: 20,
-    durationHours: 3,
+    durationHours: 4,
     time: null,
     guestDetails: { name: user?.name || "", email: user?.email || "", phone: user?.phone || "", notes: "", occasion: "business" },
   });
