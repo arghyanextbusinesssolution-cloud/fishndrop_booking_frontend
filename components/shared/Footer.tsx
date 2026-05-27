@@ -14,15 +14,24 @@ export const Footer = () => {
       </Link>
 
       <div className="flex flex-wrap justify-center gap-10">
-        {["Privacy Policy", "Terms of Service", "Sustainability"].map((link) => (
-          <Link 
-            key={link}
-            href="#" 
-            className="font-label text-[10px] uppercase tracking-[0.25em] text-[#C8A96A]/40 hover:text-[#C8A96A] transition-colors font-bold"
-          >
-            {link}
-          </Link>
-        ))}
+        <Link
+          href="#"
+          className="font-label text-[10px] uppercase tracking-[0.25em] text-[#C8A96A]/40 hover:text-[#C8A96A] transition-colors font-bold"
+        >
+          Privacy Policy
+        </Link>
+        <Link
+          href="/terms-and-conditions"
+          className="font-label text-[10px] uppercase tracking-[0.25em] text-[#C8A96A]/40 hover:text-[#C8A96A] transition-colors font-bold"
+        >
+          Terms of Service
+        </Link>
+        <Link
+          href="#"
+          className="font-label text-[10px] uppercase tracking-[0.25em] text-[#C8A96A]/40 hover:text-[#C8A96A] transition-colors font-bold"
+        >
+          Sustainability
+        </Link>
       </div>
       <p className="font-label text-[10px] uppercase tracking-[0.25em] text-[#C8A96A]/30 font-bold text-center">
         © 2024 Tropica Sanctuary. All rights reserved.
