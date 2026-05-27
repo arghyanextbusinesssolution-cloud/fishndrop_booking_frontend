@@ -21,6 +21,9 @@ interface PrivateBookingData {
     phone: string;
     notes: string;
     occasion: string;
+    agreedToTransactional: boolean;
+    agreedToMarketing: boolean;
+    agreedToTerms: boolean;
   };
 }
 
@@ -33,7 +36,16 @@ export const PrivateBookingWizard = () => {
     guests: 20,
     durationHours: 4,
     time: null,
-    guestDetails: { name: user?.name || "", email: user?.email || "", phone: user?.phone || "", notes: "", occasion: "business" },
+    guestDetails: {
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      notes: "",
+      occasion: "business",
+      agreedToTransactional: false,
+      agreedToMarketing: false,
+      agreedToTerms: false
+    },
   });
 
   const updateData = (stepData: Partial<PrivateBookingData>) => {
@@ -158,7 +170,7 @@ export const PrivateBookingWizard = () => {
 
       <div className="flex-1 bg-background/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 md:p-10 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50" />
-        
+
         {renderStep()}
 
         {/* Navigation */}

@@ -30,6 +30,9 @@ interface BookingData {
     email: string;
     phone: string;
     password?: string;
+    agreedToTransactional: boolean;
+    agreedToMarketing: boolean;
+    agreedToTerms: boolean;
   };
   occasion: string;
   addons: string[];
@@ -53,7 +56,7 @@ export const BookingWizard = () => {
   const [splitDialogMessage, setSplitDialogMessage] = useState("");
   const [chairConsentOpen, setChairConsentOpen] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  
+
   const [bookingData, setBookingData] = useState<BookingData>({
     date: initialDate,
     time: null,
@@ -63,7 +66,10 @@ export const BookingWizard = () => {
       name: user?.name || "",
       email: user?.email || "",
       phone: user?.phone || "",
-      password: ""
+      password: "",
+      agreedToTransactional: false,
+      agreedToMarketing: false,
+      agreedToTerms: false
     },
     occasion: "other",
     addons: [],
@@ -125,13 +131,13 @@ export const BookingWizard = () => {
         if (data.token && data.user) {
           setAuth(data.user, data.token);
         }
-        
+
         // Initiate Stripe Checkout
         try {
           const { data: stripeData } = await api.post("/payments/checkout-session", {
             bookingId: data.booking._id
           });
-          
+
           if (stripeData.success && stripeData.url) {
             localStorage.removeItem(STORAGE_KEY);
             window.location.href = stripeData.url;
@@ -177,7 +183,7 @@ export const BookingWizard = () => {
     setBookingData({ ...updatedData, totalPrice: finalPrice });
     let nextStep = step + 1;
     if (nextStep === 5 && user && updatedData.guestDetails.phone) nextStep = 6;
-    
+
     const needsCakeStep = updatedData.addons.includes("custom_cake");
     const maxSteps = needsCakeStep ? 9 : 8;
 
@@ -193,7 +199,7 @@ export const BookingWizard = () => {
   const handleBack = () => {
     let prevStep = step - 1;
     if (prevStep === 5 && user && bookingData.guestDetails.phone) prevStep = 4;
-    
+
     const needsCakeStep = bookingData.addons.includes("custom_cake");
     if (step === (needsCakeStep ? 9 : 8)) prevStep = needsCakeStep ? 8 : 7;
 
@@ -231,9 +237,9 @@ export const BookingWizard = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden selection:bg-primary/30" style={{backgroundColor: '#1a4a35'}}>
+    <div className="h-screen flex flex-col overflow-hidden selection:bg-primary/30" style={{ backgroundColor: '#1a4a35' }}>
       <NavBar />
-      
+
       <ConfirmationModal
         isOpen={showCancelModal}
         onClose={() => setShowCancelModal(false)}
@@ -248,7 +254,7 @@ export const BookingWizard = () => {
       {/* Split Table Approval Dialog */}
       {splitDialogOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-background/90 backdrop-blur-xl">
-          <div className="p-10 max-w-md w-full space-y-8 relative overflow-hidden rounded-2xl" style={{backgroundColor: '#111412', border: '1px solid rgba(200,169,106,0.15)'}}>
+          <div className="p-10 max-w-md w-full space-y-8 relative overflow-hidden rounded-2xl" style={{ backgroundColor: '#111412', border: '1px solid rgba(200,169,106,0.15)' }}>
             <div className="absolute top-0 left-0 w-full h-1 bg-gold-gradient" />
             <div className="space-y-3">
               <span className="font-label text-[9px] tracking-[0.3em] uppercase text-primary font-bold block">Table Availability Notice</span>
@@ -270,7 +276,7 @@ export const BookingWizard = () => {
       {/* Chair Arrangement Consent Dialog */}
       {chairConsentOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-background/90 backdrop-blur-xl">
-          <div className="p-10 max-w-md w-full space-y-8 relative overflow-hidden rounded-2xl" style={{backgroundColor: '#111412', border: '1px solid rgba(200,169,106,0.15)'}}>
+          <div className="p-10 max-w-md w-full space-y-8 relative overflow-hidden rounded-2xl" style={{ backgroundColor: '#111412', border: '1px solid rgba(200,169,106,0.15)' }}>
             <div className="absolute top-0 left-0 w-full h-1 bg-gold-gradient" />
             <div className="space-y-4">
               <h2 className="font-headline text-3xl italic text-on-surface leading-tight">Party of <span className="text-gold-gradient">Five</span></h2>
@@ -299,14 +305,14 @@ export const BookingWizard = () => {
           {/* Wizard Content */}
           <div className={cn("w-full max-w-6xl relative pb-20", (isSubmitting || isRestoring) && "opacity-50 pointer-events-none")}>
             {(isSubmitting || isRestoring) && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md" style={{backgroundColor: 'rgba(26,74,53,0.6)'}}>
+              <div className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md" style={{ backgroundColor: 'rgba(26,74,53,0.6)' }}>
                 <div className="flex flex-col items-center gap-6">
                   <div className="w-20 h-20 rounded-full border-2 border-primary/10 border-t-primary animate-spin" />
                   <p className="font-headline text-3xl italic animate-pulse text-gold-gradient">{isRestoring ? "Restoring journey..." : "Crafting experience..."}</p>
                 </div>
               </div>
             )}
-            
+
             <AnimatePresence mode="wait">
               <motion.div
                 key={step}

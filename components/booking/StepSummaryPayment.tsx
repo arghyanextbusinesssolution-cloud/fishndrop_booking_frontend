@@ -110,7 +110,12 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
 
       {clientSecret && bookingId ? (
         <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
-          <StripePaymentForm bookingId={bookingId} onSuccess={handlePaymentSuccess} />
+          <StripePaymentForm
+            bookingId={bookingId}
+            onSuccess={handlePaymentSuccess}
+            agreedToTerms={bookingData.guestDetails.agreedToTerms}
+            agreedToTransactional={bookingData.guestDetails.agreedToTransactional}
+          />
         </Elements>
       ) : !error ? (
         <div className="space-y-4 animate-pulse p-6 bg-primary/5 rounded-xl border border-primary/10">

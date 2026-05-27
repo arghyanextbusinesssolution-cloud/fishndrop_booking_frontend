@@ -12,7 +12,10 @@ const guestSchema = z.object({
   password: z.string().optional(),
   confirmPassword: z.string().optional(),
   emailExists: z.boolean().optional(),
-  isLoggedIn: z.boolean().optional()
+  isLoggedIn: z.boolean().optional(),
+  agreedToTransactional: z.boolean().refine(val => val === true, "Transactional consent is required"),
+  agreedToMarketing: z.boolean().optional(),
+  agreedToTerms: z.boolean().refine(val => val === true, "Terms agreement is required")
 }).refine((data) => {
   // If logged in, password is not required
   if (data.isLoggedIn) return true;
@@ -117,7 +120,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
       <div className="lg:col-span-7 glass-card p-8 md:p-12 rounded-2xl relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gold-gradient" />
         <form onSubmit={handleSubmit((data) => onNext({ guestDetails: data }))} className="space-y-10">
-          
+
           {user ? (
             /* AUTHENTICATED STATE */
             <div className="space-y-8 animate-in fade-in duration-700">
@@ -271,6 +274,69 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
               </div>
             </div>
           )}
+
+          {/* Consent Checkboxes */}
+          <div className="space-y-4 pt-6 border-t border-outline-variant/10">
+            <label className="flex gap-3 cursor-pointer group">
+              <div className="relative flex items-center pt-1">
+                <input
+                  type="checkbox"
+                  {...register("agreedToTransactional")}
+                  className="peer h-4 w-4 shrink-0 appearance-none rounded-sm border border-[#C8A96A]/30 bg-transparent checked:bg-[#C8A96A] transition-all"
+                />
+                <div className="absolute inset-0 flex items-center justify-center text-primary-foreground opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none">
+                  <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-current stroke-[4px]">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] leading-relaxed text-on-surface/60 font-body transition-colors group-hover:text-on-surface/80">
+                  I consent to receive transactional messages at the phone number provided. Message frequency may vary. Message & Data rates may apply. Reply HELP for help or STOP to opt-out.
+                </span>
+                {errors.agreedToTransactional && <p className="text-[9px] uppercase tracking-widest text-error font-bold">{errors.agreedToTransactional.message as string}</p>}
+              </div>
+            </label>
+
+            <label className="flex gap-3 cursor-pointer group">
+              <div className="relative flex items-center pt-1">
+                <input
+                  type="checkbox"
+                  {...register("agreedToMarketing")}
+                  className="peer h-4 w-4 shrink-0 appearance-none rounded-sm border border-[#C8A96A]/30 bg-transparent checked:bg-[#C8A96A] transition-all"
+                />
+                <div className="absolute inset-0 flex items-center justify-center text-primary-foreground opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none">
+                  <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-current stroke-[4px]">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+              </div>
+              <span className="text-[10px] leading-relaxed text-on-surface/60 font-body transition-colors group-hover:text-on-surface/80">
+                I consent to receive marketing and promotional messages at the phone number provided. Message frequency may vary. Message & Data rates may apply. Reply HELP for help or STOP to opt-out.
+              </span>
+            </label>
+
+            <label className="flex gap-3 cursor-pointer group">
+              <div className="relative flex items-center pt-1">
+                <input
+                  type="checkbox"
+                  {...register("agreedToTerms")}
+                  className="peer h-4 w-4 shrink-0 appearance-none rounded-sm border border-[#C8A96A]/30 bg-transparent checked:bg-[#C8A96A] transition-all"
+                />
+                <div className="absolute inset-0 flex items-center justify-center text-primary-foreground opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none">
+                  <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-current stroke-[4px]">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] leading-relaxed text-on-surface/60 font-body transition-colors group-hover:text-on-surface/80">
+                  I agree to the <a href="/terms" className="text-[#C8A96A] underline hover:text-[#C8A96A]/80 transition-colors" target="_blank" rel="noopener noreferrer">Terms & Conditions</a> and <a href="/privacy-policy" className="text-[#C8A96A] underline hover:text-[#C8A96A]/80 transition-colors" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+                </span>
+                {errors.agreedToTerms && <p className="text-[9px] uppercase tracking-widest text-error font-bold">{errors.agreedToTerms.message as string}</p>}
+              </div>
+            </label>
+          </div>
 
           <div className="pt-8 flex flex-col sm:flex-row items-center gap-8">
             <button
