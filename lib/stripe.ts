@@ -6,5 +6,10 @@ export const getStripe = () => {
     console.error("Stripe public key missing from environment variables");
     return null;
   }
+
+  if (process.env.NODE_ENV !== "production" || true) { // temporary true to debug
+    console.log("Stripe Initialized with prefix:", publicKey.substring(0, 10) + "...");
+  }
+
   return loadStripe(publicKey);
 };
