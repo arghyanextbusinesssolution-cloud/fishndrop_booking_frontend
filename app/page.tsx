@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { NavBar } from "@/components/shared/NavBar";
+import { Footer } from "@/components/shared/Footer";
 import { Calendar } from "@/components/booking/Calendar";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { ChevronRight, Users, Minus, Plus } from "lucide-react";
@@ -68,7 +69,7 @@ export default function Home() {
     if (!pendingDate) return;
 
     setIsNavigating(true);
-    
+
     // Artificial "Compiling" delay for premium feel
     setTimeout(() => {
       try {
@@ -111,7 +112,7 @@ export default function Home() {
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-[#0F3D2E]/90 backdrop-blur-sm p-4">
           <div className="bg-[#1a1c1b] border border-[#C8A96A]/30 rounded-2xl p-6 md:p-8 max-w-lg w-full shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-fade-in relative">
             <h3 className="font-headline italic text-2xl md:text-3xl text-[#C8A96A] mb-4">Terms & Conditions</h3>
-            
+
             <div className="text-on-surface/80 font-body text-sm space-y-4 mb-6 h-64 overflow-y-auto pr-2 custom-scrollbar">
               <p><strong>Allergen Disclaimer – Tropica Private Dining Lounge</strong></p>
               <p>At Tropica, we are committed to providing a safe dining experience. Our menu items—whether for dine-in or online orders—may contain or come into contact with allergens including, but not limited to: dairy, eggs, wheat, soy, nuts, peanuts, fish, and shellfish.</p>
@@ -123,8 +124,8 @@ export default function Home() {
 
             <label className="flex items-start gap-3 cursor-pointer group mb-8">
               <div className="relative flex items-center justify-center mt-1">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   className="peer sr-only"
                   checked={hasAcceptedDisclaimer}
                   onChange={(e) => setHasAcceptedDisclaimer(e.target.checked)}
@@ -139,7 +140,7 @@ export default function Home() {
             </label>
 
             <div className="flex gap-4">
-              <button 
+              <button
                 onClick={() => {
                   setShowDisclaimer(false);
                   setHasAcceptedDisclaimer(false);
@@ -148,7 +149,7 @@ export default function Home() {
               >
                 Cancel
               </button>
-              <button 
+              <button
                 disabled={!hasAcceptedDisclaimer}
                 onClick={proceedWithDate}
                 className="flex-[2] py-3 font-label text-[10px] uppercase tracking-[0.2em] bg-[#C8A96A] text-[#0F3D2E] rounded-lg hover:brightness-110 disabled:opacity-50 disabled:hover:brightness-100 disabled:cursor-not-allowed transition-all font-bold"
@@ -196,9 +197,9 @@ export default function Home() {
           <div className="w-full max-w-2xl bg-[#1a1c1b] rounded-xl border border-[#C8A96A]/10 p-4 md:p-8 shadow-[0_0_30px_rgba(0,0,0,0.3)] relative overflow-hidden group">
             {/* Decorative leaf like in Stitch */}
             <div className="absolute top-0 right-0 p-4 md:p-8 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
-               <span className="material-symbols-outlined text-[60px] md:text-[120px]">spa</span>
+              <span className="material-symbols-outlined text-[60px] md:text-[120px]">spa</span>
             </div>
-            
+
             <Calendar selectedDate={selectedDate} onSelect={handleInitialDateSelect} />
 
             {/* Calendar Legend */}
@@ -216,13 +217,13 @@ export default function Home() {
 
           {/* Actions */}
           <div className="mt-8 md:mt-16 w-full max-w-2xl flex justify-between items-center gap-4">
-            <button 
+            <button
               onClick={() => router.push('/')}
               className="flex-1 md:flex-none px-6 md:px-10 py-3 md:py-4 font-label text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-[#C8A96A] border border-[#C8A96A]/30 rounded-lg hover:bg-[#C8A96A]/5 transition-all font-bold"
             >
               Cancel
             </button>
-            <button 
+            <button
               disabled={!selectedDate}
               onClick={() => selectedDate && handleInitialDateSelect(selectedDate)}
               className="flex-[2] md:flex-none bg-[#C8A96A] px-6 md:px-12 py-3 md:py-4 font-label text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-[#0F3D2E] rounded-lg shadow-[0_0_20px_rgba(200,169,106,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 md:gap-3 font-bold"
@@ -245,6 +246,7 @@ export default function Home() {
             </div>
           </div>
         </main>
+        <Footer />
       </div>
     </div>
   );
