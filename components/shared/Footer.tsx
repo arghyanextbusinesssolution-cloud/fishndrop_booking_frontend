@@ -62,7 +62,7 @@ export const Footer = () => {
 
         <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-[#C8A96A]/10 text-center">
           <p className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A]/40 font-bold">
-            © 2024 Tropica Sanctuary. All rights reserved.
+            © 2026 Tropica Sanctuary. All rights reserved.
           </p>
         </div>
       </footer>
