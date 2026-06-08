@@ -60,10 +60,14 @@ export const Footer = () => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-[#C8A96A]/10 text-center">
-          <p className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A]/40 font-bold">
+        <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-[#C8A96A]/10 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A]/40 font-bold order-2 md:order-1">
             © 2026 Tropica Sanctuary. All rights reserved.
           </p>
+          <div className="flex gap-6 order-1 md:order-2">
+            <Link href="/privacy" className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A]/40 font-bold hover:text-[#C8A96A] transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A]/40 font-bold hover:text-[#C8A96A] transition-colors">Terms & Conditions</Link>
+          </div>
         </div>
       </footer>
     </div>

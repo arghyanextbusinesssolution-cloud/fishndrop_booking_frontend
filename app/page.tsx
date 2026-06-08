@@ -7,14 +7,14 @@ import { NavBar } from "@/components/shared/NavBar";
 import { Footer } from "@/components/shared/Footer";
 import { Calendar } from "@/components/booking/Calendar";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
-import { ChevronRight, Users, Minus, Plus } from "lucide-react";
+import { Hero } from "@/components/home/Hero";
+import { Experience } from "@/components/home/Experience";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [partySize, setPartySize] = useState(2);
   const [isLoading, setIsLoading] = useState(true);
   const [isNavigating, setIsNavigating] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
@@ -22,41 +22,25 @@ export default function Home() {
   const [pendingDate, setPendingDate] = useState<Date | null>(null);
 
   useEffect(() => {
-    // Artificial delay to show the beautiful loading experience 
-    // and check backend health
     const checkBackend = async () => {
       try {
         const startTime = Date.now();
-        // Use port 5002 where our verified backend is running
         const apiBase = process.env.NEXT_PUBLIC_API_URL || "/api";
         await fetch(`${apiBase}/health`);
         const elapsed = Date.now() - startTime;
-        const minTime = 3000; // 3 seconds min to show animation
+        const minTime = 3000;
 
         setTimeout(() => {
           setIsLoading(false);
         }, Math.max(0, minTime - elapsed));
       } catch (error) {
         console.error("Backend health check failed:", error);
-        // Fallback: stop loading after 4s anyway
         setTimeout(() => setIsLoading(false), 4000);
       }
     };
 
     void checkBackend();
   }, []);
-
-
-  const MIN_GUESTS = 2;
-  const MAX_GUESTS = 8;
-
-  const getTableNote = (guests: number): string => {
-    if (guests === 2) return "One intimate 2-seater table";
-    if (guests === 3 || guests === 4) return "One 4-seater table";
-    if (guests === 5 || guests === 6) return "One 4-seater + one 2-seater";
-    if (guests === 7 || guests === 8) return "Two premium 4-seater tables";
-    return "";
-  };
 
   const handleInitialDateSelect = (date: Date) => {
     setSelectedDate(date);
@@ -70,7 +54,6 @@ export default function Home() {
 
     setIsNavigating(true);
 
-    // Artificial "Compiling" delay for premium feel
     setTimeout(() => {
       try {
         const year = pendingDate.getFullYear();
@@ -86,7 +69,7 @@ export default function Home() {
   };
 
   return (
-    <div className="theme-astral min-h-screen bg-[#0F3D2E] text-on-surface selection:bg-primary/30 selection:text-primary font-body">
+    <div className="theme-astral min-h-screen bg-[#0F3D2E] text-on-surface selection:bg-primary/30 selection:text-primary font-body overflow-x-hidden">
       <LoadingScreen isLoading={isLoading} />
 
       {/* Navigation Loader */}
@@ -113,7 +96,7 @@ export default function Home() {
           <div className="bg-[#1a1c1b] border border-[#C8A96A]/30 rounded-2xl p-6 md:p-8 max-w-lg w-full shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-fade-in relative">
             <h3 className="font-headline italic text-2xl md:text-3xl text-[#C8A96A] mb-4">Terms & Conditions</h3>
 
-            <div className="text-on-surface/80 font-body text-sm space-y-4 mb-6 h-64 overflow-y-auto pr-2 custom-scrollbar">
+            <div className="text-on-surface/80 font-body text-sm space-y-4 mb-6 h-64 overflow-y-auto pr-2 custom-scrollbar text-left">
               <p><strong>Allergen Disclaimer – Tropica Private Dining Lounge</strong></p>
               <p>At Tropica, we are committed to providing a safe dining experience. Our menu items—whether for dine-in or online orders—may contain or come into contact with allergens including, but not limited to: dairy, eggs, wheat, soy, nuts, peanuts, fish, and shellfish.</p>
               <p>If you have any allergies, please inform our staff prior to dining or note them when placing an online order. While we take great care, we cannot guarantee that any dish will be completely allergen-free, due to potential cross-contact.</p>
@@ -134,7 +117,7 @@ export default function Home() {
                   <span className="material-symbols-outlined text-[14px] text-[#0F3D2E] opacity-0 peer-checked:opacity-100 transition-opacity">check</span>
                 </div>
               </div>
-              <span className="font-label text-xs uppercase tracking-widest text-[#C8A96A]/80 group-hover:text-[#C8A96A] transition-colors leading-relaxed">
+              <span className="font-label text-xs uppercase tracking-widest text-[#C8A96A]/80 group-hover:text-[#C8A96A] transition-colors leading-relaxed text-left">
                 I have read and agree to the allergen disclaimer and terms of condition
               </span>
             </label>
@@ -167,88 +150,69 @@ export default function Home() {
       )}>
         <NavBar />
 
-        <main className="flex-grow pt-24 md:pt-32 pb-8 md:pb-12 px-4 md:px-12 flex flex-col items-center">
-          {/* Progress Stepper */}
-          <div className="w-full max-w-4xl mb-8 md:mb-16">
-            <div className="flex items-center justify-between mb-2 md:mb-4 px-2">
-              <span className="font-label text-[8px] md:text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] font-bold">Step 1 of 8: Date Selection</span>
-              <span className="font-label text-[8px] md:text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] font-bold">12.5%</span>
-            </div>
-            <div className="h-1 w-full bg-[#333534] rounded-full overflow-hidden">
-              <div className="h-full bg-[#C8A96A] w-[12.5%] transition-all duration-700 ease-out shadow-[0_0_10px_rgba(200,169,106,0.5)]"></div>
-            </div>
-          </div>
-
+        <main className="flex-grow pt-0">
           {/* Hero Section */}
-          <div className="text-center mb-6 md:mb-12">
-            <h1 className="font-headline text-3xl md:text-7xl text-on-surface mb-3 md:mb-6 font-semibold tracking-tight">When shall we expect you?</h1>
-            <p className="font-body text-on-surface/60 text-xs md:text-base max-w-lg mx-auto leading-relaxed mb-4 md:mb-6">
-              Select a preferred date for your private garden experience.
-            </p>
-            <button
-              onClick={() => router.push('/book-venue')}
-              className="px-4 py-2.5 md:px-6 md:py-3 border border-[#C8A96A]/30 text-[#C8A96A] font-label text-[8px] md:text-[10px] uppercase tracking-[0.25em] rounded-full hover:bg-[#C8A96A]/10 transition-all font-bold shadow-[0_0_15px_rgba(200,169,106,0.15)]"
-            >
-              Book Lounge
-            </button>
-          </div>
+          <Hero />
 
-          {/* Calendar Container */}
-          <div className="w-full max-w-2xl bg-[#1a1c1b] rounded-xl border border-[#C8A96A]/10 p-4 md:p-8 shadow-[0_0_30px_rgba(0,0,0,0.3)] relative overflow-hidden group">
-            {/* Decorative leaf like in Stitch */}
-            <div className="absolute top-0 right-0 p-4 md:p-8 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
-              <span className="material-symbols-outlined text-[60px] md:text-[120px]">spa</span>
-            </div>
+          {/* Experience Section */}
+          <Experience />
 
-            <Calendar selectedDate={selectedDate} onSelect={handleInitialDateSelect} />
-
-            {/* Calendar Legend */}
-            <div className="mt-4 md:mt-8 pt-4 md:pt-6 border-t border-[#C8A96A]/10 flex justify-between items-center">
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-[#C8A96A]" />
-                <span className="font-label text-[8px] md:text-[10px] uppercase tracking-widest text-on-surface/40 font-bold">Available</span>
+          {/* Reservations Section */}
+          <section id="reservations" className="py-16 md:py-24 px-4 md:px-12 bg-[#0F2D24]">
+            <div className="max-w-4xl mx-auto flex flex-col items-center">
+              <div className="text-center mb-12 md:mb-16">
+                <span className="font-label text-[8px] md:text-[10px] uppercase tracking-[0.4em] text-[#C8A96A] font-bold">Reservation</span>
+                <h2 className="font-headline text-3xl md:text-7xl text-on-surface mt-4 mb-6 tracking-tight italic leading-tight">When shall we expect you?</h2>
+                <p className="font-body text-on-surface/60 text-[10px] md:text-base max-w-lg mx-auto leading-relaxed mb-8 md:mb-12 px-4">
+                  Select a preferred date for your private garden experience.
+                </p>
               </div>
-              <div className="flex items-center gap-2 md:gap-3">
-                <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-[#333534] border border-[#C8A96A]/10" />
-                <span className="font-label text-[8px] md:text-[10px] uppercase tracking-widest text-on-surface/40 font-bold">Full</span>
+
+              {/* Calendar Container */}
+              <div className="w-full bg-[#1a1c1b] rounded-2xl border border-[#C8A96A]/10 p-4 md:p-12 shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
+                  <span className="material-symbols-outlined text-[80px] md:text-[120px]">spa</span>
+                </div>
+
+                <Calendar selectedDate={selectedDate} onSelect={handleInitialDateSelect} />
+
+                {/* Calendar Legend */}
+                <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-[#C8A96A]/10 flex justify-center gap-6 md:gap-12 items-center">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-[#C8A96A]" />
+                    <span className="font-label text-[8px] md:text-[10px] uppercase tracking-widest text-[#C8A96A]/40 font-bold">Available</span>
+                  </div>
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-[#333534] border border-[#C8A96A]/10" />
+                    <span className="font-label text-[8px] md:text-[10px] uppercase tracking-widest text-[#C8A96A]/40 font-bold">Full</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Gallery Section Preview */}
+              <div className="mt-20 md:mt-32 w-full">
+                <div className="text-center mb-12 md:mb-16">
+                  <span className="font-label text-[8px] md:text-[10px] uppercase tracking-[0.4em] text-[#C8A96A] font-bold">Gallery</span>
+                  <h2 className="font-headline text-3xl md:text-6xl text-[#C8A96A] mt-4 mb-12 md:mb-16">Captured Moments</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:grid-cols-3 md:gap-8">
+                  {[
+                    "https://lh3.googleusercontent.com/aida-public/AB6AXuBSXkv1bUTfT0-n4B887NnK9lcdaAiQyHPUtwpI2g6sJ0UQBso7OcEN2Dg3borLpRXTCX2tJ-QL503TjPzXaaN4Z6fFCSUQ-Dr3HOAJsaVPtXr4cT5ZEfkq-P4ymleX1dq06oIwT4y_m3FyXZJrO8OfUo3fYpHWFs-NeCormJTzH7wip230wKeAzC5uLw5oIT9-3tMWHffcAe8evlWkHjo1MRqSZZHcn695Ha5hmSI21seRVrl4KiuT-H_og6c0QrVR_ssiG2g3Oxo",
+                    "https://lh3.googleusercontent.com/aida-public/AB6AXuD4qH16qwWZ8umR_Zj--U_ihIIxlL9L707YZ20Ml3SkjLt2Mx8WTmhxAfeL7KFjr71UBXr0FH84TXwsJBLFoDS1PNpA8WNWQ7Fdhld9S301PZJkyr4II6cTTQ-dmFO6l-3UY33Yf4SdWGqBosz6VwKzL5pxlAhJTbpCyWb6mnLR4iTlozoV-Jxz-aDytNZk2w_PH4x30nwPIcUubQzcHd2bysEM8-E36G4O4ILDEcvOCOvmXErwS1xDk5vyOeXJGgYe1RxwyNSsMN0",
+                    "https://lh3.googleusercontent.com/aida-public/AB6AXuBjhoXkdcSxBZno7ebjD6pTJlR3s9468JNQ6RpbyA1y6pRFyJD_3VcYuX0BWRqDM98Jy0K5PFQu0N50e5ZtF1cgyLnjIEoURPFKGnUXfwH5E9whxQggqABdbFy3fw6qcHF3CfHIxJeRAxYx5c6v5KjlfJbps6cHen7vbeV0Izvbtu_6aoWTYDjeHqz7jG6me4l7nu70UD6xIFv6i7hfLe3Cu0pR56oEGIK_pZeQ9tgbIVSmSwOnpWYFG4tGWnwwbYHbcznMaQV0dl4"
+                  ].map((url, i) => (
+                    <div key={i} className="aspect-[3/4] overflow-hidden rounded-2xl border border-[#C8A96A]/10 group relative cursor-pointer shadow-xl">
+                      <img className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 brightness-[0.8] group-hover:brightness-100" src={url} alt={`Gallery ${i + 1}`} />
+                      <div className="absolute inset-0 bg-[#0F3D2E]/20 group-hover:bg-transparent transition-all duration-500" />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-
-          {/* Actions */}
-          <div className="mt-8 md:mt-16 w-full max-w-2xl flex justify-between items-center gap-4">
-            <button
-              onClick={() => router.push('/')}
-              className="flex-1 md:flex-none px-6 md:px-10 py-3 md:py-4 font-label text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-[#C8A96A] border border-[#C8A96A]/30 rounded-lg hover:bg-[#C8A96A]/5 transition-all font-bold"
-            >
-              Cancel
-            </button>
-            <button
-              disabled={!selectedDate}
-              onClick={() => selectedDate && handleInitialDateSelect(selectedDate)}
-              className="flex-[2] md:flex-none bg-[#C8A96A] px-6 md:px-12 py-3 md:py-4 font-label text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-[#0F3D2E] rounded-lg shadow-[0_0_20px_rgba(200,169,106,0.3)] hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 md:gap-3 font-bold"
-            >
-              Next: Choose Time
-              <span className="material-symbols-outlined text-[14px] md:text-[18px]">arrow_forward</span>
-            </button>
-          </div>
-
-          {/* Context Images */}
-          <div className="mt-20 w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="aspect-square overflow-hidden rounded-xl border border-[#C8A96A]/10 group">
-              <img className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSXkv1bUTfT0-n4B887NnK9lcdaAiQyHPUtwpI2g6sJ0UQBso7OcEN2Dg3borLpRXTCX2tJ-QL503TjPzXaaN4Z6fFCSUQ-Dr3HOAJsaVPtXr4cT5ZEfkq-P4ymleX1dq06oIwT4y_m3FyXZJrO8OfUo3fYpHWFs-NeCormJTzH7wip230wKeAzC5uLw5oIT9-3tMWHffcAe8evlWkHjo1MRqSZZHcn695Ha5hmSI21seRVrl4KiuT-H_og6c0QrVR_ssiG2g3Oxo" alt="Garden" />
-            </div>
-            <div className="aspect-square overflow-hidden rounded-xl border border-[#C8A96A]/10 group">
-              <img className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4qH16qwWZ8umR_Zj--U_ihIIxlL9L707YZ20Ml3SkjLt2Mx8WTmhxAfeL7KFjr71UBXr0FH84TXwsJBLFoDS1PNpA8WNWQ7Fdhld9S301PZJkyr4II6cTTQ-dmFO6l-3UY33Yf4SdWGqBosz6VwKzL5pxlAhJTbpCyWb6mnLR4iTlozoV-Jxz-aDytNZk2w_PH4x30nwPIcUubQzcHd2bysEM8-E36G4O4ILDEcvOCOvmXErwS1xDk5vyOeXJGgYe1RxwyNSsMN0" alt="Lounge" />
-            </div>
-            <div className="aspect-square overflow-hidden rounded-xl border border-[#C8A96A]/10 group">
-              <img className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjhoXkdcSxBZno7ebjD6pTJlR3s9468JNQ6RpbyA1y6pRFyJD_3VcYuX0BWRqDM98Jy0K5PFQu0N50e5ZtF1cgyLnjIEoURPFKGnUXfwH5E9whxQggqABdbFy3fw6qcHF3CfHIxJeRAxYx5c6v5KjlfJbps6cHen7vbeV0Izvbtu_6aoWTYDjeHqz7jG6me4l7nu70UD6xIFv6i7hfLe3Cu0pR56oEGIK_pZeQ9tgbIVSmSwOnpWYFG4tGWnwwbYHbcznMaQV0dl4" alt="Table" />
-            </div>
-          </div>
+          </section>
         </main>
         <Footer />
       </div>
     </div>
   );
 }
-
