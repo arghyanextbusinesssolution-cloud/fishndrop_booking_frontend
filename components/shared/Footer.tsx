@@ -26,7 +26,7 @@ export const Footer = () => {
           {/* Brand Column */}
           <div className="space-y-6">
             <Link href="/" className="flex items-center group">
-              <div className="relative w-48 h-20 md:w-72 md:h-32 hover:brightness-110 transition-all -ml-2 md:-ml-4">
+              <div className="relative w-64 h-28 md:w-[28rem] md:h-44 hover:brightness-110 transition-all -ml-2 md:-ml-4">
                 <Image
                   src="/tropica-logo.png"
                   alt="Tropica Sanctuary"

@@ -31,7 +31,7 @@ export const NavBar = () => {
         : "bg-transparent"
     )}>
       <Link href="/" className="flex items-center">
-        <div className="relative w-56 h-20 md:w-96 md:h-32 hover:brightness-110 transition-all -ml-2 md:-ml-4">
+        <div className="relative w-72 h-24 md:w-[28rem] md:h-40 hover:brightness-110 transition-all -ml-2 md:-ml-4">
           <Image
             src="/tropica-logo.png"
             alt="Tropica Sanctuary"
