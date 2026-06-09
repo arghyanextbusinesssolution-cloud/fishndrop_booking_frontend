@@ -19,7 +19,7 @@ export default function TermsAndConditions() {
             <main className="max-w-4xl mx-auto py-20 px-6 md:px-12">
                 <header className="mb-16 text-center">
                     <h1 className="font-headline text-4xl md:text-6xl mb-6">Terms & Conditions</h1>
-                    <p className="font-label text-xs uppercase tracking-[0.3em] opacity-60 italic mb-2">Tropica Private Dining Lounge</p>
+                    <p className="font-label text-xs uppercase tracking-[0.3em] opacity-60 italic mb-2">Tropica Private Dining Private Space</p>
                     <p className="font-label text-xs uppercase tracking-[0.3em] opacity-60">Reservation Terms & Conditions</p>
                 </header>
 
@@ -54,7 +54,7 @@ export default function TermsAndConditions() {
                     <div>
                         <h2 className="font-headline text-2xl mb-4 border-b border-[#C8A96A]/20 pb-2">3. Release of Liability</h2>
                         <p className="opacity-80 leading-relaxed mb-4">
-                            To the fullest extent permitted by law, Tropica Private Dining Lounge, its owners, staff, affiliates, contractors, entertainers, DJs, chefs, security personnel, vendors, and partners shall not be held liable for:
+                            To the fullest extent permitted by law, Tropica Private Dining Private Space, its owners, staff, affiliates, contractors, entertainers, DJs, chefs, security personnel, vendors, and partners shall not be held liable for:
                         </p>
                         <ul className="list-disc list-inside space-y-2 opacity-80 pl-4 mb-4">
                             <li>Personal injury, Illness, or Death</li>

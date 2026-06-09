@@ -7,7 +7,7 @@ export const Footer = () => {
       {/* CTA Section */}
       <section className="w-full py-20 px-4 flex flex-col items-center text-center bg-[#0F3D2E] border-b border-[#C8A96A]/10">
         <h2 className="font-headline text-3xl md:text-5xl text-[#C8A96A] mb-4">
-          Reserve Your Private Lounge Experience
+          Reserve Your Private Private Space Experience
         </h2>
         <p className="font-body text-[#C8A96A]/80 text-sm md:text-base mb-10 max-w-2xl italic">
           Perfect for intimate dinners, celebrations, and unforgettable evenings.
@@ -30,7 +30,7 @@ export const Footer = () => {
               <span className="font-headline text-2xl uppercase tracking-wider group-hover:brightness-110 transition-all">TROPICA</span>
             </Link>
             <p className="font-body text-sm text-[#C8A96A]/70 leading-relaxed max-w-xs italic">
-              A private garden dining and lounge experience crafted for beautiful moments.
+              A private garden dining and private space experience crafted for beautiful moments.
             </p>
           </div>
 

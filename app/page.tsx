@@ -97,7 +97,7 @@ export default function Home() {
             <h3 className="font-headline italic text-2xl md:text-3xl text-[#C8A96A] mb-4">Terms & Conditions</h3>
 
             <div className="text-on-surface/80 font-body text-sm space-y-4 mb-6 h-64 overflow-y-auto pr-2 custom-scrollbar text-left">
-              <p><strong>Allergen Disclaimer – Tropica Private Dining Lounge</strong></p>
+              <p><strong>Allergen Disclaimer – Tropica Private Dining Private Space</strong></p>
               <p>At Tropica, we are committed to providing a safe dining experience. Our menu items—whether for dine-in or online orders—may contain or come into contact with allergens including, but not limited to: dairy, eggs, wheat, soy, nuts, peanuts, fish, and shellfish.</p>
               <p>If you have any allergies, please inform our staff prior to dining or note them when placing an online order. While we take great care, we cannot guarantee that any dish will be completely allergen-free, due to potential cross-contact.</p>
               <p>For online orders, please use the &ldquo;special instructions&rdquo; field to note allergies, or contact us directly before ordering.</p>

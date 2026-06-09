@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const Hero = () => {
     return (
-        <section className="relative w-full h-[85vh] md:h-[90vh] flex items-center justify-center overflow-hidden pt-24 md:pt-32">
+        <section className="relative w-full h-screen flex items-center justify-center overflow-hidden pt-24 md:pt-32">
             {/* Background Media */}
             <div className="absolute inset-0 z-0">
                 <video
@@ -11,7 +11,7 @@ export const Hero = () => {
                     muted
                     loop
                     playsInline
-                    className="w-full h-full object-cover brightness-[0.4]"
+                    className="w-full h-full object-cover brightness-[0.5]"
                 >
                     <source src="/banner_video.mp4" type="video/mp4" />
                     <img
@@ -20,7 +20,7 @@ export const Hero = () => {
                         className="w-full h-full object-cover"
                     />
                 </video>
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0F3D2E]/40 to-[#0F3D2E]" />
+                <div className="absolute inset-0 bg-black/40" />
             </div>
 
             {/* Content */}
@@ -37,7 +37,7 @@ export const Hero = () => {
                         href="/book-venue"
                         className="w-full md:w-auto bg-[#C8A96A] text-[#0F3D2E] px-8 md:px-10 py-4 md:py-5 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:scale-105 transition-all shadow-xl shadow-[#C8A96A]/20"
                     >
-                        RESERVE THE LOUNGE
+                        RESERVE THE PRIVATE SPACE
                     </Link>
                     <a
                         href="#reservations"

@@ -14,21 +14,21 @@ export default function NotFound() {
             priority
           />
         </div>
-        
+
         <h1 className="font-headline text-8xl md:text-[10rem] text-[#C8A96A] opacity-20 tracking-tighter italic leading-none absolute top-10 md:-top-10 -z-10 pointer-events-none">
           404
         </h1>
-        
+
         <h2 className="font-headline text-4xl md:text-6xl text-white italic mb-6">
           Lost in the <span className="text-gold-gradient">Sanctuary</span>
         </h2>
-        
+
         <p className="font-body text-white/60 text-lg md:text-xl font-light mb-12 max-w-md mx-auto">
-          The page you are looking for has vanished into the mist. Allow us to guide you back to the main lounge.
+          The page you are looking for has vanished into the mist. Allow us to guide you back to the main private space.
         </p>
 
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="bg-gold-gradient text-on-primary font-label text-[11px] tracking-[0.3em] uppercase px-12 py-5 rounded-full shadow-2xl shadow-[#C8A96A]/20 hover:scale-105 active:scale-95 transition-all duration-500 font-bold"
         >
           Return Home

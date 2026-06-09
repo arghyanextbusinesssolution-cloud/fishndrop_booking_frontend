@@ -15,7 +15,7 @@ const features = [
     {
         icon: <Music className="w-6 h-6" />,
         title: "Vibes & Audio",
-        description: "Experience a perfect blend of ambient soundscapes and premium lounge music."
+        description: "Experience a perfect blend of ambient soundscapes and premium private space music."
     },
     {
         icon: <Users className="w-6 h-6" />,
@@ -52,7 +52,7 @@ export const Experience = () => {
                     <div className="aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border border-[#C8A96A]/10">
                         <img
                             src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4qH16qwWZ8umR_Zj--U_ihIIxlL9L707YZ20Ml3SkjLt2Mx8WTmhxAfeL7KFjr71UBXr0FH84TXwsJBLFoDS1PNpA8WNWQ7Fdhld9S301PZJkyr4II6cTTQ-dmFO6l-3UY33Yf4SdWGqBosz6VwKzL5pxlAhJTbpCyWb6mnLR4iTlozoV-Jxz-aDytNZk2w_PH4x30nwPIcUubQzcHd2bysEM8-E36G4O4ILDEcvOCOvmXErwS1xDk5vyOeXJGgYe1RxwyNSsMN0"
-                            alt="Lounge Experience"
+                            alt="Private Space Experience"
                             className="w-full h-full object-cover hover:scale-110 transition-transform duration-1000"
                         />
                     </div>

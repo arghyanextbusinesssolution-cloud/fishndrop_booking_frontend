@@ -61,7 +61,7 @@ const sections = [
         icon: <Shield className="w-5 h-5 text-[#C8A96A]" />,
         content: (
             <div className="space-y-3">
-                <p>To the fullest extent permitted by law, Tropica Private Dining Lounge, its owners, staff, affiliates, contractors, entertainers, DJs, chefs, security personnel, vendors, and partners shall not be held liable for:</p>
+                <p>To the fullest extent permitted by law, Tropica Private Dining Private Space, its owners, staff, affiliates, contractors, entertainers, DJs, chefs, security personnel, vendors, and partners shall not be held liable for:</p>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1 text-on-surface/70">
                     <li>• Personal injury</li>
                     <li>• Illness</li>
@@ -228,7 +228,7 @@ const sections = [
         icon: <Handshake className="w-5 h-5 text-[#C8A96A]" />,
         content: (
             <div className="space-y-4">
-                <p>Guests agree to indemnify and hold harmless Tropica Private Dining Lounge, its owners, affiliates, employees, contractors, vendors, and agents from any claims, damages, losses, legal fees, or liabilities arising from:</p>
+                <p>Guests agree to indemnify and hold harmless Tropica Private Dining Private Space, its owners, affiliates, employees, contractors, vendors, and agents from any claims, damages, losses, legal fees, or liabilities arising from:</p>
                 <ul className="list-disc pl-5 space-y-2 text-on-surface/70">
                     <li>Guest conduct</li>
                     <li>Violation of these Terms</li>
@@ -283,7 +283,7 @@ export default function TermsAndConditions() {
                         Terms & <span className="text-gold-gradient">Conditions</span>
                     </h1>
                     <p className="font-body text-on-surface/60 text-sm md:text-lg max-w-2xl leading-relaxed">
-                        Please read these terms carefully before making a reservation or visiting Tropica Private Dining Lounge. Your agreement to these terms ensures a premium and safe experience for all our guests.
+                        Please read these terms carefully before making a reservation or visiting Tropica Private Dining Private Space. Your agreement to these terms ensures a premium and safe experience for all our guests.
                     </p>
                 </div>
 
