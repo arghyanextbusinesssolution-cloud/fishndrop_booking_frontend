@@ -47,7 +47,7 @@ export const NavBar = () => {
           <Link href="/" className="text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] font-bold">Reservations</Link>
         </div>
 
-        {/* Book a Lounge Button - New */}
+        {/* Book a Private Space Button - New */}
         <Link
           href="/book-venue"
           className="hidden sm:flex text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] border border-[#C8A96A]/30 px-4 py-2 rounded-full hover:bg-[#C8A96A]/10 transition-all font-bold"

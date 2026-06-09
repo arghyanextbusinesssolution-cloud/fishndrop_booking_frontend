@@ -20,6 +20,20 @@ export default function Home() {
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] = useState(false);
   const [pendingDate, setPendingDate] = useState<Date | null>(null);
+  const [countdown, setCountdown] = useState(5);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (showDisclaimer && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    } else if (showDisclaimer && countdown === 0) {
+      setShowDisclaimer(false);
+      router.push('/book-venue');
+    }
+    return () => clearInterval(timer);
+  }, [showDisclaimer, countdown, router]);
 
   useEffect(() => {
     const checkBackend = async () => {
@@ -90,54 +104,38 @@ export default function Home() {
         </div>
       )}
 
-      {/* Disclaimer Modal */}
+      {/* Booking Notice Modal */}
       {showDisclaimer && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-[#0F3D2E]/90 backdrop-blur-sm p-4">
-          <div className="bg-[#1a1c1b] border border-[#C8A96A]/30 rounded-2xl p-6 md:p-8 max-w-lg w-full shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-fade-in relative">
-            <h3 className="font-headline italic text-2xl md:text-3xl text-[#C8A96A] mb-4">Terms & Conditions</h3>
-
-            <div className="text-on-surface/80 font-body text-sm space-y-4 mb-6 h-64 overflow-y-auto pr-2 custom-scrollbar text-left">
-              <p><strong>Allergen Disclaimer – Tropica Private Dining Private Space</strong></p>
-              <p>At Tropica, we are committed to providing a safe dining experience. Our menu items—whether for dine-in or online orders—may contain or come into contact with allergens including, but not limited to: dairy, eggs, wheat, soy, nuts, peanuts, fish, and shellfish.</p>
-              <p>If you have any allergies, please inform our staff prior to dining or note them when placing an online order. While we take great care, we cannot guarantee that any dish will be completely allergen-free, due to potential cross-contact.</p>
-              <p>For online orders, please use the &ldquo;special instructions&rdquo; field to note allergies, or contact us directly before ordering.</p>
-              <p>Guests with severe allergies should exercise their own discretion. We are always happy to answer questions about ingredients—just ask!</p>
-              <p>Thank you for dining with Tropica and for your understanding.</p>
+          <div className="bg-[#1a1c1b] border border-[#C8A96A]/30 rounded-2xl p-6 md:p-8 max-w-lg w-full shadow-[0_0_50px_rgba(0,0,0,0.5)] animate-fade-in relative text-center">
+            <div className="w-16 h-16 rounded-full bg-[#C8A96A]/10 flex items-center justify-center mx-auto mb-6">
+              <span className="material-symbols-outlined text-[#C8A96A] text-3xl">info</span>
             </div>
+            <h3 className="font-headline italic text-2xl md:text-3xl text-[#C8A96A] mb-4">Notice</h3>
+            <p className="font-body text-on-surface/80 text-sm md:text-base mb-8 leading-relaxed">
+              We are currently not taking general restaurant reservations. To experience Tropica, please explore our Private Dining Space opportunities.
+            </p>
+            <p className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] mb-8 animate-pulse">
+              Redirecting to Private Space in {countdown}s...
+            </p>
 
-            <label className="flex items-start gap-3 cursor-pointer group mb-8">
-              <div className="relative flex items-center justify-center mt-1">
-                <input
-                  type="checkbox"
-                  className="peer sr-only"
-                  checked={hasAcceptedDisclaimer}
-                  onChange={(e) => setHasAcceptedDisclaimer(e.target.checked)}
-                />
-                <div className="w-5 h-5 border-2 border-[#C8A96A]/50 rounded peer-checked:bg-[#C8A96A] peer-checked:border-[#C8A96A] transition-all flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[14px] text-[#0F3D2E] opacity-0 peer-checked:opacity-100 transition-opacity">check</span>
-                </div>
-              </div>
-              <span className="font-label text-xs uppercase tracking-widest text-[#C8A96A]/80 group-hover:text-[#C8A96A] transition-colors leading-relaxed text-left">
-                I have read and agree to the allergen disclaimer and terms of condition
-              </span>
-            </label>
-
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-3">
               <button
                 onClick={() => {
                   setShowDisclaimer(false);
-                  setHasAcceptedDisclaimer(false);
+                  router.push('/book-venue');
                 }}
-                className="flex-1 py-3 font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] border border-[#C8A96A]/30 rounded-lg hover:bg-[#C8A96A]/10 transition-all font-bold"
+                className="w-full py-4 font-label text-[10px] uppercase tracking-[0.2em] bg-[#C8A96A] text-[#0F3D2E] rounded-lg hover:brightness-110 transition-all font-bold"
               >
-                Cancel
+                Explore Private Space
               </button>
               <button
-                disabled={!hasAcceptedDisclaimer}
-                onClick={proceedWithDate}
-                className="flex-[2] py-3 font-label text-[10px] uppercase tracking-[0.2em] bg-[#C8A96A] text-[#0F3D2E] rounded-lg hover:brightness-110 disabled:opacity-50 disabled:hover:brightness-100 disabled:cursor-not-allowed transition-all font-bold"
+                onClick={() => {
+                  setShowDisclaimer(false);
+                }}
+                className="w-full py-3 font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A]/60 hover:text-[#C8A96A] transition-all font-bold"
               >
-                Accept & Continue
+                Close
               </button>
             </div>
           </div>
@@ -152,7 +150,10 @@ export default function Home() {
 
         <main className="flex-grow pt-0">
           {/* Hero Section */}
-          <Hero />
+          <Hero onTableReservationClick={() => {
+            setCountdown(5);
+            setShowDisclaimer(true);
+          }} />
 
           {/* Experience Section */}
           <Experience />

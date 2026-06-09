@@ -25,9 +25,16 @@ export const Footer = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
           {/* Brand Column */}
           <div className="space-y-6">
-            <Link href="/" className="flex items-center gap-2 group">
-              <span className="text-2xl">🌴</span>
-              <span className="font-headline text-2xl uppercase tracking-wider group-hover:brightness-110 transition-all">TROPICA</span>
+            <Link href="/" className="flex items-center group">
+              <div className="relative w-48 h-20 md:w-72 md:h-32 hover:brightness-110 transition-all -ml-2 md:-ml-4">
+                <Image
+                  src="/tropica-logo.png"
+                  alt="Tropica Sanctuary"
+                  fill
+                  className="object-contain object-left"
+                  priority
+                />
+              </div>
             </Link>
             <p className="font-body text-sm text-[#C8A96A]/70 leading-relaxed max-w-xs italic">
               A private garden dining and private space experience crafted for beautiful moments.

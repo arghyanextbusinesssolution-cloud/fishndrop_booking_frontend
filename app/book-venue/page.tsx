@@ -1,4 +1,5 @@
 import { PrivateBookingWizard } from "@/components/booking/PrivateBookingWizard";
+import { NavBar } from "@/components/shared/NavBar";
 
 export const metadata = {
   title: "Book The Venue | Tropica",
@@ -7,10 +8,13 @@ export const metadata = {
 
 export default function BookVenuePage() {
   return (
-    <main className="min-h-screen bg-background pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <PrivateBookingWizard />
-      </div>
-    </main>
+    <div className="theme-astral min-h-screen bg-[#0F3D2E]">
+      <NavBar />
+      <main className="pt-24 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <PrivateBookingWizard />
+        </div>
+      </main>
+    </div>
   );
 }

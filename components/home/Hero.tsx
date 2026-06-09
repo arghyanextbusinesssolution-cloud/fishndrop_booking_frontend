@@ -1,7 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
 
-export const Hero = () => {
+interface HeroProps {
+    onTableReservationClick?: () => void;
+}
+
+export const Hero = ({ onTableReservationClick }: HeroProps) => {
     return (
         <section className="relative w-full h-screen flex items-center justify-center overflow-hidden pt-24 md:pt-32">
             {/* Background Media */}
@@ -39,12 +43,21 @@ export const Hero = () => {
                     >
                         RESERVE THE PRIVATE SPACE
                     </Link>
-                    <a
-                        href="#reservations"
-                        className="w-full md:w-auto border border-[#C8A96A]/30 text-[#C8A96A] px-8 md:px-10 py-4 md:py-5 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:bg-[#C8A96A]/10 transition-all"
-                    >
-                        TABLE RESERVATION
-                    </a>
+                    {onTableReservationClick ? (
+                        <button
+                            onClick={onTableReservationClick}
+                            className="w-full md:w-auto border border-[#C8A96A]/30 text-[#C8A96A] px-8 md:px-10 py-4 md:py-5 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:bg-[#C8A96A]/10 transition-all font-body"
+                        >
+                            TABLE RESERVATION
+                        </button>
+                    ) : (
+                        <a
+                            href="#reservations"
+                            className="w-full md:w-auto border border-[#C8A96A]/30 text-[#C8A96A] px-8 md:px-10 py-4 md:py-5 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:bg-[#C8A96A]/10 transition-all"
+                        >
+                            TABLE RESERVATION
+                        </a>
+                    )}
                 </div>
             </div>
 
