@@ -78,7 +78,9 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
     <div className="max-w-md mx-auto space-y-6 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="bg-[#f7f6f2] rounded-xl p-6 flex justify-between items-center shadow-lg">
         <p className="font-label text-[10px] tracking-[0.3em] uppercase text-[#1a1c1b]/60 font-bold max-w-[80px] leading-tight">Total Amount</p>
-        <p className="font-headline text-5xl text-[#C8A96A] font-bold tracking-tighter">${bookingData.totalPrice?.toFixed(2) || bookingData.totalPrice}</p>
+        <p className="font-headline text-5xl text-[#C8A96A] font-bold tracking-tighter">
+          ${(bookingData.totalPrice || (bookingData.durationHours * 125)).toFixed(2)}
+        </p>
       </div>
 
       {error && (

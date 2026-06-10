@@ -127,11 +127,12 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
           <div className="glass-card rounded-xl p-6 border-primary/20 bg-primary/5">
             <h3 className="font-headline italic text-xl text-primary mb-2">Venue Buyout</h3>
             <p className="text-white/60 font-body text-sm mb-4">
-              Private venue bookings are charged at a flat rate of <span className="text-white font-medium">$250 per hour</span>, regardless of guest count.
+              Private venue bookings are currently specialized at <span className="line-through opacity-50 mr-2">$250</span>
+              <span className="text-primary font-bold text-lg">$125 per hour</span>, regardless of guest count.
             </p>
             <div className="flex items-center justify-between border-t border-white/10 pt-4">
               <span className="font-label uppercase text-[10px] tracking-widest text-white/50">Estimated Cost</span>
-              <span className="font-headline text-2xl text-white">${durationHours * 250}</span>
+              <span className="font-headline text-2xl text-white">${durationHours * 125}</span>
             </div>
           </div>
 
