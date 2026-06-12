@@ -15,7 +15,7 @@ const guestSchema = z.object({
   isLoggedIn: z.boolean().optional(),
   agreedToTransactional: z.boolean().refine(val => val === true, "Transactional consent is required"),
   agreedToMarketing: z.boolean().optional(),
-  agreedToTerms: z.boolean().refine(val => val === true, "Terms agreement is required")
+  agreedToTerms: z.boolean().optional()
 }).refine((data) => {
   // If logged in, password is not required
   if (data.isLoggedIn) return true;
@@ -61,7 +61,8 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
     defaultValues: {
       ...initialData,
       emailExists: false,
-      isLoggedIn: !!user
+      isLoggedIn: !!user,
+      agreedToTerms: true
     },
   });
 
@@ -312,30 +313,10 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
                 </div>
               </div>
               <span className="text-sm leading-relaxed text-on-surface/60 font-body transition-colors group-hover:text-on-surface/80">
-                I consent to receive marketing and promotional messages at the phone number provided. Message frequency may vary. Message & Data rates may apply. Reply HELP for help or STOP to opt-out.
+                By checking this box, I consent to receive marketing and promotional SMS messages from Tropica.nyc , including special offers, discounts, announcements, and updates. Message frequency may vary. Message and data rates may apply. Reply HELP for help or STOP to opt out at any time.
               </span>
             </label>
 
-            <label className="flex gap-4 cursor-pointer group">
-              <div className="relative flex items-center pt-1">
-                <input
-                  type="checkbox"
-                  {...register("agreedToTerms")}
-                  className="peer h-6 w-6 shrink-0 appearance-none rounded-sm border border-[#C8A96A]/30 bg-transparent checked:bg-[#C8A96A] transition-all"
-                />
-                <div className="absolute inset-0 flex items-center justify-center text-primary-foreground opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none">
-                  <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-[4px]">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <span className="text-sm leading-relaxed text-on-surface/60 font-body transition-colors group-hover:text-on-surface/80">
-                  I agree to the <a href="/terms" className="text-[#C8A96A] underline hover:text-[#C8A96A]/80 transition-colors" target="_blank" rel="noopener noreferrer">Terms & Conditions</a> and <a href="/privacy-policy" className="text-[#C8A96A] underline hover:text-[#C8A96A]/80 transition-colors" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
-                </span>
-                {errors.agreedToTerms && <p className="text-[10px] uppercase tracking-widest text-error font-bold">{errors.agreedToTerms.message as string}</p>}
-              </div>
-            </label>
           </div>
 
           <div className="pt-8 flex flex-col sm:flex-row items-center gap-8">
@@ -345,6 +326,9 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
             >
               Continue to Finalize
             </button>
+            <p className="text-[11px] text-on-surface/50 font-body leading-relaxed max-w-xs text-center sm:text-left">
+              By continuing, you agree to our <a href="/terms" className="text-[#C8A96A] underline hover:text-[#C8A96A]/80 transition-colors" target="_blank" rel="noopener noreferrer">Terms & Conditions</a> and <a href="/privacy" className="text-[#C8A96A] underline hover:text-[#C8A96A]/80 transition-colors" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+            </p>
           </div>
         </form>
       </div>

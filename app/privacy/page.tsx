@@ -68,6 +68,9 @@ export default function PrivacyPolicy() {
                         <p className="opacity-80 leading-relaxed mb-4">
                             We do not sell, trade, or otherwise transfer to outside parties your personally identifiable information unless we provide you with advance notice. This does not include website hosting partners and other parties who assist us in operating our website, conducting our business, or servicing you.
                         </p>
+                        <p className="opacity-80 leading-relaxed mb-4">
+                            No mobile information will be shared with third parties/affiliates for marketing/promotional purposes. Information sharing to subcontractors in support services, such as customer service is permitted. All other use case categories exclude text messaging originator opt-in data and consent; this information will not be shared with any third parties.
+                        </p>
                     </div>
 
                     <div>
