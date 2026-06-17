@@ -79,7 +79,7 @@ export default function PrivacyPolicy() {
                             If there are any questions regarding this privacy policy, you may contact us using the information below:
                         </p>
                         <div className="mt-4 p-6 bg-[#0F3D2E] rounded-lg border border-[#C8A96A]/10 italic">
-                            <p>Tropica Sanctuary</p>
+                            <p>TASTE OF THE CITY GOURMET LLC DBA TROPICA</p>
                             <p>Email: Bookings@tropica.nyc</p>
                             <p>Phone: 1 866-990-7422</p>
                         </div>

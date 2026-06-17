@@ -54,7 +54,7 @@ export default function TermsAndConditions() {
                     <div>
                         <h2 className="font-headline text-2xl mb-4 border-b border-[#C8A96A]/20 pb-2">3. Release of Liability</h2>
                         <p className="opacity-80 leading-relaxed mb-4">
-                            To the fullest extent permitted by law, Tropica Private Dining Private Space, its owners, staff, affiliates, contractors, entertainers, DJs, chefs, security personnel, vendors, and partners shall not be held liable for:
+                            To the fullest extent permitted by law, TASTE OF THE CITY GOURMET LLC DBA TROPICA, its owners, staff, affiliates, contractors, entertainers, DJs, chefs, security personnel, vendors, and partners shall not be held liable for:
                         </p>
                         <ul className="list-disc list-inside space-y-2 opacity-80 pl-4 mb-4">
                             <li>Personal injury, Illness, or Death</li>

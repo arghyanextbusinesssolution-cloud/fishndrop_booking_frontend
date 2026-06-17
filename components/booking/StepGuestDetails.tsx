@@ -313,7 +313,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
                 </div>
               </div>
               <span className="text-sm leading-relaxed text-on-surface/60 font-body transition-colors group-hover:text-on-surface/80">
-                By checking this box, I consent to receive marketing and promotional SMS messages from Tropica.nyc , including special offers, discounts, announcements, and updates. Message frequency may vary. Message and data rates may apply. Reply HELP for help or STOP to opt out at any time.
+                By checking this box, I consent to receive marketing and promotional SMS messages from TASTE OF THE CITY GOURMET LLC DBA TROPICA , including special offers, discounts, announcements, and updates. Message frequency may vary. Message and data rates may apply. Reply HELP for help or STOP to opt out at any time.
               </span>
             </label>
 
