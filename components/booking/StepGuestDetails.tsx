@@ -102,11 +102,11 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
         </p>
         <div className="pt-8 border-t border-outline-variant/20">
           <div className="flex items-center gap-4 group">
-            <div className="w-12 h-12 rounded-full overflow-hidden glass-card border-primary/20">
+            <div className="w-12 h-12 rounded-full overflow-hidden glass-card border-primary/20 ring-1 ring-primary/20">
               <img
-                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                className="w-full h-full object-cover transition-all duration-700"
                 alt="Concierge"
-                src="https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80&w=200"
+                src="/resturant_img1.png"
               />
             </div>
             <div>

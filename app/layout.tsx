@@ -51,6 +51,13 @@ export default function RootLayout({
             fbq('track', 'PageView');
           `}
         </Script>
+        <Script
+          src="https://widgets.leadconnectorhq.com/loader.js"
+          data-resources-url="https://widgets.leadconnectorhq.com/chat-widget/loader.js"
+          data-widget-id="6a315a5281870ee2fdf63b71"
+          data-source="WEB_USER"
+          strategy="lazyOnload"
+        />
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col">
         <noscript>

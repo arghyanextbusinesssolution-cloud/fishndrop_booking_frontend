@@ -43,6 +43,14 @@ export const Hero = ({ onTableReservationClick }: HeroProps) => {
                     >
                         RESERVE THE PRIVATE SPACE
                     </Link>
+                    <a
+                        href="https://api.leadconnectorhq.com/widget/booking/hh2gGpKwljrlKAb3FzN1"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full md:w-auto border border-[#C8A96A]/30 text-[#C8A96A] px-8 md:px-10 py-4 md:py-5 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:bg-[#C8A96A]/10 transition-all font-body text-center"
+                    >
+                        BOOK A TOUR
+                    </a>
                     {onTableReservationClick ? (
                         <button
                             onClick={onTableReservationClick}

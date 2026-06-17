@@ -54,6 +54,14 @@ export const NavBar = () => {
         >
           Book Private Space
         </Link>
+        <a
+          href="https://api.leadconnectorhq.com/widget/booking/hh2gGpKwljrlKAb3FzN1"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden sm:flex text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] border border-[#C8A96A]/30 px-4 py-2 rounded-full hover:bg-[#C8A96A]/10 transition-all font-bold"
+        >
+          Book Tour
+        </a>
 
         <div className="flex items-center gap-3 md:gap-6">
           <button className="hidden sm:flex text-[#C8A96A]/60 hover:text-[#C8A96A] transition-all items-center justify-center">
