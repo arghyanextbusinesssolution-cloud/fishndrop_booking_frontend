@@ -37,8 +37,11 @@ export interface Booking {
   bookingTime: string;
   status: "confirmed" | "cancelled";
   /** Omitted on older records — treated as paid in UI. */
-  paymentStatus?: "pending_payment" | "paid";
+  paymentStatus?: "pending_payment" | "paid" | "deposit_paid";
   bookingType: "standard" | "private_event";
+  depositAmount?: number;
+  remainingAmount?: number;
+  remainingPaymentStatus?: "unpaid" | "paid";
   durationHours?: number;
   createdAt: string;
 }

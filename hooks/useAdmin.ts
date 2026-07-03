@@ -53,9 +53,9 @@ export function useAdmin() {
     setLoading(true);
     setError(null);
     try {
-      const params = { 
-        page, 
-        limit, 
+      const params = {
+        page,
+        limit,
         status: status === "all" ? undefined : status,
         date: date || undefined
       };
@@ -196,6 +196,20 @@ export function useAdmin() {
     }
   }, []);
 
+  const deleteBooking = useCallback(async (bookingId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await api.delete(`/admin/bookings/${bookingId}`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Failed to delete booking";
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     getStats,
     getAllBookings,
@@ -208,6 +222,7 @@ export function useAdmin() {
     getSlotLocks,
     getPaymentSummary,
     deleteTable,
+    deleteBooking,
     loading,
     error
   };

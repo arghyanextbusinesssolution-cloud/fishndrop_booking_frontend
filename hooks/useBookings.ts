@@ -14,9 +14,9 @@ export function useBookings() {
     setError(null);
     try {
       const { data } = await api.get<BookingResponse>("/bookings/my", {
-        params: { 
-          page, 
-          limit: 10, 
+        params: {
+          page,
+          limit: 10,
           status: status === "all" ? undefined : status,
           type: type || undefined
         },
@@ -104,6 +104,23 @@ export function useBookings() {
     }
   }, []);
 
+  const startRemainingPayment = useCallback(async (bookingId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.post<{ success: boolean; url: string }>("/payments/checkout-balance", { bookingId });
+      if (!data.url) {
+        throw new Error("Missing payment URL");
+      }
+      return data.url;
+    } catch {
+      setError("Failed to start remaining payment");
+      throw new Error("Failed to start remaining payment");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const verifyCheckoutSession = useCallback(async (sessionId: string) => {
     setLoading(true);
     setError(null);
@@ -118,5 +135,19 @@ export function useBookings() {
     }
   }, []);
 
-  return { getMyBookings, getAvailability, createBooking, getBookingById, startPayment, verifyCheckoutSession, cancelBooking, loading, error };
+  const verifyPaymentIntent = useCallback(async (paymentIntentId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.post<{ success: boolean; booking: Booking }>("/payments/verify-payment-intent", { paymentIntentId });
+      return data.booking;
+    } catch {
+      setError("Failed to confirm payment intent");
+      throw new Error("Failed to confirm payment intent");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { getMyBookings, getAvailability, createBooking, getBookingById, startPayment, startRemainingPayment, verifyCheckoutSession, verifyPaymentIntent, cancelBooking, loading, error };
 }

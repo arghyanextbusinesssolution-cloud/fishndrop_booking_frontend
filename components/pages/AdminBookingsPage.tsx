@@ -8,6 +8,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { cn } from "@/lib/utils";
 import { CalendarDays, Search, ChevronLeft, ChevronRight, XCircle } from "lucide-react";
 import { CalendarDropdown } from "@/components/shared/CalendarDropdown";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-US", {
@@ -29,16 +30,24 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function PaymentBadge({ status }: { status?: string }) {
-  const isPaid = status === "paid";
+function PaymentBadge({ status, remainingStatus }: { status?: string, remainingStatus?: string }) {
+  if (status === "paid" || (status === "deposit_paid" && remainingStatus === "paid")) {
+    return (
+      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-emerald-50 text-emerald-700 border-emerald-200">
+        Paid
+      </span>
+    );
+  }
+  if (status === "deposit_paid") {
+    return (
+      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-amber-50 text-amber-700 border-amber-200">
+        Deposit Paid
+      </span>
+    );
+  }
   return (
-    <span className={cn(
-      "px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold",
-      isPaid
-        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-        : "bg-amber-50 text-amber-700 border-amber-200"
-    )}>
-      {isPaid ? "Paid" : "Unpaid"}
+    <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-surface-container-lowest text-secondary border-outline-variant/30">
+      Unpaid
     </span>
   );
 }
@@ -63,8 +72,10 @@ const FILTER_TABS = [
   { key: "cancelled", label: "Cancelled" },
 ];
 
+type PendingAction = { bookingId: string; action: "cancel" | "delete" } | null;
+
 export default function AdminBookingsPage() {
-  const { getAllBookings, adminCancelBooking } = useAdmin();
+  const { getAllBookings, adminCancelBooking, deleteBooking } = useAdmin();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
@@ -73,6 +84,7 @@ export default function AdminBookingsPage() {
   const [selectedDate, setSelectedDate] = useState("");
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -95,15 +107,43 @@ export default function AdminBookingsPage() {
 
   const filtered = query
     ? bookings.filter((b) =>
-        (b.customerName || b.user?.name || "").toLowerCase().includes(query.toLowerCase()) ||
-        (b.customerEmail || b.user?.email || "").toLowerCase().includes(query.toLowerCase())
-      )
+      (b.customerName || b.user?.name || "").toLowerCase().includes(query.toLowerCase()) ||
+      (b.customerEmail || b.user?.email || "").toLowerCase().includes(query.toLowerCase())
+    )
     : bookings;
+
+  const handleConfirm = async () => {
+    if (!pendingAction) return;
+    const { bookingId, action } = pendingAction;
+    setPendingAction(null);
+    if (action === "cancel") {
+      await adminCancelBooking(bookingId);
+      toast.success("Booking cancelled");
+    } else {
+      await deleteBooking(bookingId);
+      toast.success("Booking deleted successfully");
+    }
+    await load();
+  };
 
   if (loading) return <LoadingSpinner />;
 
   return (
     <div className="p-6 md:p-10 space-y-8 min-h-screen">
+      <ConfirmDialog
+        open={!!pendingAction}
+        title={pendingAction?.action === "delete" ? "Delete Booking" : "Cancel Booking"}
+        message={
+          pendingAction?.action === "delete"
+            ? "This will permanently remove the booking and release all associated table locks. This cannot be undone."
+            : "The guest will be notified and this reservation will be marked as cancelled."
+        }
+        confirmLabel={pendingAction?.action === "delete" ? "Delete" : "Cancel Booking"}
+        cancelLabel="Keep it"
+        variant="danger"
+        onConfirm={handleConfirm}
+        onCancel={() => setPendingAction(null)}
+      />
 
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -218,24 +258,36 @@ export default function AdminBookingsPage() {
                         b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—"
                       )}
                     </td>
-                    <td className="px-4 py-4 font-headline text-base italic text-on-surface">${b.totalAmount}</td>
-                    <td className="px-4 py-4"><PaymentBadge status={b.paymentStatus} /></td>
+                    <td className="px-4 py-4">
+                      {b.bookingType === "private_event" ? (
+                        <div className="flex flex-col gap-1">
+                          <span className="font-headline text-base italic text-on-surface">${b.totalAmount} <span className="text-[10px] text-outline font-sans not-italic">Total</span></span>
+                          {(b.depositAmount ?? 0) > 0 && <span className="text-[10px] text-primary uppercase tracking-widest font-bold">${b.depositAmount ?? 0} Deposit</span>}
+                        </div>
+                      ) : (
+                        <span className="font-headline text-base italic text-on-surface">${b.totalAmount}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4"><PaymentBadge status={b.paymentStatus} remainingStatus={b.remainingPaymentStatus} /></td>
                     <td className="px-4 py-4"><StatusBadge status={b.status} /></td>
                     <td className="px-4 py-4">
-                      {b.status === "confirmed" && (
+                      <div className="flex gap-2">
+                        {b.status === "confirmed" && (
+                          <button
+                            onClick={() => setPendingAction({ bookingId: b._id, action: "cancel" })}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-200 text-red-600 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50 transition-colors"
+                          >
+                            <XCircle className="w-3 h-3" strokeWidth={2} />
+                            Cancel
+                          </button>
+                        )}
                         <button
-                          onClick={async () => {
-                            if (!window.confirm("Cancel this booking?")) return;
-                            await adminCancelBooking(b._id);
-                            toast.success("Booking cancelled");
-                            await load();
-                          }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-200 text-red-600 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50 transition-colors"
+                          onClick={() => setPendingAction({ bookingId: b._id, action: "delete" })}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-700 text-red-700 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50/50 transition-colors"
                         >
-                          <XCircle className="w-3 h-3" strokeWidth={2} />
-                          Cancel
+                          Delete
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}

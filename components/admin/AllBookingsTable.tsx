@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 interface Props {
   bookings: Booking[];
   onCancel: (id: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }
 
-export function AllBookingsTable({ bookings, onCancel }: Props) {
+export function AllBookingsTable({ bookings, onCancel, onDelete }: Props) {
   const [query, setQuery] = useState("");
   const rows = useMemo(
     () => bookings.filter((b) => b.user.name.toLowerCase().includes(query.toLowerCase())),
@@ -27,7 +28,12 @@ export function AllBookingsTable({ bookings, onCancel }: Props) {
                 <td className="p-2">{i + 1}</td><td className="p-2">{b.user.name}</td><td className="p-2">{b.user.email}</td><td className="p-2">{b.partySize}</td>
                 <td className="p-2">{b.tables.map((t) => `#${t.tableNumber}`).join(", ")}</td><td className="p-2">${b.totalAmount}</td><td className="p-2">{b.complimentaryDrinks}</td><td className="p-2">{b.status}</td>
                 <td className={`p-2 font-medium ${b.paymentStatus === "pending_payment" ? "text-amber-700" : "text-[var(--success)]"}`}>{b.paymentStatus === "pending_payment" ? "Unpaid" : "Paid"}</td>
-                <td className="p-2">{b.status === "confirmed" && <Button onClick={() => void onCancel(b._id)} className="bg-red-500 hover:bg-red-600">Cancel</Button>}</td>
+                <td className="p-2">
+                  <div className="flex gap-2">
+                    {b.status === "confirmed" && <Button onClick={() => void onCancel(b._id)} className="bg-red-500 hover:bg-red-600">Cancel</Button>}
+                    <Button onClick={() => { if (confirm("Are you sure you want to delete this booking?")) void onDelete(b._id); }} className="bg-red-700 hover:bg-red-800 text-white">Delete</Button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

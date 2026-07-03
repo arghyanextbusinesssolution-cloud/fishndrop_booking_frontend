@@ -14,8 +14,9 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 export default function UserPaymentConfirmedPage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id") || "";
+  const paymentIntentId = searchParams.get("payment_intent") || "";
   const bookingIdFallback = searchParams.get("bookingId") || "";
-  const { verifyCheckoutSession, getBookingById, loading } = useBookings();
+  const { verifyCheckoutSession, verifyPaymentIntent, getBookingById, loading } = useBookings();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const attempted = useRef(false);
@@ -23,27 +24,37 @@ export default function UserPaymentConfirmedPage() {
   const runVerify = useCallback(async () => {
     if (attempted.current) return;
     attempted.current = true;
+    console.log("[Confirm] sessionId:", sessionId, "paymentIntentId:", paymentIntentId, "bookingId:", bookingIdFallback);
     try {
       if (sessionId) {
+        console.log("[Confirm] Verifying via session...");
         const b = await verifyCheckoutSession(sessionId);
         setBooking(b);
+      } else if (paymentIntentId) {
+        console.log("[Confirm] Verifying via paymentIntent:", paymentIntentId);
+        const b = await verifyPaymentIntent(paymentIntentId);
+        setBooking(b);
       } else if (bookingIdFallback) {
+        console.log("[Confirm] Falling back to getBookingById...");
         const b = await getBookingById(bookingIdFallback);
         setBooking(b);
+      } else {
+        console.warn("[Confirm] No valid params found — cannot verify.");
       }
-    } catch {
+    } catch (err) {
+      console.error("[Confirm] Verify failed:", err);
       attempted.current = false;
       setError("We could not confirm this payment. Your card may have been declined, or the session expired.");
     }
-  }, [sessionId, bookingIdFallback, verifyCheckoutSession, getBookingById]);
+  }, [sessionId, paymentIntentId, bookingIdFallback, verifyCheckoutSession, verifyPaymentIntent, getBookingById]);
 
   useEffect(() => {
-    if (!sessionId && !bookingIdFallback) return;
+    if (!sessionId && !paymentIntentId && !bookingIdFallback) return;
     const t = window.setTimeout(() => {
       void runVerify();
-    }, 0);
+    }, 300);
     return () => window.clearTimeout(t);
-  }, [sessionId, bookingIdFallback, runVerify]);
+  }, [sessionId, paymentIntentId, bookingIdFallback, runVerify]);
 
   const ctaClass = cn(
     buttonVariants({ variant: "default" }),
@@ -51,7 +62,7 @@ export default function UserPaymentConfirmedPage() {
   );
   const outlineClass = cn(buttonVariants({ variant: "outline" }));
 
-  if (!sessionId && !bookingIdFallback) {
+  if (!sessionId && !paymentIntentId && !bookingIdFallback) {
     return (
       <div className="mx-auto max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 text-center">
         <p className="font-semibold text-[var(--text-primary)]">Invalid confirmation link</p>

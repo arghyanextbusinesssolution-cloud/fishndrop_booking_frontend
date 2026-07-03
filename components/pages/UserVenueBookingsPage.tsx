@@ -79,7 +79,6 @@ export default function UserVenueBookingsPage() {
         ))}
       </div>
 
-      {/* Bookings Grid */}
       {bookings.length === 0 ? (
         <div className="py-32 flex flex-col items-center justify-center space-y-8 bg-surface-container-low/30 rounded-2xl border border-dashed border-outline-variant/20">
           <CalendarDays className="w-12 h-12 text-outline/20" strokeWidth={1} />
@@ -87,75 +86,72 @@ export default function UserVenueBookingsPage() {
             <p className="font-headline text-3xl italic text-secondary">No exclusive events yet.</p>
             <p className="text-sm text-outline font-body font-light italic">Your journey towards an exclusive buyout starts here.</p>
           </div>
-          <Link href="/private-booking" className="bg-gold-gradient px-8 py-3 rounded-lg text-on-primary font-label tracking-widest uppercase text-[10px] font-bold">
+          <Link href="/book-venue" className="bg-gold-gradient px-8 py-3 rounded-lg text-on-primary font-label tracking-widest uppercase text-[10px] font-bold">
             Reserve the Venue
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          {bookings.map((booking) => (
-            <div key={booking._id} className="group space-y-8 relative">
-              <div className="bg-surface-container-lowest p-2 rounded-xl ambient-shadow ring-1 ring-outline-variant/10 transition-transform duration-700 group-hover:scale-[1.01]">
-                <div className="aspect-[21/9] rounded-lg overflow-hidden relative">
-                  <img
-                    src={VENUE_IMAGE}
-                    alt="Private Venue"
-                    className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className={cn(
-                    "absolute top-4 right-4 px-3 py-1 rounded-full text-[8px] uppercase tracking-widest font-bold border backdrop-blur-md",
-                    booking.status === 'confirmed' ? "bg-primary/20 border-primary/30 text-primary" : "bg-error/10 border-error/20 text-error"
-                  )}>
-                    {booking.status}
-                  </div>
-                  <div className="absolute bottom-4 left-4">
-                    <span className="text-[10px] text-white/80 font-label tracking-widest uppercase font-bold">Exclusive Buyout</span>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4 px-2">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <p className="text-[9px] uppercase tracking-widest font-bold text-primary opacity-60 uppercase">{booking.occasion}</p>
-                    <h4 className="font-headline text-4xl italic text-on-surface leading-tight transition-colors group-hover:text-primary">
-                      {new Date(booking.bookingDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </h4>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[9px] uppercase tracking-widest font-bold text-outline">Exclusive Access</p>
-                    <p className="font-headline text-3xl italic text-on-surface">Full Venue</p>
-                  </div>
-                </div>
+        <div className="overflow-x-auto rounded-xl border border-outline-variant/10 bg-surface-container-lowest ambient-shadow">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-surface-container-low/50 border-b border-outline-variant/10">
+                <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Date & Time</th>
+                <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Occasion</th>
+                <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Details</th>
+                <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Payment Status</th>
+                <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-outline-variant/5">
+              {bookings.map((booking) => {
+                const remainingAmt = booking.remainingAmount ?? 0;
+                const isUnpaid = remainingAmt > 0 && booking.remainingPaymentStatus !== "paid";
 
-                <div className="grid grid-cols-3 gap-8 pt-6 border-t border-outline-variant/10">
-                  <div>
-                    <p className="text-[8px] uppercase tracking-widest text-outline font-bold">Ensemble</p>
-                    <p className="text-sm font-body font-light text-on-surface italic">{booking.partySize} Guests</p>
-                  </div>
-                  <div>
-                    <p className="text-[8px] uppercase tracking-widest text-outline font-bold">Commence</p>
-                    <p className="text-sm font-body font-light text-on-surface italic">{booking.bookingTime}</p>
-                  </div>
-                  <div>
-                    <p className="text-[8px] uppercase tracking-widest text-outline font-bold">Duration</p>
-                    <p className="text-sm font-body font-light text-on-surface italic">{booking.durationHours} Hours</p>
-                  </div>
-                </div>
-
-                <div className="pt-4 flex items-center justify-between border-t border-outline-variant/10">
-                  <div className="flex gap-2">
-                    <span className="text-[9px] px-3 py-1 rounded bg-primary/10 text-primary font-bold uppercase tracking-widest border border-primary/20 transition-all">
-                      Total Investment: ${booking.totalAmount}
-                    </span>
-                  </div>
-                  <span title="Private event bookings include full venue access and dedicated service.">
-                    <Info className="w-4 h-4 text-outline/30 cursor-help" />
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
+                return (
+                  <tr key={booking._id} className="hover:bg-surface-container-low/20 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="font-headline text-lg italic text-on-surface">
+                        {new Date(booking.bookingDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </p>
+                      <p className="text-xs text-outline">{booking.bookingTime}</p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="text-sm text-on-surface capitalize">{booking.occasion}</p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="text-xs text-outline">{booking.partySize} Guests</p>
+                      <p className="text-xs text-outline">{booking.durationHours} Hours</p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="space-y-1">
+                        <p className="text-xs text-on-surface"><span className="text-outline">Total:</span> ${booking.totalAmount?.toFixed(2)}</p>
+                        <p className="text-xs text-primary"><span className="text-outline">Deposit Paid:</span> ${booking.depositAmount?.toFixed(2)}</p>
+                        {remainingAmt > 0 && (
+                          <p className={cn("text-xs font-semibold", isUnpaid ? "text-error" : "text-emerald-500")}>
+                            <span className="text-outline">Remaining:</span> ${remainingAmt.toFixed(2)} ({booking.remainingPaymentStatus})
+                          </p>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      {isUnpaid ? (
+                        <Link
+                          href={`/user/payment?is_balance=true&bookingId=${booking._id}`}
+                          className="inline-block bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 px-4 py-2 rounded text-[10px] font-bold tracking-widest uppercase transition-colors"
+                        >
+                          Pay Balance
+                        </Link>
+                      ) : (
+                        <span className="text-[10px] font-bold tracking-widest uppercase text-emerald-500">
+                          {booking.status === 'cancelled' ? 'Cancelled' : 'Fully Paid'}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 

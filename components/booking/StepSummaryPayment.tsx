@@ -75,9 +75,11 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
 
   const router = useRouter();
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = (bookingId: string, paymentIntentId?: string) => {
     if (bookingId) {
-      router.push(`/user/payment/confirmed?bookingId=${bookingId}`);
+      let url = `/user/payment/confirmed?bookingId=${bookingId}`;
+      if (paymentIntentId) url += `&payment_intent=${paymentIntentId}`;
+      router.push(url);
     }
   };
 

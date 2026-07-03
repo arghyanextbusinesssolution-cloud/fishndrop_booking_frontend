@@ -9,7 +9,7 @@ import Link from "next/link";
 
 
 interface StripePaymentFormProps {
-  onSuccess: (bookingId: string) => void;
+  onSuccess: (bookingId: string, paymentIntentId?: string) => void;
   bookingId: string;
   agreedToTerms?: boolean;
   agreedToTransactional?: boolean;
@@ -45,7 +45,7 @@ export const StripePaymentForm = ({
       setIsProcessing(false);
     } else if (paymentIntent && paymentIntent.status === "succeeded") {
       toast.success("Payment successful!");
-      onSuccess(bookingId);
+      onSuccess(bookingId, paymentIntent.id);
     }
   };
 

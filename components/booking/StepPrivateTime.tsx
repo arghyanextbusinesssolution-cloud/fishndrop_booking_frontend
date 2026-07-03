@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Loader2, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatTimeTo12Hour } from "@/lib/utils";
 import axios from "axios";
+
 
 interface StepPrivateTimeProps {
   onNext: (data: { time: string }) => void;
@@ -25,17 +26,17 @@ export const StepPrivateTime = ({ onNext, date, durationHours, selectedTime }: S
   useEffect(() => {
     const fetchAvailability = async () => {
       if (!date) return;
-      
+
       setIsLoading(true);
       setError(null);
-      
+
       try {
         // Robust YYYY-MM-DD parsing to avoid timezone shifts
         const d = new Date(date);
         const formattedDate = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-        
+
         console.group(`💎 Private Event Analysis for ${formattedDate} (${durationHours} Hours)`);
-        
+
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/bookings/private-availability`,
           {
@@ -45,11 +46,11 @@ export const StepPrivateTime = ({ onNext, date, durationHours, selectedTime }: S
             },
           }
         );
-        
+
         if (response.data.success) {
           setSlots(response.data.slots);
           console.log("Raw Private Slots Data:", response.data.slots);
-          
+
           const blocked = response.data.slots.filter((s: any) => !s.isAvailable);
           if (blocked.length > 0) {
             console.warn("🚫 BLOCKED SLOTS FOR BUYOUT:", blocked.map((s: any) => `${s.slot} (${s.message})`));
@@ -102,14 +103,14 @@ export const StepPrivateTime = ({ onNext, date, durationHours, selectedTime }: S
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {slots.map(({ slot, isAvailable, message }) => (
-            <button 
+            <button
               key={slot}
               onClick={() => isAvailable && onNext({ time: slot })}
               disabled={!isAvailable}
               className={cn(
                 "p-4 md:p-8 rounded-xl border transition-all duration-500 flex flex-col items-center justify-center gap-1 md:gap-2 group relative overflow-hidden",
-                selectedTime === slot 
-                  ? "bg-[#E5E7EB] border-[#E5E7EB] shadow-2xl shadow-black/40" 
+                selectedTime === slot
+                  ? "bg-[#E5E7EB] border-[#E5E7EB] shadow-2xl shadow-black/40"
                   : isAvailable
                     ? "glass-card border-white/15 hover:bg-white/10 hover:border-white/30 hover:scale-[1.02]"
                     : "opacity-40 cursor-not-allowed border-white/5 bg-black/20"
@@ -119,12 +120,12 @@ export const StepPrivateTime = ({ onNext, date, durationHours, selectedTime }: S
               {selectedTime === slot && (
                 <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent mix-blend-overlay"></div>
               )}
-              
+
               <span className={cn(
                 "font-headline text-2xl md:text-4xl transition-colors duration-300 relative z-10",
                 selectedTime === slot ? "text-gray-900" : isAvailable ? "text-white group-hover:text-primary" : "text-white/30"
               )}>
-                {slot}
+                {formatTimeTo12Hour(slot)}
               </span>
               <span className={cn(
                 "font-label text-[9px] md:text-[10px] uppercase tracking-widest relative z-10 font-bold",
@@ -142,11 +143,11 @@ export const StepPrivateTime = ({ onNext, date, durationHours, selectedTime }: S
           ))}
         </div>
       )}
-      
+
       {slots.filter(s => s.isAvailable).length === 0 && !isLoading && !error && (
         <div className="mt-8 p-6 rounded-xl border border-primary/20 bg-primary/5 text-center">
           <p className="text-primary font-body">
-            We're sorry, but the venue cannot be secured for a continuous {durationHours}-hour block on this date. 
+            We're sorry, but the venue cannot be secured for a continuous {durationHours}-hour block on this date.
             Please try selecting a shorter duration or a different date.
           </p>
         </div>

@@ -120,7 +120,7 @@ export function BookingForm() {
         cakePrice: String(values.cakePrice ?? 0)
       });
       router.push(`/user/payment?${params.toString()}`);
-    } catch {}
+    } catch { }
   };
 
   return (
@@ -170,11 +170,10 @@ export function BookingForm() {
                     type="button"
                     disabled={isPast}
                     onClick={() => setValue("bookingDate", format(dayDate, "yyyy-MM-dd"), { shouldValidate: true })}
-                    className={`h-11 rounded-md border text-sm ${
-                      isSelected
+                    className={`h-11 rounded-md border text-sm ${isSelected
                         ? "border-pink-500 bg-pink-500/20 text-pink-700"
                         : "border-[var(--border)] text-[var(--text-primary)]"
-                    } ${isPast ? "cursor-not-allowed opacity-40" : ""}`}
+                      } ${isPast ? "cursor-not-allowed opacity-40" : ""}`}
                   >
                     {format(dayDate, "d")}
                   </button>
@@ -257,11 +256,11 @@ export function BookingForm() {
 
         {step === 5 && <div className={`rounded-xl border p-4 ${canFillDetails ? "border-[#2a3148]" : "border-[#2a3148]/40 opacity-60"}`}>
           <p className="text-sm font-semibold">Step 5 - Personal Details</p>
-        <div>
-          <div className="mt-2"><Label htmlFor="customerName">Name</Label><Input id="customerName" disabled={!canFillDetails} {...register("customerName")} />{errors.customerName && <p className="text-sm text-[var(--error)]">{errors.customerName.message}</p>}</div>
-          <div><Label htmlFor="customerEmail">Email</Label><Input id="customerEmail" type="email" disabled={!canFillDetails} {...register("customerEmail")} />{errors.customerEmail && <p className="text-sm text-[var(--error)]">{errors.customerEmail.message}</p>}</div>
-          <div><Label htmlFor="customerPhone">Phone</Label><Input id="customerPhone" disabled={!canFillDetails} {...register("customerPhone")} />{errors.customerPhone && <p className="text-sm text-[var(--error)]">{errors.customerPhone.message}</p>}</div>
-          <div><Label htmlFor="notes">Notes (optional)</Label><Input id="notes" disabled={!canFillDetails} {...register("notes")} /></div>
+          <div>
+            <div className="mt-2"><Label htmlFor="customerName">Name</Label><Input id="customerName" disabled={!canFillDetails} {...register("customerName")} />{errors.customerName && <p className="text-sm text-[var(--error)]">{errors.customerName.message}</p>}</div>
+            <div><Label htmlFor="customerEmail">Email</Label><Input id="customerEmail" type="email" disabled={!canFillDetails} {...register("customerEmail")} />{errors.customerEmail && <p className="text-sm text-[var(--error)]">{errors.customerEmail.message}</p>}</div>
+            <div><Label htmlFor="customerPhone">Phone</Label><Input id="customerPhone" disabled={!canFillDetails} {...register("customerPhone")} />{errors.customerPhone && <p className="text-sm text-[var(--error)]">{errors.customerPhone.message}</p>}</div>
+            <div><Label htmlFor="notes">Notes (optional)</Label><Input id="notes" disabled={!canFillDetails} {...register("notes")} /></div>
           </div>
           <div className="mt-4 flex justify-between">
             <Button type="button" variant="outline" onClick={() => setStep(4)}>Back</Button>

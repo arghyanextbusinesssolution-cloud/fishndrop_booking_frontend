@@ -21,6 +21,7 @@ type PaymentBooking = {
   occasion: string;
   notes?: string;
   cakeDetails?: string;
+  remainingAmount?: number;
 };
 
 export default function UserPaymentPage() {
@@ -33,7 +34,7 @@ export default function UserPaymentPage() {
   const prefilledCustomerName = searchParams.get("customerName") || "";
   const prefilledOccasion = searchParams.get("occasion") || "";
   const prefilledCakePrice = Number(searchParams.get("cakePrice") || 0);
-  const { getBookingById, startPayment, loading } = useBookings();
+  const { getBookingById, startPayment, startRemainingPayment, loading } = useBookings();
   const [booking, setBooking] = useState<PaymentBooking | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
 
@@ -83,6 +84,8 @@ export default function UserPaymentPage() {
     prefilledCakePrice
   ]);
 
+  const isBalance = searchParams.get("is_balance") === "true";
+
   useEffect(() => {
     void loadBooking();
   }, [loadBooking]);
@@ -90,7 +93,10 @@ export default function UserPaymentPage() {
   const handleProceedToStripe = async () => {
     if (!booking?._id) return;
     try {
-      const url = await startPayment(booking._id);
+      const url = isBalance
+        ? await startRemainingPayment(booking._id)
+        : await startPayment(booking._id);
+
       if (url && typeof window !== "undefined") {
         window.location.href = url;
       }
@@ -112,6 +118,8 @@ export default function UserPaymentPage() {
     );
   }
 
+  const displayAmount = isBalance ? (booking.remainingAmount || booking.totalAmount) : booking.totalAmount;
+
   return (
     <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
       <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
@@ -126,8 +134,8 @@ export default function UserPaymentPage() {
           <p><span className="font-medium text-[var(--text-primary)]">Cake:</span> ${booking.cakePrice || 0}</p>
         </div>
         <div className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-          <p className="text-sm text-[var(--text-secondary)]">Total Charge</p>
-          <p className="text-3xl font-bold text-[var(--accent)]">${booking.totalAmount}</p>
+          <p className="text-sm text-[var(--text-secondary)]">{isBalance ? "Remaining Amount Due" : "Total Charge"}</p>
+          <p className="text-3xl font-bold text-[var(--accent)]">${displayAmount}</p>
         </div>
       </section>
 
