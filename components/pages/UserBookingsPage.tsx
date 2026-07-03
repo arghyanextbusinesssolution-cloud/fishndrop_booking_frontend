@@ -37,7 +37,7 @@ export default function UserBookingsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getMyBookings(page, status);
+      const data = await getMyBookings(page, status, "standard");
       setBookings(data.bookings);
       setTotalPages(data.totalPages);
     } catch {
@@ -167,41 +167,6 @@ export default function UserBookingsPage() {
                   </div>
                 )}
 
-                {/* Private Event Payment Breakdown & Pay Balance CTA */}
-                {booking.bookingType === "private_event" && (
-                  <div className="pt-4 space-y-3 border-t border-outline-variant/10">
-                    <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider">
-                      <span className="text-outline">Total Budget</span>
-                      <span className="text-on-surface">${booking.totalAmount}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider">
-                      <span className="text-outline">Deposit Paid</span>
-                      <span className="text-primary">${booking.depositAmount}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider">
-                      <span className="text-outline">Remaining Balance</span>
-                      <span className={booking.remainingPaymentStatus === "paid" ? "text-primary" : "text-error"}>
-                        ${booking.remainingAmount} ({booking.remainingPaymentStatus})
-                      </span>
-                    </div>
-                    {booking.status === "confirmed" && booking.remainingPaymentStatus === "unpaid" && (
-                      <button
-                        onClick={() => handlePayRemaining(booking._id)}
-                        disabled={payingId === booking._id}
-                        className="w-full mt-2 bg-gold-gradient text-on-primary font-label tracking-widest uppercase text-[10px] font-bold py-2.5 rounded-lg transition-transform duration-500 hover:scale-[1.01] active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-                      >
-                        {payingId === booking._id ? (
-                          <>
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                            Redirecting...
-                          </>
-                        ) : (
-                          `Pay Remaining Balance ($${booking.remainingAmount})`
-                        )}
-                      </button>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
           ))}
