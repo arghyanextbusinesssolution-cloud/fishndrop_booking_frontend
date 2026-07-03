@@ -42,9 +42,9 @@ export const PrivateBookingWizard = () => {
       phone: user?.phone || "",
       notes: "",
       occasion: "business",
-      agreedToTransactional: false,
+      agreedToTransactional: true,
       agreedToMarketing: false,
-      agreedToTerms: false
+      agreedToTerms: true
     },
   });
 

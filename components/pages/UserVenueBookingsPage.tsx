@@ -91,68 +91,136 @@ export default function UserVenueBookingsPage() {
           </Link>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-outline-variant/10 bg-surface-container-lowest ambient-shadow">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-surface-container-low/50 border-b border-outline-variant/10">
-                <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Date & Time</th>
-                <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Occasion</th>
-                <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Details</th>
-                <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Payment Status</th>
-                <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-outline-variant/5">
-              {bookings.map((booking) => {
-                const remainingAmt = booking.remainingAmount ?? 0;
-                const isUnpaid = remainingAmt > 0 && booking.remainingPaymentStatus !== "paid";
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto rounded-xl border border-outline-variant/10 bg-surface-container-lowest ambient-shadow">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-surface-container-low/50 border-b border-outline-variant/10">
+                  <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Date & Time</th>
+                  <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Occasion</th>
+                  <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Details</th>
+                  <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline">Payment Status</th>
+                  <th className="px-6 py-4 text-[10px] uppercase tracking-widest font-bold text-outline text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-outline-variant/5">
+                {bookings.map((booking) => {
+                  const remainingAmt = booking.remainingAmount ?? 0;
+                  const isUnpaid = remainingAmt > 0 && booking.remainingPaymentStatus !== "paid";
 
-                return (
-                  <tr key={booking._id} className="hover:bg-surface-container-low/20 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="font-headline text-lg italic text-on-surface">
+                  return (
+                    <tr key={booking._id} className="hover:bg-surface-container-low/20 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <p className="font-headline text-lg italic text-on-surface">
+                          {new Date(booking.bookingDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
+                        <p className="text-xs text-outline">{booking.bookingTime}</p>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <p className="text-sm text-on-surface capitalize">{booking.occasion}</p>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <p className="text-xs text-outline">{booking.partySize} Guests</p>
+                        <p className="text-xs text-outline">{booking.durationHours} Hours</p>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="space-y-1">
+                          <p className="text-xs text-on-surface"><span className="text-outline">Total:</span> ${booking.totalAmount?.toFixed(2)}</p>
+                          <p className="text-xs text-primary"><span className="text-outline">Deposit Paid:</span> ${booking.depositAmount?.toFixed(2)}</p>
+                          {remainingAmt > 0 && (
+                            <p className={cn("text-xs font-semibold", isUnpaid ? "text-error" : "text-emerald-500")}>
+                              <span className="text-outline">Remaining:</span> ${remainingAmt.toFixed(2)} ({booking.remainingPaymentStatus})
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        {isUnpaid ? (
+                          <Link
+                            href={`/user/payment?is_balance=true&bookingId=${booking._id}`}
+                            className="inline-block bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 px-4 py-2 rounded text-[10px] font-bold tracking-widest uppercase transition-colors"
+                          >
+                            Pay Balance
+                          </Link>
+                        ) : (
+                          <span className="text-[10px] font-bold tracking-widest uppercase text-emerald-500">
+                            {booking.status === 'cancelled' ? 'Cancelled' : 'Fully Paid'}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {bookings.map((booking) => {
+              const remainingAmt = booking.remainingAmount ?? 0;
+              const isUnpaid = remainingAmt > 0 && booking.remainingPaymentStatus !== "paid";
+
+              return (
+                <div key={booking._id} className="p-5 rounded-xl border border-outline-variant/10 bg-surface-container-lowest ambient-shadow space-y-4">
+                  <div className="flex justify-between items-start border-b border-outline-variant/5 pb-4">
+                    <div>
+                      <p className="font-headline text-xl italic text-on-surface">
                         {new Date(booking.bookingDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </p>
                       <p className="text-xs text-outline">{booking.bookingTime}</p>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-sm text-on-surface capitalize">{booking.occasion}</p>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="text-xs text-outline">{booking.partySize} Guests</p>
-                      <p className="text-xs text-outline">{booking.durationHours} Hours</p>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="space-y-1">
-                        <p className="text-xs text-on-surface"><span className="text-outline">Total:</span> ${booking.totalAmount?.toFixed(2)}</p>
-                        <p className="text-xs text-primary"><span className="text-outline">Deposit Paid:</span> ${booking.depositAmount?.toFixed(2)}</p>
-                        {remainingAmt > 0 && (
-                          <p className={cn("text-xs font-semibold", isUnpaid ? "text-error" : "text-emerald-500")}>
-                            <span className="text-outline">Remaining:</span> ${remainingAmt.toFixed(2)} ({booking.remainingPaymentStatus})
-                          </p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      {isUnpaid ? (
-                        <Link
-                          href={`/user/payment?is_balance=true&bookingId=${booking._id}`}
-                          className="inline-block bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 px-4 py-2 rounded text-[10px] font-bold tracking-widest uppercase transition-colors"
-                        >
-                          Pay Balance
-                        </Link>
-                      ) : (
-                        <span className="text-[10px] font-bold tracking-widest uppercase text-emerald-500">
-                          {booking.status === 'cancelled' ? 'Cancelled' : 'Fully Paid'}
+                    </div>
+                    {isUnpaid ? (
+                      <Link
+                        href={`/user/payment?is_balance=true&bookingId=${booking._id}`}
+                        className="inline-block bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 px-3 py-2 rounded text-[10px] font-bold tracking-widest uppercase transition-colors text-center"
+                      >
+                        Pay Balance
+                      </Link>
+                    ) : (
+                      <span className="text-[10px] font-bold tracking-widest uppercase text-emerald-500">
+                        {booking.status === 'cancelled' ? 'Cancelled' : 'Fully Paid'}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest font-bold text-outline mb-1">Occasion</p>
+                      <p className="text-on-surface capitalize">{booking.occasion}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest font-bold text-outline mb-1">Details</p>
+                      <p className="text-on-surface text-xs">{booking.partySize} Guests</p>
+                      <p className="text-on-surface text-xs">{booking.durationHours} Hours</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-outline-variant/5 space-y-1">
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-outline mb-2">Payment</p>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-outline">Total:</span>
+                      <span className="text-on-surface font-semibold">${booking.totalAmount?.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-outline">Deposit Paid:</span>
+                      <span className="text-primary font-semibold">${booking.depositAmount?.toFixed(2)}</span>
+                    </div>
+                    {remainingAmt > 0 && (
+                      <div className="flex justify-between items-center text-xs mt-1">
+                        <span className="text-outline">Remaining ({booking.remainingPaymentStatus}):</span>
+                        <span className={cn("font-bold", isUnpaid ? "text-error" : "text-emerald-500")}>
+                          ${remainingAmt.toFixed(2)}
                         </span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* Pagination */}

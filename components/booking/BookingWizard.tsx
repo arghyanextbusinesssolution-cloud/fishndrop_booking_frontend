@@ -67,9 +67,9 @@ export const BookingWizard = () => {
       email: user?.email || "",
       phone: user?.phone || "",
       password: "",
-      agreedToTransactional: false,
+      agreedToTransactional: true,
       agreedToMarketing: false,
-      agreedToTerms: false
+      agreedToTerms: true
     },
     occasion: "other",
     addons: [],

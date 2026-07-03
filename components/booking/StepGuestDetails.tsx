@@ -13,9 +13,9 @@ const guestSchema = z.object({
   confirmPassword: z.string().optional(),
   emailExists: z.boolean().optional(),
   isLoggedIn: z.boolean().optional(),
-  agreedToTransactional: z.boolean().refine(val => val === true, "Transactional consent is required"),
+  agreedToTransactional: z.boolean().optional(),
   agreedToMarketing: z.boolean().optional(),
-  agreedToTerms: z.boolean().optional()
+  agreedToTerms: z.boolean().refine(val => val === true, "Must agree to terms")
 }).refine((data) => {
   // If logged in, password is not required
   if (data.isLoggedIn) return true;
@@ -62,7 +62,9 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
       ...initialData,
       emailExists: false,
       isLoggedIn: !!user,
-      agreedToTerms: true
+      agreedToTerms: true,
+      agreedToTransactional: true,
+      agreedToMarketing: true
     },
   });
 
