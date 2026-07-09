@@ -113,32 +113,33 @@ export const Calendar = ({ onSelect, selectedDate }: CalendarProps) => {
             <div
               key={i}
               className={cn(
-                "aspect-[4/3] flex items-center justify-center relative transition-all duration-300",
-                isDisabled ? "cursor-not-allowed" : "cursor-pointer"
+                "w-full aspect-square flex items-center justify-center relative transition-all duration-300",
+                isDisabled ? "cursor-not-allowed" : "cursor-pointer",
+                isSelected ? "z-50" : "z-0"
               )}
               onClick={() => !isDisabled && onSelect(new Date(year, month, d.day))}
             >
               <div
                 className={cn(
-                  "w-full h-full rounded-lg flex flex-col items-center justify-center gap-1 transition-all duration-500",
+                  "w-full rounded-xl flex flex-col items-center justify-center transition-all duration-500",
                   isSelected
-                    ? "bg-[#E3C281] text-[#0F3D2E] shadow-[0_0_25px_rgba(227,194,129,0.5)] scale-110 z-10"
+                    ? "py-1.5 md:py-2 bg-[#E3C281] text-[#0F3D2E] shadow-[0_0_25px_rgba(227,194,129,0.5)] scale-110 z-10"
                     : isDisabled
-                      ? "text-white/10"
-                      : "text-white/80 hover:bg-[#E3C281]/20 hover:text-white"
+                      ? "h-full text-white/10"
+                      : "h-full text-white/80 hover:bg-[#E3C281]/20 hover:text-white"
                 )}
               >
                 <span className={cn(
-                  "text-lg md:text-xl font-headline italic font-bold",
+                  "text-base md:text-lg font-headline italic font-bold leading-none",
                   isSelected ? "text-[#0F3D2E]" : ""
                 )}>
                   {d.day}
                 </span>
                 {isSelected && (
-                  <span className="text-[7px] uppercase tracking-widest font-bold opacity-80">Chosen</span>
+                  <span className="text-[7px] uppercase tracking-widest font-bold opacity-80 mt-1">Chosen</span>
                 )}
                 {isToday && !isSelected && (
-                  <div className="absolute bottom-2 w-1 h-1 rounded-full bg-[#E3C281]" />
+                  <div className="absolute bottom-1.5 md:bottom-2 w-1 h-1 rounded-full bg-[#E3C281]" />
                 )}
               </div>
             </div>

@@ -90,19 +90,19 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
   }, [emailValue, setValue]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">
       {/* Editorial Left Column */}
-      <div className="lg:col-span-5 space-y-8">
-        <header className="space-y-4">
+      <div className="lg:col-span-5 space-y-4 lg:space-y-8">
+        <header className="space-y-2 lg:space-y-4">
           <span className="font-label text-[10px] tracking-widest text-primary uppercase font-bold">Step 05 of 08</span>
-          <h1 className="font-headline text-5xl md:text-6xl text-on-surface leading-tight tracking-tight">
+          <h1 className="font-headline text-4xl md:text-5xl lg:text-6xl text-on-surface leading-tight tracking-tight">
             05. <span className="font-headline italic text-gold-gradient">The Guest</span> Register
           </h1>
         </header>
-        <p className="text-on-surface/70 font-body text-lg leading-relaxed max-w-sm font-light">
+        <p className="hidden md:block text-on-surface/70 font-body text-lg leading-relaxed max-w-sm font-light">
           The beauty of hospitality lies in the anticipation of our guests&apos; needs. Creating an account allows us to curate your future journeys.
         </p>
-        <div className="pt-8 border-t border-outline-variant/20">
+        <div className="hidden md:block pt-8 border-t border-outline-variant/20">
           <div className="flex items-center gap-4 group">
             <div className="w-12 h-12 rounded-full overflow-hidden glass-card border-primary/20 ring-1 ring-primary/20">
               <img
@@ -120,14 +120,14 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
       </div>
 
       {/* Form Right Column */}
-      <div className="lg:col-span-7 glass-card p-8 md:p-12 rounded-2xl relative overflow-hidden">
+      <div className="lg:col-span-7 glass-card p-6 lg:p-12 rounded-2xl relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gold-gradient" />
-        <form onSubmit={handleSubmit((data) => onNext({ guestDetails: data }))} className="space-y-10">
+        <form onSubmit={handleSubmit((data) => onNext({ guestDetails: data }))} className="space-y-6 lg:space-y-10">
 
           {user ? (
             /* AUTHENTICATED STATE */
-            <div className="space-y-8 animate-in fade-in duration-700">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-6 lg:space-y-8 animate-in fade-in duration-700">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8">
                 <div className="space-y-1">
                   <p className="font-label text-[9px] uppercase tracking-widest text-primary font-bold">Authenticated Guest</p>
                   <p className="font-headline text-3xl italic text-on-surface">{user.name}</p>
@@ -138,15 +138,15 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
                 </div>
               </div>
 
-              <div className="group relative space-y-4 pt-8 border-t border-outline-variant/10">
-                <label className="block font-headline italic text-2xl text-on-surface/60 transition-all duration-300 group-focus-within:text-gold-gradient">
+              <div className="group relative space-y-3 lg:space-y-4 pt-6 lg:pt-8 border-t border-outline-variant/10">
+                <label className="block font-headline italic text-xl lg:text-2xl text-on-surface/60 transition-all duration-300 group-focus-within:text-gold-gradient">
                   Contact Number
                 </label>
                 <input
                   {...register("phone")}
                   placeholder="+1 (555) 000 0000"
                   className={cn(
-                    "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-2xl text-on-surface",
+                    "w-full bg-transparent border-0 border-b py-2 lg:py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl lg:text-2xl text-on-surface",
                     errors.phone ? "border-error" : "border-outline-variant/40 focus:border-primary"
                   )}
                 />
@@ -279,7 +279,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
           )}
 
           {/* Terms & Conditions Checkbox */}
-          <div className="space-y-4 pt-6 border-t border-outline-variant/10">
+          <div className="space-y-4 pt-4 lg:pt-6 border-t border-outline-variant/10">
             <label className="flex gap-4 cursor-pointer group">
               <div className="relative flex items-center pt-1">
                 <input

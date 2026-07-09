@@ -22,7 +22,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { setAuth } = useAuthStore();
-  const totalCost = bookingData.durationHours * 250;
+  const totalCost = bookingData.durationHours * 125;
   const [customDeposit, setCustomDeposit] = useState<number>(Math.min(totalCost, 200));
   const [submitting, setSubmitting] = useState(false);
 
