@@ -52,6 +52,34 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
         }
         setBookingId(res.data.booking._id);
 
+        // Fire GHL webhook to capture lead
+        try {
+          await fetch(
+            "https://services.leadconnectorhq.com/hooks/3HmJCw40C6xzJYaLg6cK/webhook-trigger/bc6da1e0-2155-4d01-a223-318afd60c723",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                name: bookingData.guestDetails.name,
+                email: bookingData.guestDetails.email,
+                phone: bookingData.guestDetails.phone,
+                bookingDate: bookingData.date,
+                bookingTime: bookingData.time || "19:00",
+                partySize: bookingData.guests,
+                durationHours: bookingData.durationHours || 1,
+                occasion: bookingData.occasion || "other",
+                notes: bookingData.notes || "",
+                depositAmount: customDeposit,
+                totalCost,
+                bookingId: res.data.booking._id,
+              }),
+            }
+          );
+        } catch (ghlErr) {
+          // Non-blocking — log but don't interrupt the booking flow
+          console.warn("GHL webhook failed:", ghlErr);
+        }
+
         const { data: piData } = await api.post("/payments/create-payment-intent", {
           bookingId: res.data.booking._id
         });
