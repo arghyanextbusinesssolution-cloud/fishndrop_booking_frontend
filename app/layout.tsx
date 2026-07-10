@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Newsreader, Manrope } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
+import { Suspense } from "react";
 import { AuthInitializer } from "@/components/shared/AuthInitializer";
+import PageLoader from "@/components/shared/PageLoader";
 import Script from "next/script";
 
 const newsreader = Newsreader({
@@ -69,6 +71,9 @@ export default function RootLayout({
             alt=""
           />
         </noscript>
+        <Suspense fallback={null}>
+          <PageLoader />
+        </Suspense>
         <AuthInitializer />
         {children}
         <Toaster position="top-right" />

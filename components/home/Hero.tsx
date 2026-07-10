@@ -1,5 +1,7 @@
-import React from 'react';
-import Link from 'next/link';
+"use client";
+
+import React, { useState } from 'react';
+import { NavSpinnerLink, SpinnerButton } from '@/components/shared/NavSpinnerLink';
 
 interface HeroProps {
     onTableReservationClick?: () => void;
@@ -37,27 +39,26 @@ export const Hero = ({ onTableReservationClick }: HeroProps) => {
                     A hidden gem crafted for intimate dining, celebrations, and unforgettable evenings in the heart of the city.
                 </p>
                 <div className="flex flex-col md:flex-row items-center justify-center gap-4 animate-fade-in-up delay-500 w-full md:w-auto px-6 md:px-0">
-                    <Link
+                    <NavSpinnerLink
                         href="/book-venue"
                         className="w-full md:w-auto bg-[#C8A96A] text-[#0F3D2E] px-8 md:px-10 py-4 md:py-5 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:scale-105 transition-all shadow-xl shadow-[#C8A96A]/20"
                     >
                         RESERVE THE PRIVATE SPACE
-                    </Link>
-                    <a
+                    </NavSpinnerLink>
+                    <NavSpinnerLink
                         href="https://api.leadconnectorhq.com/widget/booking/hh2gGpKwljrlKAb3FzN1"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        external
                         className="w-full md:w-auto border border-[#C8A96A]/30 text-[#C8A96A] px-8 md:px-10 py-4 md:py-5 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:bg-[#C8A96A]/10 transition-all font-body text-center"
                     >
                         BOOK A TOUR
-                    </a>
+                    </NavSpinnerLink>
                     {onTableReservationClick ? (
-                        <button
-                            onClick={onTableReservationClick}
+                        <SpinnerButton
+                            onClickAsync={onTableReservationClick}
                             className="w-full md:w-auto border border-[#C8A96A]/30 text-[#C8A96A] px-8 md:px-10 py-4 md:py-5 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:bg-[#C8A96A]/10 transition-all font-body"
                         >
                             TABLE RESERVATION
-                        </button>
+                        </SpinnerButton>
                     ) : (
                         <a
                             href="#reservations"

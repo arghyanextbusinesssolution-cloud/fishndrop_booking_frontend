@@ -9,6 +9,7 @@ import { Calendar } from "@/components/booking/Calendar";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { Hero } from "@/components/home/Hero";
 import { Experience } from "@/components/home/Experience";
+import { NavSpinnerLink } from "@/components/shared/NavSpinnerLink";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
@@ -120,15 +121,12 @@ export default function Home() {
             </p>
 
             <div className="flex flex-col gap-3">
-              <button
-                onClick={() => {
-                  setShowDisclaimer(false);
-                  router.push('/book-venue');
-                }}
-                className="w-full py-4 font-label text-[10px] uppercase tracking-[0.2em] bg-[#C8A96A] text-[#0F3D2E] rounded-lg hover:brightness-110 transition-all font-bold"
+              <NavSpinnerLink
+                href="/book-venue"
+                className="w-full py-4 font-label text-[10px] uppercase tracking-[0.2em] bg-[#C8A96A] text-[#0F3D2E] rounded-lg hover:brightness-110 transition-all font-bold flex items-center justify-center"
               >
                 Explore Private Space
-              </button>
+              </NavSpinnerLink>
               <button
                 onClick={() => {
                   setShowDisclaimer(false);

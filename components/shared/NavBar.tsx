@@ -1,12 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
-import { User } from "lucide-react";
 import { useState, useEffect } from "react";
+import { NavSpinnerLink } from "@/components/shared/NavSpinnerLink";
 
 export const NavBar = () => {
   const pathname = usePathname();
@@ -30,7 +29,7 @@ export const NavBar = () => {
         ? "bg-[#0F3D2E]/95 backdrop-blur-md border-b border-[#C8A96A]/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)]"
         : "bg-transparent"
     )}>
-      <Link href="/" className="flex items-center">
+      <NavSpinnerLink href="/" className="flex items-center">
         <div className="relative w-72 h-24 md:w-[28rem] md:h-40 hover:brightness-110 transition-all -ml-2 md:-ml-4">
           <Image
             src="/tropica-logo.png"
@@ -40,28 +39,30 @@ export const NavBar = () => {
             priority
           />
         </div>
-      </Link>
+      </NavSpinnerLink>
 
       <div className="flex items-center gap-2 md:gap-8">
         <div className="hidden lg:flex items-center gap-10">
-          <Link href="/" className="text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] font-bold">Reservations</Link>
+          <NavSpinnerLink href="/" className="text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] font-bold">
+            Reservations
+          </NavSpinnerLink>
         </div>
 
-        {/* Book a Private Space Button - New */}
-        <Link
+        {/* Book a Private Space Button */}
+        <NavSpinnerLink
           href="/book-venue"
           className="hidden sm:flex text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] border border-[#C8A96A]/30 px-4 py-2 rounded-full hover:bg-[#C8A96A]/10 transition-all font-bold"
         >
           Book Private Space
-        </Link>
-        <a
+        </NavSpinnerLink>
+
+        <NavSpinnerLink
           href="https://api.leadconnectorhq.com/widget/booking/hh2gGpKwljrlKAb3FzN1"
-          target="_blank"
-          rel="noopener noreferrer"
+          external
           className="hidden sm:flex text-[9px] md:text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] border border-[#C8A96A]/30 px-4 py-2 rounded-full hover:bg-[#C8A96A]/10 transition-all font-bold"
         >
           Book Tour
-        </a>
+        </NavSpinnerLink>
 
         <div className="flex items-center gap-3 md:gap-6">
           <button className="hidden sm:flex text-[#C8A96A]/60 hover:text-[#C8A96A] transition-all items-center justify-center">
@@ -70,19 +71,19 @@ export const NavBar = () => {
 
           {mounted && (
             isAuthenticated ? (
-              <Link
+              <NavSpinnerLink
                 href={user?.role === "admin" ? "/admin" : "/user"}
                 className="bg-gold-gradient px-4 md:px-8 py-2 md:py-2.5 rounded-full text-on-primary font-body tracking-[0.2em] uppercase text-[9px] md:text-[10px] font-bold shadow-lg shadow-[#C8A96A]/20 hover:scale-105 transition-all active:scale-95"
               >
                 Dashboard
-              </Link>
+              </NavSpinnerLink>
             ) : (
-              <Link
+              <NavSpinnerLink
                 href="/login"
                 className="bg-gold-gradient px-4 md:px-8 py-2 md:py-2.5 rounded-full text-on-primary font-body tracking-[0.2em] uppercase text-[9px] md:text-[10px] font-bold shadow-lg shadow-[#C8A96A]/20 hover:scale-105 transition-all active:scale-95"
               >
                 Sign In
-              </Link>
+              </NavSpinnerLink>
             )
           )}
         </div>
