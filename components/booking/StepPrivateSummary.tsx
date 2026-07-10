@@ -132,7 +132,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
               type="range"
               min={Math.min(totalCost, 200)}
               max={totalCost}
-              step="50"
+              step="25"
               value={customDeposit}
               onChange={(e) => setCustomDeposit(Number(e.target.value))}
               className="w-full accent-[#C8A96A] h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
