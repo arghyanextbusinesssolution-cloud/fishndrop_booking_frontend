@@ -136,7 +136,7 @@ export const Calendar = ({ onSelect, selectedDate }: CalendarProps) => {
                   {d.day}
                 </span>
                 {isSelected && (
-                  <span className="text-[7px] uppercase tracking-widest font-bold opacity-80 mt-1">Chosen</span>
+                  <span className="text-[7px] uppercase tracking-widest font-bold opacity-80 mt-1"></span>
                 )}
                 {isToday && !isSelected && (
                   <div className="absolute bottom-1.5 md:bottom-2 w-1 h-1 rounded-full bg-[#E3C281]" />
