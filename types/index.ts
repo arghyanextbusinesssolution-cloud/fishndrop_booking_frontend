@@ -74,6 +74,20 @@ export interface CreateBookingPayload {
   cakePrice?: number;
 }
 
+export interface Coupon {
+  _id: string;
+  code: string;
+  promoterName: string;
+  promoterEmail?: string;
+  discountType: "percentage" | "fixed";
+  discountValue: number;
+  maxUses?: number;
+  usageCount: number;
+  isActive: boolean;
+  expiryDate?: string;
+  createdAt: string;
+}
+
 export interface AvailabilitySlot {
   slot: string;
   isAvailable: boolean;

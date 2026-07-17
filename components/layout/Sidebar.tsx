@@ -10,7 +10,7 @@ export function Sidebar({ closeMobile }: { closeMobile?: () => void }) {
   const router = useRouter();
   const { user, clearAuth } = useAuthStore();
   const links = user?.role === "admin"
-    ? [{ href: "/admin", label: "Dashboard" }, { href: "/admin/bookings", label: "All Bookings" }, { href: "/admin/tables", label: "Tables" }]
+    ? [{ href: "/admin", label: "Dashboard" }, { href: "/admin/bookings", label: "All Bookings" }, { href: "/admin/tables", label: "Tables" }, { href: "/admin/coupons", label: "Coupons" }]
     : [{ href: "/user", label: "Dashboard" }, { href: "/user/book", label: "Book a Table" }, { href: "/user/bookings", label: "My Bookings" }];
 
   return (
@@ -22,11 +22,10 @@ export function Sidebar({ closeMobile }: { closeMobile?: () => void }) {
             key={link.href}
             href={link.href}
             onClick={closeMobile}
-            className={`block cursor-pointer rounded-md border px-3 py-2 transition-colors ${
-              pathname === link.href
-                ? "border-[var(--accent)] bg-[var(--surface-2)] text-[var(--accent)]"
-                : "border-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-white"
-            }`}
+            className={`block cursor-pointer rounded-md border px-3 py-2 transition-colors ${pathname === link.href
+              ? "border-[var(--accent)] bg-[var(--surface-2)] text-[var(--accent)]"
+              : "border-transparent text-[var(--text-secondary)] hover:bg-[var(--surface-2)] hover:text-white"
+              }`}
           >
             {link.label}
           </Link>

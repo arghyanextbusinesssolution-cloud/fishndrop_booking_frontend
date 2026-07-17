@@ -210,6 +210,79 @@ export function useAdmin() {
     }
   }, []);
 
+  const getCoupons = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.get("/admin/coupons");
+      return data.coupons;
+    } catch {
+      setError("Failed to load coupons");
+      throw new Error("Failed to load coupons");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const createCoupon = useCallback(async (payload: any) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.post("/admin/coupons", payload);
+      return data.coupon;
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Failed to create coupon";
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const updateCoupon = useCallback(async (id: string, payload: any) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.put(`/admin/coupons/${id}`, payload);
+      return data.coupon;
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Failed to update coupon";
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const deleteCoupon = useCallback(async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await api.delete(`/admin/coupons/${id}`);
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Failed to delete coupon";
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getCouponStats = useCallback(async (id: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.get(`/admin/coupons/${id}/stats`);
+      return data;
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Failed to load coupon stats";
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     getStats,
     getAllBookings,
@@ -223,6 +296,11 @@ export function useAdmin() {
     getPaymentSummary,
     deleteTable,
     deleteBooking,
+    getCoupons,
+    createCoupon,
+    updateCoupon,
+    deleteCoupon,
+    getCouponStats,
     loading,
     error
   };

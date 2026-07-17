@@ -15,6 +15,7 @@ import {
   CreditCard,
   Lock,
   Wrench,
+  Ticket,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -89,6 +90,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { icon: TableProperties, label: "Tables", href: "/admin/tables" },
     { icon: CreditCard, label: "Payments", href: "/admin/payments" },
     { icon: Lock, label: "Slot Locks", href: "/admin/locks" },
+    { icon: Ticket, label: "Coupons", href: "/admin/coupons" },
     { icon: Wrench, label: "Settings", href: "/admin/settings" },
   ];
 
@@ -109,9 +111,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen relative overflow-x-hidden" style={{backgroundColor: '#0F3D2E'}}>
+    <div className="flex min-h-screen relative overflow-x-hidden" style={{ backgroundColor: '#0F3D2E' }}>
       {/* Mobile Top Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 border-b border-[#C8A96A]/10 z-40 flex items-center justify-between px-6 backdrop-blur-md" style={{backgroundColor: '#0a2e21'}}>
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 border-b border-[#C8A96A]/10 z-40 flex items-center justify-between px-6 backdrop-blur-md" style={{ backgroundColor: '#0a2e21' }}>
         <Link
           href="/"
           className="flex items-center"
@@ -155,7 +157,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           "w-64 flex flex-col py-12 fixed h-screen overflow-y-auto z-50 transition-transform duration-500 lg:translate-x-0 tracking-tight border-r border-[#C8A96A]/10",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
-        style={{backgroundColor: '#0a2e21'}}
+        style={{ backgroundColor: '#0a2e21' }}
       >
         <div className="px-8 mb-16 hidden lg:block">
           <Link
