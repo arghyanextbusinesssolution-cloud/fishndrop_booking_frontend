@@ -164,7 +164,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
                 </label>
                 <input
                   {...register("name")}
-                  placeholder="E.g. Alexander Sterling"
+                  placeholder="E.g. John Doe"
                   className={cn(
                     "w-full bg-transparent border-0 border-b py-3 px-0 focus:ring-0 transition-colors placeholder:text-outline/40 font-body text-xl text-on-surface",
                     errors.name ? "border-error" : "border-outline-variant/40 focus:border-primary"

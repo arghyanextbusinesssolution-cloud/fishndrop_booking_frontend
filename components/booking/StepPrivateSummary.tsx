@@ -91,34 +91,6 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
         }
         setBookingId(res.data.booking._id);
 
-        // Fire GHL webhook to capture lead
-        try {
-          await fetch(
-            "https://services.leadconnectorhq.com/hooks/3HmJCw40C6xzJYaLg6cK/webhook-trigger/bc6da1e0-2155-4d01-a223-318afd60c723",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                name: bookingData.guestDetails.name,
-                email: bookingData.guestDetails.email,
-                phone: bookingData.guestDetails.phone,
-                bookingDate: bookingData.date,
-                bookingTime: bookingData.time || "19:00",
-                partySize: bookingData.guests,
-                durationHours: bookingData.durationHours || 1,
-                occasion: bookingData.occasion || "other",
-                notes: bookingData.notes || "",
-                depositAmount: customDeposit,
-                totalCost: finalCost,
-                bookingId: res.data.booking._id,
-              }),
-            }
-          );
-        } catch (ghlErr) {
-          // Non-blocking — log but don't interrupt the booking flow
-          console.warn("GHL webhook failed:", ghlErr);
-        }
-
         const { data: piData } = await api.post("/payments/create-payment-intent", {
           bookingId: res.data.booking._id
         });
@@ -141,6 +113,56 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
 
   const handlePaymentSuccess = (bookingId: string, paymentIntentId?: string) => {
     if (bookingId) {
+      // Send private booking data to Lead Connector (GHL) only after successful Stripe payment
+      try {
+        fetch(
+          "https://services.leadconnectorhq.com/hooks/3HmJCw40C6xzJYaLg6cK/webhook-trigger/a5543d0c-c081-4aed-b0f4-c0a0333de4de",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: bookingData.guestDetails.name,
+              email: bookingData.guestDetails.email,
+              phone: bookingData.guestDetails.phone,
+              bookingDate: bookingData.date,
+              bookingTime: bookingData.time || "19:00",
+              partySize: bookingData.guests,
+              durationHours: bookingData.durationHours || 1,
+              occasion: bookingData.occasion || "other",
+              notes: bookingData.notes || "",
+              depositAmount: customDeposit,
+              totalAmount: finalCost,
+              bookingId: bookingId,
+              paymentIntentId: paymentIntentId || "",
+              bookingType: "private_event",
+              status: "confirmed",
+              couponApplied: Boolean(appliedCoupon),
+              couponCode: appliedCoupon?.code || "",
+              couponDiscountAmount: appliedCoupon?.discountAmount || 0,
+              couponDetails: appliedCoupon
+                ? { code: appliedCoupon.code, discountAmount: appliedCoupon.discountAmount }
+                : null,
+              bookingDetails: {
+                occasion: bookingData.occasion || "other",
+                notes: bookingData.notes || "",
+                partySize: bookingData.guests,
+                durationHours: bookingData.durationHours || 1,
+                bookingDate: bookingData.date,
+                bookingTime: bookingData.time || "19:00",
+                depositAmount: customDeposit,
+                totalAmount: finalCost,
+                customDepositAmount: customDeposit,
+              },
+            }),
+          }
+        ).catch((ghlErr) => {
+          // Non-blocking — log but don't interrupt the booking flow
+          console.warn("Lead Connector webhook failed:", ghlErr);
+        });
+      } catch (ghlErr) {
+        console.warn("Lead Connector webhook failed:", ghlErr);
+      }
+
       let url = `/user/payment/confirmed?bookingId=${bookingId}`;
       if (paymentIntentId) url += `&payment_intent=${paymentIntentId}`;
       router.push(url);
