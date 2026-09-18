@@ -22,16 +22,16 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
   const slats = Array.from({ length: SLAT_COUNT });
 
   useEffect(() => {
-    // Initial progress animation
+    // Fast progress animation
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
           clearInterval(interval);
           return 100;
         }
-        return prev + 1;
+        return Math.min(100, prev + 10);
       });
-    }, 30);
+    }, 10);
 
     return () => clearInterval(interval);
   }, []);
@@ -39,11 +39,10 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
   useEffect(() => {
     if (!isLoading && progress >= 100) {
       setIsExiting(true);
-      // Duration (800ms) + Stagger Delay (9 * 80ms) + Safety Margin (100ms)
       const timer = setTimeout(() => {
         setShouldRender(false);
         if (onFinished) onFinished();
-      }, 1620);
+      }, 250);
       return () => clearTimeout(timer);
     }
   }, [isLoading, progress, onFinished]);

@@ -30,6 +30,28 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+function CategoryBadge({ status, paymentStatus }: { status: string; paymentStatus?: string }) {
+  if (status === "cancelled") {
+    return (
+      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-red-50 text-red-700 border-red-200">
+        Cancelled
+      </span>
+    );
+  }
+  if (paymentStatus === "paid" || paymentStatus === "deposit_paid") {
+    return (
+      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-emerald-50 text-emerald-700 border-emerald-200">
+        Booking
+      </span>
+    );
+  }
+  return (
+    <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-amber-50 text-amber-700 border-amber-200">
+      Lead
+    </span>
+  );
+}
+
 function PaymentBadge({ status, remainingStatus }: { status?: string, remainingStatus?: string }) {
   if (status === "paid" || (status === "deposit_paid" && remainingStatus === "paid")) {
     return (
@@ -40,14 +62,14 @@ function PaymentBadge({ status, remainingStatus }: { status?: string, remainingS
   }
   if (status === "deposit_paid") {
     return (
-      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-amber-50 text-amber-700 border-amber-200">
+      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-emerald-50/80 text-emerald-800 border-emerald-300">
         Deposit Paid
       </span>
     );
   }
   return (
-    <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-surface-container-lowest text-secondary border-outline-variant/30">
-      Unpaid
+    <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-amber-50 text-amber-700 border-amber-200">
+      Unpaid (Lead)
     </span>
   );
 }
@@ -67,10 +89,11 @@ function TypeBadge({ type }: { type: string }) {
 }
 
 const FILTER_TABS = [
-  { key: "all", label: "All Bookings" },
-  { key: "confirmed", label: "Confirmed" },
-  { key: "cancelled", label: "Cancelled" },
-];
+  { key: "all", label: "All Records", countKey: "all" },
+  { key: "leads", label: "Leads", countKey: "leads" },
+  { key: "bookings", label: "Bookings", countKey: "bookings" },
+  { key: "cancelled", label: "Cancelled", countKey: "cancelled" },
+] as const;
 
 type PendingAction = { bookingId: string; action: "cancel" | "delete" } | null;
 
@@ -81,6 +104,12 @@ export default function AdminBookingsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [counts, setCounts] = useState<{ all: number; leads: number; bookings: number; cancelled: number }>({
+    all: 0,
+    leads: 0,
+    bookings: 0,
+    cancelled: 0,
+  });
   const [selectedDate, setSelectedDate] = useState("");
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -93,6 +122,9 @@ export default function AdminBookingsPage() {
       setBookings(data.bookings);
       setTotalPages(data.totalPages);
       setTotal(data.total);
+      if (data.counts) {
+        setCounts(data.counts);
+      }
     } catch {
       setBookings([]);
       setTotalPages(1);
@@ -152,10 +184,10 @@ export default function AdminBookingsPage() {
             Administration
           </span>
           <h1 className="font-headline text-4xl md:text-5xl italic text-on-surface">
-            All Reservations
+            Reservations & Leads
           </h1>
           <p className="text-sm text-secondary font-body font-light italic">
-            {total} total reservations across all time
+            Track leads, paid bookings, and cancelled reservations
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -166,23 +198,89 @@ export default function AdminBookingsPage() {
         </div>
       </div>
 
+      {/* Category Overview Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div
+          onClick={() => { setStatus("leads"); setPage(1); }}
+          className={cn(
+            "p-5 rounded-xl border transition-all cursor-pointer",
+            status === "leads"
+              ? "bg-amber-500/10 border-amber-500/40 shadow-sm"
+              : "bg-surface-container-lowest border-outline-variant/15 hover:border-outline-variant/40"
+          )}
+        >
+          <span className="text-[10px] uppercase tracking-widest text-amber-600 font-bold block mb-1">
+            ⚡ Leads (Unpaid Attempts)
+          </span>
+          <div className="flex items-baseline justify-between">
+            <span className="font-headline text-3xl italic text-on-surface">{counts.leads}</span>
+            <span className="text-[11px] text-secondary font-body italic">Attempted but unpaid</span>
+          </div>
+        </div>
+
+        <div
+          onClick={() => { setStatus("bookings"); setPage(1); }}
+          className={cn(
+            "p-5 rounded-xl border transition-all cursor-pointer",
+            status === "bookings"
+              ? "bg-emerald-500/10 border-emerald-500/40 shadow-sm"
+              : "bg-surface-container-lowest border-outline-variant/15 hover:border-outline-variant/40"
+          )}
+        >
+          <span className="text-[10px] uppercase tracking-widest text-emerald-600 font-bold block mb-1">
+            💳 Bookings (Paid / Deposit)
+          </span>
+          <div className="flex items-baseline justify-between">
+            <span className="font-headline text-3xl italic text-on-surface">{counts.bookings}</span>
+            <span className="text-[11px] text-secondary font-body italic">Deposit or full paid</span>
+          </div>
+        </div>
+
+        <div
+          onClick={() => { setStatus("cancelled"); setPage(1); }}
+          className={cn(
+            "p-5 rounded-xl border transition-all cursor-pointer",
+            status === "cancelled"
+              ? "bg-red-500/10 border-red-500/40 shadow-sm"
+              : "bg-surface-container-lowest border-outline-variant/15 hover:border-outline-variant/40"
+          )}
+        >
+          <span className="text-[10px] uppercase tracking-widest text-red-600 font-bold block mb-1">
+            ❌ Cancelled
+          </span>
+          <div className="flex items-baseline justify-between">
+            <span className="font-headline text-3xl italic text-on-surface">{counts.cancelled}</span>
+            <span className="text-[11px] text-secondary font-body italic">Cancelled bookings</span>
+          </div>
+        </div>
+      </div>
+
       {/* Filter Tabs + Search */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex gap-2">
-          {FILTER_TABS.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => { setStatus(tab.key); setPage(1); }}
-              className={cn(
-                "px-5 py-2.5 rounded-full text-[9px] uppercase tracking-widest font-bold transition-all duration-300 border",
-                status === tab.key
-                  ? "bg-on-surface text-surface border-on-surface shadow-md"
-                  : "bg-surface-container-lowest text-secondary border-outline-variant/20 hover:border-outline-variant/40 hover:text-on-surface"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap gap-2">
+          {FILTER_TABS.map((tab) => {
+            const countVal = counts[tab.countKey as keyof typeof counts];
+            return (
+              <button
+                key={tab.key}
+                onClick={() => { setStatus(tab.key); setPage(1); }}
+                className={cn(
+                  "px-5 py-2.5 rounded-full text-[9px] uppercase tracking-widest font-bold transition-all duration-300 border flex items-center gap-2",
+                  status === tab.key
+                    ? "bg-on-surface text-surface border-on-surface shadow-md"
+                    : "bg-surface-container-lowest text-secondary border-outline-variant/20 hover:border-outline-variant/40 hover:text-on-surface"
+                )}
+              >
+                <span>{tab.label}</span>
+                <span className={cn(
+                  "px-1.5 py-0.5 rounded-full text-[9px]",
+                  status === tab.key ? "bg-surface text-on-surface font-extrabold" : "bg-surface-container text-secondary"
+                )}>
+                  {countVal}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
@@ -212,14 +310,14 @@ export default function AdminBookingsPage() {
       <div className="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-outline-variant/10">
         {filtered.length === 0 ? (
           <p className="p-10 text-center font-body text-secondary italic text-sm">
-            No reservations found.
+            No records found for this category.
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-surface-container border-b border-outline-variant/10">
                 <tr>
-                  {["#", "Type", "Guest Name", "Email", "Date", "Time", "Party", "Tables", "Amount", "Payment", "Status", "Actions"].map(h => (
+                  {["#", "Category", "Type", "Guest Name", "Email", "Date", "Time", "Party", "Tables", "Amount", "Payment", "Status", "Actions"].map(h => (
                     <th key={h} className="px-4 py-4 text-[9px] uppercase tracking-widest text-outline font-bold whitespace-nowrap">
                       {h}
                     </th>
@@ -230,6 +328,7 @@ export default function AdminBookingsPage() {
                 {filtered.map((b, i) => (
                   <tr key={b._id} className="hover:bg-surface-container/50 transition-colors">
                     <td className="px-4 py-4 font-body text-sm text-secondary">{(page - 1) * 10 + i + 1}</td>
+                    <td className="px-4 py-4"><CategoryBadge status={b.status} paymentStatus={b.paymentStatus} /></td>
                     <td className="px-4 py-4"><TypeBadge type={b.bookingType} /></td>
                     <td className="px-4 py-4 font-headline text-base italic text-on-surface whitespace-nowrap">
                       {b.customerName || b.user?.name}

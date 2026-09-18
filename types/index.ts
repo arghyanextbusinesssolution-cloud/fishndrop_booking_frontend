@@ -51,6 +51,12 @@ export interface BookingResponse {
   total: number;
   page: number;
   totalPages: number;
+  counts?: {
+    all: number;
+    leads: number;
+    bookings: number;
+    cancelled: number;
+  };
 }
 
 export interface TableStats {

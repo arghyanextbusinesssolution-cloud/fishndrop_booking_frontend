@@ -29,14 +29,13 @@ export default function PageLoader() {
         completeTimerRef.current = setTimeout(() => {
             setVisible(false);
             setProgress(0);
-        }, 400);
+        }, 100);
     };
 
     // Fire on every route change
     useEffect(() => {
         start();
-        // Small delay so it feels snappy even on instant navigations
-        const t = setTimeout(() => finish(), 120);
+        const t = setTimeout(() => finish(), 40);
         return () => clearTimeout(t);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pathname, searchParams]);

@@ -39,18 +39,12 @@ export default function Home() {
   useEffect(() => {
     const checkBackend = async () => {
       try {
-        const startTime = Date.now();
         const apiBase = process.env.NEXT_PUBLIC_API_URL || "/api";
         await fetch(`${apiBase}/health`);
-        const elapsed = Date.now() - startTime;
-        const minTime = 3000;
-
-        setTimeout(() => {
-          setIsLoading(false);
-        }, Math.max(0, minTime - elapsed));
+        setIsLoading(false);
       } catch (error) {
         console.error("Backend health check failed:", error);
-        setTimeout(() => setIsLoading(false), 4000);
+        setIsLoading(false);
       }
     };
 
@@ -68,19 +62,16 @@ export default function Home() {
     if (!pendingDate) return;
 
     setIsNavigating(true);
-
-    setTimeout(() => {
-      try {
-        const year = pendingDate.getFullYear();
-        const month = String(pendingDate.getMonth() + 1).padStart(2, '0');
-        const day = String(pendingDate.getDate()).padStart(2, '0');
-        const dateString = `${year}-${month}-${day}`;
-        router.push(`/book-table?date=${dateString}`);
-      } catch (e) {
-        console.error("Date selection error:", e);
-        setIsNavigating(false);
-      }
-    }, 1500);
+    try {
+      const year = pendingDate.getFullYear();
+      const month = String(pendingDate.getMonth() + 1).padStart(2, '0');
+      const day = String(pendingDate.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      router.push(`/book-table?date=${dateString}`);
+    } catch (e) {
+      console.error("Date selection error:", e);
+      setIsNavigating(false);
+    }
   };
 
   return (
