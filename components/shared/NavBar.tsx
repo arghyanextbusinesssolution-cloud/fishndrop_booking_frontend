@@ -42,11 +42,7 @@ export const NavBar = () => {
       </NavSpinnerLink>
 
       <div className="flex items-center gap-2 md:gap-8">
-        <div className="hidden lg:flex items-center gap-10">
-          <NavSpinnerLink href="/" className="text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] font-bold">
-            Reservations
-          </NavSpinnerLink>
-        </div>
+
 
         {/* Book a Private Space Button */}
         <NavSpinnerLink

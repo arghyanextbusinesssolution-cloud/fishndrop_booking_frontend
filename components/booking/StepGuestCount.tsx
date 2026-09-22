@@ -88,7 +88,7 @@ export const StepGuestCount = ({ onNext, selectedGuests }: StepGuestCountProps) 
             {getTableNote(count)}
           </p>
           <p className="font-label text-[9px] tracking-[0.2em] uppercase text-gold-gradient font-bold bg-primary/5 px-4 py-1.5 rounded-full border border-[#C8A96A]/20">
-            ${count * 40}.00 Deposit · Subject to availability
+            $1.00 Deposit · Subject to availability
           </p>
         </div>
 

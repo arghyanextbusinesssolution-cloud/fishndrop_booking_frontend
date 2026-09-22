@@ -9,6 +9,7 @@ import api from "@/lib/axios";
 import { useAuthStore } from "@/store/authStore";
 import toast from "react-hot-toast";
 import { ConfirmationModal } from "@/components/shared/ConfirmationModal";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 // Step Components
 import { StepTimeSelection } from "./StepTimeSelection";
@@ -305,12 +306,7 @@ export const BookingWizard = () => {
           {/* Wizard Content */}
           <div className={cn("w-full max-w-6xl relative pb-20", (isSubmitting || isRestoring) && "opacity-50 pointer-events-none")}>
             {(isSubmitting || isRestoring) && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center backdrop-blur-md" style={{ backgroundColor: 'rgba(26,74,53,0.6)' }}>
-                <div className="flex flex-col items-center gap-6">
-                  <div className="w-20 h-20 rounded-full border-2 border-primary/10 border-t-primary animate-spin" />
-                  <p className="font-headline text-3xl italic animate-pulse text-gold-gradient">{isRestoring ? "Restoring journey..." : "Crafting experience..."}</p>
-                </div>
-              </div>
+              <LoadingSpinner fullPage message={isRestoring ? "Restoring journey..." : "Crafting your experience & connecting to payment..."} />
             )}
 
             <AnimatePresence mode="wait">

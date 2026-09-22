@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/axios";
 import { Loader2, Ticket, Check, X } from "lucide-react";
 import toast from "react-hot-toast";
+import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 interface StepSummaryPaymentProps {
   bookingData: any;
@@ -191,19 +192,9 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
       )}
 
       {submitting && !clientSecret && (
-        <div className="space-y-4 animate-pulse p-6 bg-primary/5 rounded-xl border border-primary/10">
-          <div className="h-6 w-40 bg-gray-200 rounded mb-6" />
-          <div className="h-12 bg-gray-200 rounded-lg" />
-          <div className="grid grid-cols-2 gap-4">
-            <div className="h-12 bg-gray-200 rounded-lg" />
-            <div className="h-12 bg-gray-200 rounded-lg" />
-          </div>
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-400 pt-4">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Connecting to Stripe...
-          </div>
-        </div>
+        <LoadingSpinner fullPage message="Connecting to Stripe secure checkout..." />
       )}
+
 
       {clientSecret && bookingId && (
         <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>

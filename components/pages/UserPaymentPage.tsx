@@ -98,7 +98,7 @@ export default function UserPaymentPage() {
     }
   };
 
-  if (pageLoading) return <LoadingSpinner />;
+  if (pageLoading) return <LoadingSpinner fullPage message="Preparing secure payment details..." />;
 
   if (!booking) {
     return (

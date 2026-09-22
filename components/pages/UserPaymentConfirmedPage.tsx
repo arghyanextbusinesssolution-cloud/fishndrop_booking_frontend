@@ -73,13 +73,9 @@ export default function UserPaymentConfirmedPage() {
   }
 
   if (loading || !booking) {
-    return (
-      <div className="flex flex-col items-center gap-4 py-16">
-        <LoadingSpinner />
-        <p className="text-sm text-[var(--text-secondary)]">Confirming your payment…</p>
-      </div>
-    );
+    return <LoadingSpinner fullPage message="Confirming your payment status..." />;
   }
+
 
   const isPrivate = booking.bookingType === "private_event";
   // Determine if fully paid using the status flags from DB — not just remainingAmount

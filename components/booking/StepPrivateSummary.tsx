@@ -31,11 +31,11 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
   const [isValidating, setIsValidating] = useState(false);
 
   const finalCost = appliedCoupon ? Math.max(0, baseCost - appliedCoupon.discountAmount) : baseCost;
-  const [customDeposit, setCustomDeposit] = useState<number>(Math.min(finalCost, 200));
+  const [customDeposit, setCustomDeposit] = useState<number>(Math.min(finalCost, 1));
 
   // Sync custom deposit correctly if finalCost changes
   useEffect(() => {
-    setCustomDeposit(Math.min(finalCost, 200));
+    setCustomDeposit(Math.min(finalCost, 1));
   }, [finalCost]);
 
   const handleApplyCoupon = async () => {
@@ -229,19 +229,19 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
             )}
 
             <label className="text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold block">
-              Adjust your initial payment amount (Min: ${Math.min(finalCost, 200)})
+              Adjust your initial payment amount (Min: ${Math.min(finalCost, 1)})
             </label>
             <input
               type="range"
-              min={Math.min(finalCost, 200)}
+              min={Math.min(finalCost, 1)}
               max={finalCost}
-              step="25"
+              step="1"
               value={customDeposit}
               onChange={(e) => setCustomDeposit(Number(e.target.value))}
               className="w-full accent-[#C8A96A] h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             />
             <div className="flex justify-between text-xs font-semibold text-gray-500">
-              <span>${Math.min(finalCost, 200)}</span>
+              <span>${Math.min(finalCost, 1)}</span>
               <span>${finalCost}</span>
             </div>
           </div>
