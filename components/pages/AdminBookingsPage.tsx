@@ -6,9 +6,10 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { Booking } from "@/types";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { cn } from "@/lib/utils";
-import { CalendarDays, Search, ChevronLeft, ChevronRight, XCircle } from "lucide-react";
+import { CalendarDays, Search, ChevronLeft, ChevronRight, XCircle, Download } from "lucide-react";
 import { CalendarDropdown } from "@/components/shared/CalendarDropdown";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { exportBookingsToCSV } from "@/lib/exportCsv";
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-US", {
@@ -18,13 +19,24 @@ function formatDate(dateStr: string) {
   });
 }
 
+function formatDateTime(dateStr?: string) {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     confirmed: "bg-emerald-50 text-emerald-700 border-emerald-200",
     cancelled: "bg-red-50 text-red-700 border-red-200",
   };
   return (
-    <span className={cn("px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold", map[status] || "bg-surface-container text-secondary border-outline-variant/20")}>
+    <span className={cn("px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold whitespace-nowrap inline-flex items-center justify-center shrink-0", map[status] || "bg-surface-container text-secondary border-outline-variant/20")}>
       {status}
     </span>
   );
@@ -33,20 +45,20 @@ function StatusBadge({ status }: { status: string }) {
 function CategoryBadge({ status, paymentStatus }: { status: string; paymentStatus?: string }) {
   if (status === "cancelled") {
     return (
-      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-red-50 text-red-700 border-red-200">
+      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-red-50 text-red-700 border-red-200 whitespace-nowrap inline-flex items-center justify-center shrink-0">
         Cancelled
       </span>
     );
   }
   if (paymentStatus === "paid" || paymentStatus === "deposit_paid") {
     return (
-      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-emerald-50 text-emerald-700 border-emerald-200">
+      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-emerald-50 text-emerald-700 border-emerald-200 whitespace-nowrap inline-flex items-center justify-center shrink-0">
         Booking
       </span>
     );
   }
   return (
-    <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-amber-50 text-amber-700 border-amber-200">
+    <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-amber-50 text-amber-700 border-amber-200 whitespace-nowrap inline-flex items-center justify-center shrink-0">
       Lead
     </span>
   );
@@ -55,20 +67,20 @@ function CategoryBadge({ status, paymentStatus }: { status: string; paymentStatu
 function PaymentBadge({ status, remainingStatus }: { status?: string, remainingStatus?: string }) {
   if (status === "paid" || (status === "deposit_paid" && remainingStatus === "paid")) {
     return (
-      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-emerald-50 text-emerald-700 border-emerald-200">
+      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-emerald-50 text-emerald-700 border-emerald-200 whitespace-nowrap inline-flex items-center justify-center shrink-0">
         Paid
       </span>
     );
   }
   if (status === "deposit_paid") {
     return (
-      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-emerald-50/80 text-emerald-800 border-emerald-300">
+      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-emerald-50/80 text-emerald-800 border-emerald-300 whitespace-nowrap inline-flex items-center justify-center shrink-0">
         Deposit Paid
       </span>
     );
   }
   return (
-    <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-amber-50 text-amber-700 border-amber-200">
+    <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-amber-50 text-amber-700 border-amber-200 whitespace-nowrap inline-flex items-center justify-center shrink-0">
       Unpaid (Lead)
     </span>
   );
@@ -78,12 +90,32 @@ function TypeBadge({ type }: { type: string }) {
   const isPrivate = type === "private_event";
   return (
     <span className={cn(
-      "px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold",
+      "px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold whitespace-nowrap inline-flex items-center justify-center shrink-0",
       isPrivate
         ? "bg-primary/10 text-primary border-primary/20"
         : "bg-surface-container text-secondary border-outline-variant/20"
     )}>
       {isPrivate ? "Venue Buyout" : "Standard"}
+    </span>
+  );
+}
+
+function OccasionBadge({ occasion }: { occasion?: string }) {
+  if (!occasion) return <span className="text-secondary text-xs">—</span>;
+  const clean = occasion.replace(/^other:\s*/i, "");
+  const map: Record<string, string> = {
+    baby_shower: "Baby Shower",
+    birthday: "Birthday",
+    anniversary: "Anniversary",
+    celebration: "Celebration",
+    business: "Business",
+    quiet: "Quiet Evening",
+    other: "Other Event",
+  };
+  const label = map[clean] || clean;
+  return (
+    <span className="px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold whitespace-nowrap inline-flex items-center gap-1 shrink-0">
+      ✨ {label}
     </span>
   );
 }
@@ -114,6 +146,7 @@ export default function AdminBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -137,10 +170,28 @@ export default function AdminBookingsPage() {
     void load();
   }, [load]);
 
+  const handleExportCSV = async () => {
+    setIsExporting(true);
+    try {
+      const data = await getAllBookings(1, status, selectedDate, 0);
+      if (data && data.bookings && data.bookings.length > 0) {
+        exportBookingsToCSV(data.bookings, `bookings_${status}`);
+        toast.success(`Exported ${data.bookings.length} booking records to CSV`);
+      } else {
+        toast.error("No booking records found to export");
+      }
+    } catch {
+      toast.error("Failed to export bookings");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const filtered = query
     ? bookings.filter((b) =>
       (b.customerName || b.user?.name || "").toLowerCase().includes(query.toLowerCase()) ||
-      (b.customerEmail || b.user?.email || "").toLowerCase().includes(query.toLowerCase())
+      (b.customerEmail || b.user?.email || "").toLowerCase().includes(query.toLowerCase()) ||
+      (b.customerPhone || "").toLowerCase().includes(query.toLowerCase())
     )
     : bookings;
 
@@ -190,11 +241,21 @@ export default function AdminBookingsPage() {
             Track leads, paid bookings, and cancelled reservations
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <CalendarDays className="w-4 h-4 text-outline" strokeWidth={1.5} />
-          <span className="font-label text-[9px] uppercase tracking-[0.2em] text-outline font-bold">
-            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-          </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExportCSV}
+            disabled={isExporting}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-on-primary text-[10px] uppercase tracking-widest font-bold hover:bg-primary/90 transition-all shadow-sm border border-primary/20 disabled:opacity-50"
+          >
+            <Download className="w-4 h-4" strokeWidth={2} />
+            <span>{isExporting ? "Exporting..." : "Export CSV"}</span>
+          </button>
+          <div className="hidden sm:flex items-center gap-2 border-l border-outline-variant/20 pl-3">
+            <CalendarDays className="w-4 h-4 text-outline" strokeWidth={1.5} />
+            <span className="font-label text-[9px] uppercase tracking-[0.2em] text-outline font-bold">
+              {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -297,7 +358,7 @@ export default function AdminBookingsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" strokeWidth={1.5} />
             <input
               type="text"
-              placeholder="Search by name..."
+              placeholder="Search by name, email, phone..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-surface-container-lowest border border-outline-variant/20 rounded-full text-sm font-body text-on-surface placeholder:text-outline/50 focus:outline-none focus:border-primary/40 transition-colors"
@@ -306,93 +367,172 @@ export default function AdminBookingsPage() {
         </div>
       </div>
 
-      {/* Bookings Table */}
-      <div className="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-outline-variant/10">
+      {/* Bookings Table / Mobile Cards */}
+      <div className="rounded-xl shadow-sm border border-outline-variant/10 bg-surface-container-lowest overflow-hidden">
         {filtered.length === 0 ? (
           <p className="p-10 text-center font-body text-secondary italic text-sm">
             No records found for this category.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead className="bg-surface-container border-b border-outline-variant/10">
-                <tr>
-                  {["#", "Category", "Type", "Guest Name", "Email", "Date", "Time", "Party", "Tables", "Amount", "Payment", "Status", "Actions"].map(h => (
-                    <th key={h} className="px-4 py-4 text-[9px] uppercase tracking-widest text-outline font-bold whitespace-nowrap">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant/10">
-                {filtered.map((b, i) => (
-                  <tr key={b._id} className="hover:bg-surface-container/50 transition-colors">
-                    <td className="px-4 py-4 font-body text-sm text-secondary">{(page - 1) * 10 + i + 1}</td>
-                    <td className="px-4 py-4"><CategoryBadge status={b.status} paymentStatus={b.paymentStatus} /></td>
-                    <td className="px-4 py-4"><TypeBadge type={b.bookingType} /></td>
-                    <td className="px-4 py-4 font-headline text-base italic text-on-surface whitespace-nowrap">
-                      {b.customerName || b.user?.name}
-                    </td>
-                    <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap">
-                      {b.customerEmail || b.user?.email}
-                    </td>
-                    <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap">
-                      {formatDate(b.bookingDate)}
-                    </td>
-                    <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap">
-                      <div className="flex flex-col">
-                        <span>{b.bookingTime}</span>
-                        {b.bookingType === "private_event" && (
-                          <span className="text-[9px] text-primary font-bold uppercase tracking-widest">
-                            {b.durationHours} Hours
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 font-body text-sm text-secondary">{b.partySize} pax</td>
-                    <td className="px-4 py-4 font-body text-sm font-bold text-primary italic whitespace-nowrap">
-                      {b.bookingType === "private_event" ? (
-                        <span className="text-[10px] uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded border border-primary/10">Full Venue</span>
-                      ) : (
-                        b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—"
-                      )}
-                    </td>
-                    <td className="px-4 py-4">
-                      {b.bookingType === "private_event" ? (
-                        <div className="flex flex-col gap-1">
-                          <span className="font-headline text-base italic text-on-surface">${b.totalAmount} <span className="text-[10px] text-outline font-sans not-italic">Total</span></span>
-                          {(b.depositAmount ?? 0) > 0 && <span className="text-[10px] text-primary uppercase tracking-widest font-bold">${b.depositAmount ?? 0} Deposit</span>}
-                        </div>
-                      ) : (
-                        <span className="font-headline text-base italic text-on-surface">${b.totalAmount}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4"><PaymentBadge status={b.paymentStatus} remainingStatus={b.remainingPaymentStatus} /></td>
-                    <td className="px-4 py-4"><StatusBadge status={b.status} /></td>
-                    <td className="px-4 py-4">
-                      <div className="flex gap-2">
-                        {b.status === "confirmed" && (
-                          <button
-                            onClick={() => setPendingAction({ bookingId: b._id, action: "cancel" })}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-200 text-red-600 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50 transition-colors"
-                          >
-                            <XCircle className="w-3 h-3" strokeWidth={2} />
-                            Cancel
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setPendingAction({ bookingId: b._id, action: "delete" })}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-700 text-red-700 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50/50 transition-colors"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
+          <>
+            {/* Mobile Card Layout (Visible on Small Screens) */}
+            <div className="block md:hidden divide-y divide-outline-variant/10">
+              {filtered.map((b, i) => (
+                <div key={b._id} className="p-5 space-y-4 hover:bg-surface-container/30 transition-colors">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono text-secondary font-bold">#{(page - 1) * 10 + i + 1}</span>
+                      <CategoryBadge status={b.status} paymentStatus={b.paymentStatus} />
+                      <TypeBadge type={b.bookingType} />
+                    </div>
+                    <StatusBadge status={b.status} />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <h3 className="font-headline text-lg italic text-on-surface">
+                        {b.customerName || b.user?.name}
+                      </h3>
+                      <OccasionBadge occasion={b.occasion} />
+                    </div>
+                    <p className="text-xs text-secondary font-body">{b.customerEmail || b.user?.email}</p>
+                    <p className="text-xs font-mono text-secondary">{b.customerPhone || "—"}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 p-3 rounded-lg bg-surface-container/40 text-xs font-body">
+                    <div>
+                      <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Event Date</span>
+                      <span className="text-on-surface font-semibold">{formatDate(b.bookingDate)}</span>
+                      <span className="text-[10px] text-secondary block">{b.bookingTime}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Party / Tables</span>
+                      <span className="text-on-surface font-semibold">{b.partySize} pax</span>
+                      <span className="text-[10px] text-primary block font-bold">
+                        {b.bookingType === "private_event" ? "Full Venue" : (b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—")}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Tried Date</span>
+                      <span className="text-secondary text-[10px]">{formatDateTime(b.createdAt)}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Amount & Payment</span>
+                      <span className="font-headline text-sm italic text-on-surface">${b.totalAmount}</span>
+                      <div className="mt-0.5"><PaymentBadge status={b.paymentStatus} remainingStatus={b.remainingPaymentStatus} /></div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2">
+                    {b.status === "confirmed" && (
+                      <button
+                        onClick={() => setPendingAction({ bookingId: b._id, action: "cancel" })}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-200 text-red-600 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50 transition-colors"
+                      >
+                        <XCircle className="w-3.5 h-3.5" strokeWidth={2} />
+                        Cancel
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setPendingAction({ bookingId: b._id, action: "delete" })}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-700 text-red-700 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50/50 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table Layout (Visible on Medium+ Screens) */}
+            <div className="hidden md:block overflow-x-auto w-full" style={{ WebkitOverflowScrolling: "touch" }}>
+              <table className="min-w-[1200px] w-full text-left">
+                <thead className="bg-surface-container border-b border-outline-variant/10">
+                  <tr>
+                    {["#", "Category", "Type", "Guest Name", "Occasion", "Email", "Phone", "Event Date", "Tried Date", "Time", "Party", "Tables", "Amount", "Payment", "Status", "Actions"].map(h => (
+                      <th key={h} className="px-4 py-4 text-[9px] uppercase tracking-widest text-outline font-bold whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-outline-variant/10">
+                  {filtered.map((b, i) => (
+                    <tr key={b._id} className="hover:bg-surface-container/50 transition-colors">
+                      <td className="px-4 py-4 font-body text-sm text-secondary">{(page - 1) * 10 + i + 1}</td>
+                      <td className="px-4 py-4"><CategoryBadge status={b.status} paymentStatus={b.paymentStatus} /></td>
+                      <td className="px-4 py-4"><TypeBadge type={b.bookingType} /></td>
+                      <td className="px-4 py-4 font-headline text-base italic text-on-surface whitespace-nowrap">
+                        {b.customerName || b.user?.name}
+                      </td>
+                      <td className="px-4 py-4"><OccasionBadge occasion={b.occasion} /></td>
+                      <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap">
+                        {b.customerEmail || b.user?.email}
+                      </td>
+                      <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap font-mono">
+                        {b.customerPhone || "—"}
+                      </td>
+                      <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap">
+                        {formatDate(b.bookingDate)}
+                      </td>
+                      <td className="px-4 py-4 font-body text-xs text-secondary whitespace-nowrap">
+                        {formatDateTime(b.createdAt)}
+                      </td>
+                      <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap">
+                        <div className="flex flex-col">
+                          <span>{b.bookingTime}</span>
+                          {b.bookingType === "private_event" && (
+                            <span className="text-[9px] text-primary font-bold uppercase tracking-widest">
+                              {b.durationHours} Hours
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 font-body text-sm text-secondary">{b.partySize} pax</td>
+                      <td className="px-4 py-4 font-body text-sm font-bold text-primary italic whitespace-nowrap">
+                        {b.bookingType === "private_event" ? (
+                          <span className="text-[10px] uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded border border-primary/10">Full Venue</span>
+                        ) : (
+                          b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—"
+                        )}
+                      </td>
+                      <td className="px-4 py-4">
+                        {b.bookingType === "private_event" ? (
+                          <div className="flex flex-col gap-1">
+                            <span className="font-headline text-base italic text-on-surface">${b.totalAmount} <span className="text-[10px] text-outline font-sans not-italic">Total</span></span>
+                            {(b.depositAmount ?? 0) > 0 && <span className="text-[10px] text-primary uppercase tracking-widest font-bold">${b.depositAmount ?? 0} Deposit</span>}
+                          </div>
+                        ) : (
+                          <span className="font-headline text-base italic text-on-surface">${b.totalAmount}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4"><PaymentBadge status={b.paymentStatus} remainingStatus={b.remainingPaymentStatus} /></td>
+                      <td className="px-4 py-4"><StatusBadge status={b.status} /></td>
+                      <td className="px-4 py-4">
+                        <div className="flex gap-2">
+                          {b.status === "confirmed" && (
+                            <button
+                              onClick={() => setPendingAction({ bookingId: b._id, action: "cancel" })}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-200 text-red-600 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50 transition-colors"
+                            >
+                              <XCircle className="w-3 h-3" strokeWidth={2} />
+                              Cancel
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setPendingAction({ bookingId: b._id, action: "delete" })}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-700 text-red-700 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50/50 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 

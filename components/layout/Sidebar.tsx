@@ -36,8 +36,10 @@ export function Sidebar({ closeMobile }: { closeMobile?: () => void }) {
         aria-label="Logout"
         onClick={() => {
           clearAuth();
-          toast.success("Logged out");
-          router.push("/login");
+          toast.success("Signed out successfully");
+          if (typeof window !== "undefined") {
+            window.location.replace("/");
+          }
         }}
       >
         Logout

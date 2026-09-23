@@ -81,7 +81,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = () => {
     clearAuth();
-    router.push("/");
+    // Hard redirect — clears Next.js router cache + Zustand in-memory state
+    if (typeof window !== "undefined") {
+      window.location.replace("/");
+    }
   };
 
   const adminNavItems = [
@@ -111,7 +114,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen relative overflow-x-hidden" style={{ backgroundColor: '#0F3D2E' }}>
+    <div className="flex min-h-screen relative" style={{ backgroundColor: '#0F3D2E' }}>
       {/* Mobile Top Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 border-b border-[#C8A96A]/10 z-40 flex items-center justify-between px-6 backdrop-blur-md" style={{ backgroundColor: '#0a2e21' }}>
         <Link
@@ -229,7 +232,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-grow lg:ml-64 min-h-screen pt-16 lg:pt-0">
+      <main className="flex-grow lg:ml-64 min-h-screen pt-16 lg:pt-0 overflow-x-auto">
         {children}
       </main>
     </div>

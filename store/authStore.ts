@@ -69,9 +69,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user, token, isAuthenticated: true, isLoading: false });
   },
   clearAuth: () => {
+    // Remove all known auth cookies
     Cookies.remove("token", { path: "/" });
     Cookies.remove("user_role", { path: "/" });
-    localStorage.removeItem("auth_user");
+    // Wipe ALL cookies as a safety net
+    if (typeof document !== "undefined") {
+      document.cookie.split(";").forEach((c) => {
+        const key = c.split("=")[0].trim();
+        document.cookie = `${key}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+      });
+    }
+    // Wipe ALL localStorage (tokens, cached data, everything)
+    if (typeof window !== "undefined") {
+      localStorage.clear();
+      sessionStorage.clear();
+    }
     set({ user: null, token: null, isAuthenticated: false, isLoading: false });
   },
   initAuth: () => {

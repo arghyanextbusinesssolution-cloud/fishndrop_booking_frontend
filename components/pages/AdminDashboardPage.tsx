@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import { useAdmin } from "@/hooks/useAdmin";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { Booking, TableStats } from "@/types";
@@ -8,7 +9,8 @@ import api from "@/lib/axios";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { TrendingUp, TrendingDown, Zap, Calendar, Users, LayoutGrid } from "lucide-react";
+import { TrendingUp, TrendingDown, Zap, Calendar, Users, LayoutGrid, Download } from "lucide-react";
+import { exportBookingsToCSV } from "@/lib/exportCsv";
 
 const HERO_IMG = "https://images.unsplash.com/photo-1414235077428-338988692286?auto=format&fit=crop&q=80&w=1600";
 
@@ -20,25 +22,37 @@ function formatDate(dateStr: string) {
   });
 }
 
+function formatDateTime(dateStr?: string) {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     confirmed: "bg-emerald-50 text-emerald-700 border-emerald-200",
     cancelled: "bg-red-50 text-red-700 border-red-200",
   };
   return (
-    <span className={cn("px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold", map[status] || "bg-surface-container text-secondary border-outline-variant/20")}>
+    <span className={cn("px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold whitespace-nowrap inline-flex items-center justify-center shrink-0", map[status] || "bg-surface-container text-secondary border-outline-variant/20")}>
       {status}
     </span>
   );
 }
 
 export default function AdminDashboardPage() {
-  const { getStats } = useAdmin();
+  const { getStats, getAllBookings } = useAdmin();
   const { user } = useAuthStore();
   const [stats, setStats] = useState<TableStats | null>(null);
   const [recent, setRecent] = useState<Booking[]>([]);
   const [todayCount, setTodayCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const hasLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -65,6 +79,23 @@ export default function AdminDashboardPage() {
     };
     void load();
   }, [getStats]);
+
+  const handleExportCSV = async () => {
+    setIsExporting(true);
+    try {
+      const data = await getAllBookings(1, "all", undefined, 0);
+      if (data && data.bookings && data.bookings.length > 0) {
+        exportBookingsToCSV(data.bookings, "all_bookings_export");
+        toast.success(`Exported ${data.bookings.length} booking records to CSV`);
+      } else {
+        toast.error("No booking records found to export");
+      }
+    } catch {
+      toast.error("Failed to export bookings");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   if (loading || !stats) return <LoadingSpinner />;
 
@@ -175,26 +206,36 @@ export default function AdminDashboardPage() {
 
         {/* Reservations Table — 2/3 */}
         <div className="lg:col-span-2 space-y-5">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <h2 className="font-headline text-2xl italic text-on-surface">Recent Reservations</h2>
-            <Link
-              href="/admin/bookings"
-              className="font-label text-[9px] uppercase tracking-widest text-primary hover:underline font-bold"
-            >
-              View All
-            </Link>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleExportCSV}
+                disabled={isExporting}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-on-primary text-[9px] uppercase tracking-widest font-bold hover:bg-primary/90 transition-all shadow-sm disabled:opacity-50"
+              >
+                <Download className="w-3.5 h-3.5" strokeWidth={2} />
+                <span>{isExporting ? "Exporting..." : "Export CSV"}</span>
+              </button>
+              <Link
+                href="/admin/bookings"
+                className="font-label text-[9px] uppercase tracking-widest text-primary hover:underline font-bold"
+              >
+                View All
+              </Link>
+            </div>
           </div>
 
-          <div className="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-outline-variant/10">
+          <div className="rounded-xl shadow-sm border border-outline-variant/10 bg-surface-container-lowest">
             {recent.length === 0 ? (
               <p className="p-10 text-center font-body text-secondary italic text-sm">No recent reservations.</p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
+              <div className="overflow-x-auto w-full" style={{ WebkitOverflowScrolling: "touch" }}>
+                <table className="min-w-[800px] w-full text-left">
                   <thead className="bg-surface-container border-b border-outline-variant/10">
                     <tr>
-                      {["Guest Name", "Date", "Time", "Party", "Tables", "Status"].map(h => (
-                        <th key={h} className="px-5 py-4 text-[9px] uppercase tracking-widest text-outline font-bold whitespace-nowrap">
+                      {["Guest Name", "Phone", "Event Date", "Tried Date", "Time", "Party", "Tables", "Status"].map(h => (
+                        <th key={h} className="px-4 py-4 text-[9px] uppercase tracking-widest text-outline font-bold whitespace-nowrap">
                           {h}
                         </th>
                       ))}
@@ -203,14 +244,16 @@ export default function AdminDashboardPage() {
                   <tbody className="divide-y divide-outline-variant/10">
                     {recent.map((b) => (
                       <tr key={b._id} className="hover:bg-surface-container/50 transition-colors">
-                        <td className="px-5 py-4 font-headline text-lg italic text-on-surface whitespace-nowrap">{b.customerName}</td>
-                        <td className="px-5 py-4 font-body text-sm text-secondary whitespace-nowrap">{formatDate(b.bookingDate)}</td>
-                        <td className="px-5 py-4 font-body text-sm text-secondary">{b.bookingTime}</td>
-                        <td className="px-5 py-4 font-body text-sm text-secondary">{b.partySize} pax</td>
-                        <td className="px-5 py-4 font-body text-sm font-bold text-primary italic whitespace-nowrap">
-                          {b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—"}
+                        <td className="px-4 py-4 font-headline text-base italic text-on-surface whitespace-nowrap">{b.customerName || b.user?.name}</td>
+                        <td className="px-4 py-4 font-body text-xs text-secondary whitespace-nowrap font-mono">{b.customerPhone || "—"}</td>
+                        <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap">{formatDate(b.bookingDate)}</td>
+                        <td className="px-4 py-4 font-body text-xs text-secondary whitespace-nowrap">{formatDateTime(b.createdAt)}</td>
+                        <td className="px-4 py-4 font-body text-sm text-secondary">{b.bookingTime}</td>
+                        <td className="px-4 py-4 font-body text-sm text-secondary">{b.partySize} pax</td>
+                        <td className="px-4 py-4 font-body text-sm font-bold text-primary italic whitespace-nowrap">
+                          {b.bookingType === "private_event" ? "Full Venue" : (b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—")}
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-4">
                           <StatusBadge status={b.status} />
                         </td>
                       </tr>
