@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { StepPrivateDate } from "./StepPrivateDate";
 import { StepPrivateTime } from "./StepPrivateTime";
+import { StepOccasionSelection } from "./StepOccasionSelection";
 import { StepGuestDetails } from "./StepGuestDetails";
 import StepPrivateSummary from "./StepPrivateSummary";
 import { Check } from "lucide-react";
@@ -15,6 +16,7 @@ interface PrivateBookingData {
   guests: number;
   durationHours: number;
   time: string | null;
+  occasion: string;
   guestDetails: {
     name: string;
     email: string;
@@ -36,20 +38,31 @@ export const PrivateBookingWizard = () => {
     guests: 20,
     durationHours: 4,
     time: null,
+    occasion: "celebration",
     guestDetails: {
       name: user?.name || "",
       email: user?.email || "",
       phone: user?.phone || "",
       notes: "",
-      occasion: "business",
+      occasion: "celebration",
       agreedToTransactional: true,
       agreedToMarketing: false,
       agreedToTerms: true
     },
   });
 
-  const updateData = (stepData: Partial<PrivateBookingData>) => {
+  const updateData = (stepData: Partial<PrivateBookingData> & Record<string, any>) => {
     setBookingData((prev) => {
+      if (stepData.occasion) {
+        return {
+          ...prev,
+          occasion: stepData.occasion,
+          guestDetails: {
+            ...prev.guestDetails,
+            occasion: stepData.occasion,
+          },
+        };
+      }
       if (stepData.guestDetails) {
         return {
           ...prev,
@@ -57,6 +70,7 @@ export const PrivateBookingWizard = () => {
           guestDetails: {
             ...prev.guestDetails,
             ...stepData.guestDetails,
+            occasion: prev.occasion || stepData.guestDetails.occasion || "celebration",
           },
         };
       }
@@ -66,7 +80,7 @@ export const PrivateBookingWizard = () => {
 
   const handleNext = (stepData: any) => {
     updateData(stepData);
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep((prev) => prev + 1);
     }
   };
@@ -82,8 +96,9 @@ export const PrivateBookingWizard = () => {
   const steps = [
     { num: 1, title: "Event Details" },
     { num: 2, title: "Time Slot" },
-    { num: 3, title: "Contact" },
-    { num: 4, title: "Summary" }
+    { num: 3, title: "Celebration" },
+    { num: 4, title: "Contact" },
+    { num: 5, title: "Summary" }
   ];
 
   const renderStep = () => {
@@ -110,12 +125,19 @@ export const PrivateBookingWizard = () => {
         );
       case 3:
         return (
+          <StepOccasionSelection
+            onNext={handleNext}
+            selectedOccasion={bookingData.occasion}
+          />
+        );
+      case 4:
+        return (
           <StepGuestDetails
             onNext={handleNext}
             initialData={bookingData.guestDetails}
           />
         );
-      case 4:
+      case 5:
         return (
           <StepPrivateSummary
             bookingData={bookingData}
@@ -128,7 +150,7 @@ export const PrivateBookingWizard = () => {
   };
 
   return (
-    <div className={cn("mx-auto min-h-[600px] flex flex-col mt-8 transition-all duration-700", currentStep === 4 ? "max-w-7xl" : "max-w-4xl")}>
+    <div className={cn("mx-auto min-h-[600px] flex flex-col mt-8 transition-all duration-700", currentStep === 5 ? "max-w-7xl" : "max-w-4xl")}>
       {/* Progress Tracker */}
       <div className="mb-12 px-4 md:px-0">
         <div className="flex items-center justify-between relative">
