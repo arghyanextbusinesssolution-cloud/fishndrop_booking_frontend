@@ -117,7 +117,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
       // Send private booking data to Lead Connector (GHL) only after successful Stripe payment
       try {
         fetch(
-          "https://services.leadconnectorhq.com/hooks/3HmJCw40C6xzJYaLg6cK/webhook-trigger/a5543d0c-c081-4aed-b0f4-c0a0333de4de",
+          "https://services.leadconnectorhq.com/hooks/3HmJCw40C6xzJYaLg6cK/webhook-trigger/68dcac67-ddc2-4765-87d7-9034ebe33001",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
