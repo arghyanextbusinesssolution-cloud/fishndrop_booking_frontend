@@ -43,6 +43,8 @@ export interface Booking {
   remainingAmount?: number;
   remainingPaymentStatus?: "unpaid" | "paid";
   durationHours?: number;
+  needDj?: boolean;
+  cateringMenu?: string;
   createdAt: string;
 }
 

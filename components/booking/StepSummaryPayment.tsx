@@ -11,6 +11,8 @@ import { Loader2, Ticket, Check, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
+import { BookingPolicyModal } from "./BookingPolicyModal";
+
 interface StepSummaryPaymentProps {
   bookingData: any;
   onBack: () => void;
@@ -24,6 +26,7 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
   const { setAuth } = useAuthStore();
   const router = useRouter();
 
@@ -64,21 +67,28 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
     setSubmitting(true);
     setError(null);
     try {
+      const cleanPhone = (bookingData.guestDetails?.phone || "").replace(/\D/g, "");
+      const customerName = bookingData.guestDetails?.name?.trim() || "Guest User";
+      const customerEmail =
+        bookingData.guestDetails?.email?.trim() ||
+        (cleanPhone ? `guest_${cleanPhone}@tropica.com` : `guest_${Date.now()}@tropica.com`);
+      const customerPhone = bookingData.guestDetails?.phone || "";
+
       const payload = {
         partySize: bookingData.guests,
         bookingDate: bookingData.date,
         bookingTime: bookingData.time,
-        customerName: bookingData.guestDetails.name,
-        customerEmail: bookingData.guestDetails.email,
-        customerPhone: bookingData.guestDetails.phone,
-        password: bookingData.guestDetails.password || undefined,
+        customerName,
+        customerEmail,
+        customerPhone,
+        password: bookingData.guestDetails?.password || undefined,
         occasion: bookingData.occasion || "other",
         notes: "",
-        cakeDetails: bookingData.addons.includes("cake") ? "Signature Birthday Cake" : "",
-        customCakeDetails: bookingData.addons.includes("custom_cake") ? bookingData.customCakeDetails : undefined,
-        cakePrice: bookingData.addons.includes("custom_cake") && bookingData.customCakeDetails
+        cakeDetails: bookingData.addons?.includes("cake") ? "Signature Birthday Cake" : "",
+        customCakeDetails: bookingData.addons?.includes("custom_cake") ? bookingData.customCakeDetails : undefined,
+        cakePrice: bookingData.addons?.includes("custom_cake") && bookingData.customCakeDetails
           ? bookingData.customCakeDetails.retailPrice
-          : bookingData.addons.includes("cake") ? 50 : 0,
+          : bookingData.addons?.includes("cake") ? 50 : 0,
         couponCode: appliedCoupon?.code || undefined,
       };
 
@@ -90,21 +100,31 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
         }
         setBookingId(data.booking._id);
 
-        const { data: piData } = await api.post("/payments/create-payment-intent", {
-          bookingId: data.booking._id,
-        });
+        const { data: piData } = await api.post(
+          "/payments/create-payment-intent",
+          { bookingId: data.booking._id },
+          data.token ? { headers: { Authorization: `Bearer ${data.token}` } } : undefined
+        );
 
         if (piData.success && piData.clientSecret) {
           setClientSecret(piData.clientSecret);
         } else {
-          setError("Failed to initialize payment. Please try again.");
+          setError(piData.message || "Failed to initialize payment. Please try again.");
         }
       } else {
         setError(data.message || "Failed to create booking.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Payment init failed:", err);
-      setError("An error occurred. Please go back and try again.");
+      let errorMsg = "An error occurred. Please go back and try again.";
+      if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {
+        errorMsg = err.response.data.errors.map((e: any) => e.message || e.msg).join(", ");
+      } else if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      setError(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -176,14 +196,29 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
           )}
 
           <button
-            onClick={handleReserve}
-            disabled={submitting}
-            className="w-full bg-gold-gradient text-on-primary py-4 rounded-lg text-[10px] uppercase tracking-widest font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
+            type="button"
+            onClick={() => setShowPolicyModal(true)}
+            className="text-[11px] text-[#C8A96A] underline font-semibold flex items-center justify-center gap-1.5 w-full mb-3 hover:text-white"
           >
-            Confirm & Reserve
+            View Booking &amp; Payment Policy (${finalPrice.toFixed(2)} Hold)
+          </button>
+
+          <button
+            onClick={() => setShowPolicyModal(true)}
+            disabled={submitting}
+            className="w-full bg-gold-gradient text-on-primary py-4 rounded-xl text-xs uppercase tracking-widest font-black shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
+          >
+            Confirm &amp; Reserve (${finalPrice.toFixed(2)})
           </button>
         </div>
       )}
+
+      <BookingPolicyModal
+        isOpen={showPolicyModal}
+        onClose={() => setShowPolicyModal(false)}
+        onAccept={handleReserve}
+        amount={finalPrice}
+      />
 
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm text-center">

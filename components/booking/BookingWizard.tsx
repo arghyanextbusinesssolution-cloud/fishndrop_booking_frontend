@@ -42,6 +42,17 @@ interface BookingData {
   assignedNote?: string;
 }
 
+const getDefaultBookingDate = (): string => {
+  const now = new Date();
+  if (now.getHours() >= 22) {
+    now.setDate(now.getDate() + 1);
+  }
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export const BookingWizard = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -58,8 +69,10 @@ export const BookingWizard = () => {
   const [chairConsentOpen, setChairConsentOpen] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
+  const defaultDate = initialDate || getDefaultBookingDate();
+
   const [bookingData, setBookingData] = useState<BookingData>({
-    date: initialDate,
+    date: defaultDate,
     time: null,
     guests: 2,
     table: null,
@@ -83,15 +96,20 @@ export const BookingWizard = () => {
     if (saved) {
       try {
         const { step: savedStep, data: savedData } = JSON.parse(saved);
-        if (initialDate === savedData.date) {
-          setStep(savedStep);
-          setBookingData(savedData);
-        } else {
-          localStorage.removeItem(STORAGE_KEY);
-        }
+        const resolvedDate = initialDate || savedData?.date || defaultDate;
+        setStep(savedStep || 2);
+        setBookingData({
+          ...savedData,
+          date: resolvedDate,
+        });
       } catch (e) {
         console.error("Failed to restore wizard state", e);
       }
+    } else {
+      setBookingData((prev) => ({
+        ...prev,
+        date: defaultDate,
+      }));
     }
     setIsRestoring(false);
   }, [initialDate]);
@@ -291,7 +309,7 @@ export const BookingWizard = () => {
       )}
 
       <main className="flex-grow flex flex-col items-center overflow-hidden">
-        <div ref={scrollContainerRef} className="w-full flex-grow flex flex-col items-center pt-28 md:pt-32 pb-10 px-4 md:px-12 overflow-y-auto scrollbar-hide">
+        <div ref={scrollContainerRef} className="w-full flex-grow flex flex-col items-center pt-24 md:pt-32 pb-16 px-4 md:px-12 overflow-y-auto scrollbar-hide">
           {/* Progress Stepper */}
           <div className="max-w-4xl w-full mb-16 px-4 shrink-0">
             <div className="flex items-center justify-between mb-4">

@@ -37,8 +37,14 @@ export default function RootLayout({
       className={`${newsreader.variable} ${manrope.variable} h-full antialiased theme-astral`}
       suppressHydrationWarning
     >
-      <head>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+      <body suppressHydrationWarning className="min-h-full flex flex-col">
+        <Suspense fallback={null}>
+          <PageLoader />
+        </Suspense>
+        <AuthInitializer />
+        {children}
+        <Toaster position="top-right" />
+
         <Script id="fb-pixel" strategy="afterInteractive">
           {`
             !function(f,b,e,v,n,t,s)
@@ -72,8 +78,7 @@ export default function RootLayout({
           data-source="WEB_USER"
           strategy="lazyOnload"
         />
-      </head>
-      <body suppressHydrationWarning className="min-h-full flex flex-col">
+
         <noscript>
           <img
             height="1"
@@ -83,12 +88,6 @@ export default function RootLayout({
             alt=""
           />
         </noscript>
-        <Suspense fallback={null}>
-          <PageLoader />
-        </Suspense>
-        <AuthInitializer />
-        {children}
-        <Toaster position="top-right" />
       </body>
     </html>
   );

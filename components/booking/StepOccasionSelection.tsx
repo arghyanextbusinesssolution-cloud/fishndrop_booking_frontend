@@ -80,11 +80,11 @@ export const StepOccasionSelection = ({ onNext, selectedOccasion }: StepOccasion
   return (
     <div className="space-y-12">
       <div className="text-center md:text-left space-y-4">
-        <span className="font-label tracking-[0.2em] text-primary text-[10px] uppercase mb-2 block font-bold transition-all animate-in fade-in slide-in-from-left-4 duration-500">
-          The Celebration Type
+        <span className="font-label tracking-[0.2em] text-[#C8A96A] text-[10px] uppercase mb-2 block font-bold transition-all animate-in fade-in slide-in-from-left-4 duration-500">
+          Step 04 of 06 &bull; The Celebration Type
         </span>
         <h1 className="font-headline italic text-5xl md:text-7xl mb-6 tracking-tight text-on-surface">
-          06. <span className="text-gold-gradient">The Occasion</span>
+          04. <span className="text-gold-gradient">The Occasion</span>
         </h1>
         <p className="font-body text-on-surface/70 text-lg md:text-xl max-w-2xl font-light">
           What type of celebration is it? Choose an occasion so we can tailor the dining experience for you and your guests.

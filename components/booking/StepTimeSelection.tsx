@@ -19,24 +19,35 @@ interface SlotAvailability {
   assignedNote?: string;
 }
 
+const getEffectiveDate = (d: string | null): string => {
+  if (d && d.trim().length >= 8) return d;
+  const now = new Date();
+  if (now.getHours() >= 22) now.setDate(now.getDate() + 1);
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export const StepTimeSelection = ({ onNext, selectedTime, date, guests }: StepTimeSelectionProps) => {
   const [slots, setSlots] = useState<SlotAvailability[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const activeDate = getEffectiveDate(date);
+
   useEffect(() => {
     const fetchAvailability = async () => {
-      if (!date) return;
       setLoading(true);
       try {
-        const { data } = await api.get(`/bookings/availability?date=${date}&partySize=${guests}`);
+        const { data } = await api.get(`/bookings/availability?date=${activeDate}&partySize=${guests}`);
         if (data.success) {
-          setSlots(data.slots);
+          setSlots(data.slots || []);
           
           // Enhanced Console Logging for Debugging
-          console.group(`🕒 Availability Analysis for ${date} (${guests} Guests)`);
+          console.group(`🕒 Availability Analysis for ${activeDate} (${guests} Guests)`);
           console.log("Raw Slots Data:", data.slots);
           
-          const blockedSlots = data.slots.filter((s: any) => !s.isAvailable);
+          const blockedSlots = (data.slots || []).filter((s: any) => !s.isAvailable);
           const venueBuyouts = blockedSlots.filter((s: any) => s.message?.includes("Private Event") || s.message?.includes("Venue partially or fully booked"));
           
           if (venueBuyouts.length > 0) {
@@ -59,7 +70,7 @@ export const StepTimeSelection = ({ onNext, selectedTime, date, guests }: StepTi
     };
 
     fetchAvailability();
-  }, [date, guests]);
+  }, [activeDate, guests]);
 
   if (loading) {
     return (
@@ -73,9 +84,19 @@ export const StepTimeSelection = ({ onNext, selectedTime, date, guests }: StepTi
   return (
     <div className="space-y-12">
       <div className="text-center md:text-left space-y-4">
-        <span className="font-label tracking-[0.2em] text-primary text-[10px] uppercase mb-2 block font-bold transition-all animate-in fade-in slide-in-from-left-4 duration-500">
-          The Perfect Moment
-        </span>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="font-label tracking-[0.2em] text-primary text-[10px] uppercase font-bold transition-all animate-in fade-in slide-in-from-left-4 duration-500">
+            The Perfect Moment
+          </span>
+          <span className="text-white/20 text-xs">•</span>
+          <span className="text-xs uppercase tracking-widest text-[#C8A96A] font-bold">
+            {new Date(activeDate + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+          </span>
+          <span className="text-white/20 text-xs">•</span>
+          <span className="text-xs uppercase tracking-widest text-white/60 font-semibold">
+            {guests} {guests === 1 ? "Guest" : "Guests"}
+          </span>
+        </div>
         <h2 className="font-headline text-5xl md:text-7xl italic text-on-surface">
           02. <span className="text-gold-gradient">The Hour</span>
         </h2>
@@ -83,6 +104,13 @@ export const StepTimeSelection = ({ onNext, selectedTime, date, guests }: StepTi
           Time is the most precious vintage we serve. Select the moment your evening begins.
         </p>
       </div>
+
+      {slots.length === 0 ? (
+        <div className="text-center py-16 p-8 rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md">
+          <p className="font-headline text-2xl italic text-white/90">No available time slots found for this date.</p>
+          <p className="text-white/50 text-sm mt-2 font-light">Please try selecting a different party size or date.</p>
+        </div>
+      ) : (
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {slots.map(({ slot, isAvailable, message, assignedNote }) => (
@@ -130,6 +158,7 @@ export const StepTimeSelection = ({ onNext, selectedTime, date, guests }: StepTi
           </button>
         ))}
       </div>
+      )}
     </div>
   );
 };

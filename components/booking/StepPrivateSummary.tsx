@@ -7,8 +7,11 @@ import { getStripe } from "@/lib/stripe";
 import { StripePaymentForm } from "./StripePaymentForm";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/axios";
-import { Loader2, Ticket, Check, X } from "lucide-react";
+import { Loader2, Ticket, Check, X, Music, UtensilsCrossed } from "lucide-react";
 import toast from "react-hot-toast";
+import { cn } from "@/lib/utils";
+
+import { BookingPolicyModal } from "./BookingPolicyModal";
 
 interface StepPrivateSummaryProps {
   bookingData: any;
@@ -17,14 +20,26 @@ interface StepPrivateSummaryProps {
 
 const stripePromise = getStripe();
 
+const CATERING_LABEL_MAP: Record<string, string> = {
+  seafood_buffet: "🦞 Seafood Extravaganza Buffet",
+  tropica_signature: "🍽️ Tropica Signature Experience",
+  cocktail_canapes: "🥂 Cocktail and Canapes Reception",
+  bbq_grill: "🔥 Tropical BBQ and Grill",
+  vegan_garden: "🌿 Garden and Vegan Feast",
+  kids_friendly: "🎉 Family and Kids Celebration Menu",
+  custom: "✍️ Custom Menu — Discuss With Us",
+};
+
 export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateSummaryProps) {
   const router = useRouter();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
   const { setAuth } = useAuthStore();
 
-  const baseCost = bookingData.durationHours * 125;
+  const djCost = bookingData.needDj ? 300 : 0;
+  const baseCost = (bookingData.durationHours || 1) * 125 + djCost;
   const [submitting, setSubmitting] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
@@ -34,7 +49,6 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
   const minDeposit = Math.min(finalCost, 200);
   const [customDeposit, setCustomDeposit] = useState<number>(minDeposit);
 
-  // Sync custom deposit correctly if finalCost changes
   useEffect(() => {
     setCustomDeposit(Math.min(finalCost, 200));
   }, [finalCost]);
@@ -80,6 +94,8 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
         durationHours: bookingData.durationHours || 1,
         occasion: bookingData.occasion || "other",
         notes: bookingData.notes || "",
+        needDj: bookingData.needDj ?? false,
+        cateringMenu: bookingData.cateringMenu || "seafood_buffet",
         customDepositAmount: customDeposit,
         couponCode: appliedCoupon?.code || undefined,
       };
@@ -92,21 +108,31 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
         }
         setBookingId(res.data.booking._id);
 
-        const { data: piData } = await api.post("/payments/create-payment-intent", {
-          bookingId: res.data.booking._id
-        });
+        const { data: piData } = await api.post(
+          "/payments/create-payment-intent",
+          { bookingId: res.data.booking._id },
+          res.data.token ? { headers: { Authorization: `Bearer ${res.data.token}` } } : undefined
+        );
 
         if (piData.success && piData.clientSecret) {
           setClientSecret(piData.clientSecret);
         } else {
-          setError("Failed to initialize payment. Please try again.");
+          setError(piData.message || "Failed to initialize payment. Please try again.");
         }
       } else {
         setError(res.data.message || "Failed to create booking.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Payment init failed:", err);
-      setError("An error occurred. Please go back and try again.");
+      let errorMsg = "An error occurred. Please go back and try again.";
+      if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {
+        errorMsg = err.response.data.errors.map((e: any) => e.message || e.msg).join(", ");
+      } else if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      setError(errorMsg);
     } finally {
       setSubmitting(false);
     }
@@ -114,7 +140,6 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
 
   const handlePaymentSuccess = (bookingId: string, paymentIntentId?: string) => {
     if (bookingId) {
-      // Send private booking data to Lead Connector (GHL) only after successful Stripe payment
       try {
         fetch(
           "https://services.leadconnectorhq.com/hooks/3HmJCw40C6xzJYaLg6cK/webhook-trigger/68dcac67-ddc2-4765-87d7-9034ebe33001",
@@ -130,10 +155,12 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
               partySize: bookingData.guests,
               durationHours: bookingData.durationHours || 1,
               occasion: bookingData.occasion || "other",
+              needDj: bookingData.needDj ?? false,
+              cateringMenu: bookingData.cateringMenu || "seafood_buffet",
               notes: bookingData.notes || "",
               depositAmount: customDeposit,
               totalAmount: finalCost,
-              bookingId: bookingId,
+              bookingId,
               paymentIntentId: paymentIntentId || "",
               bookingType: "private_event",
               status: "confirmed",
@@ -145,6 +172,8 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
                 : null,
               bookingDetails: {
                 occasion: bookingData.occasion || "other",
+                needDj: bookingData.needDj ?? false,
+                cateringMenu: bookingData.cateringMenu || "seafood_buffet",
                 notes: bookingData.notes || "",
                 partySize: bookingData.guests,
                 durationHours: bookingData.durationHours || 1,
@@ -157,7 +186,6 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
             }),
           }
         ).catch((ghlErr) => {
-          // Non-blocking — log but don't interrupt the booking flow
           console.warn("Lead Connector webhook failed:", ghlErr);
         });
       } catch (ghlErr) {
@@ -170,10 +198,14 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
     }
   };
 
+  const cateringLabel = CATERING_LABEL_MAP[bookingData.cateringMenu] || bookingData.cateringMenu || "Not selected";
+
   return (
     <div className="max-w-md mx-auto space-y-6 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {!clientSecret && !bookingId && !submitting && (
         <div className="bg-[#f7f6f2] rounded-xl p-6 shadow-lg space-y-6">
+
+          {/* Deposit / Total Header */}
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             <div className="flex justify-between items-center w-full">
               <p className="font-label text-[10px] tracking-[0.3em] uppercase text-[#1a1c1b]/60 font-bold max-w-[80px] leading-tight">Deposit Limit</p>
@@ -190,6 +222,33 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
             </div>
           </div>
 
+          {/* Preferences Summary — read-only from Step 4 */}
+          <div className="pt-4 border-t border-black/10 space-y-3">
+            <p className="text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold">Event Preferences (from step 4)</p>
+
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-white border border-[#1a1c1b]/10">
+              <Music className="w-4 h-4 text-[#C8A96A] flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-[10px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">DJ Service</p>
+                <p className={cn(
+                  "text-sm font-bold mt-0.5",
+                  bookingData.needDj ? "text-[#0F4C3A]" : "text-[#1a1c1b]/60"
+                )}>
+                  {bookingData.needDj ? "✓ Yes — DJ Requested (+$300 USD)" : "No DJ"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-white border border-[#1a1c1b]/10">
+              <UtensilsCrossed className="w-4 h-4 text-[#C8A96A] flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-[10px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">Catering Menu</p>
+                <p className="text-sm font-bold text-[#1a1c1b] mt-0.5">{cateringLabel}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Coupon */}
           <div className="space-y-4 pt-4 border-t border-black/10">
             {!appliedCoupon ? (
               <div className="space-y-2">
@@ -247,15 +306,31 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
             </div>
           </div>
 
-          <button
-            onClick={handleReserve}
-            disabled={submitting || finalCost < 0}
-            className="w-full bg-[#0F4C3A] text-white py-3 rounded text-[10px] uppercase tracking-widest font-bold transition hover:bg-[#1a5b48] disabled:opacity-50"
-          >
-            Confirm & Pay ${customDeposit.toFixed(2)}
-          </button>
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => setShowPolicyModal(true)}
+              className="text-[11px] text-[#C8A96A] underline font-semibold flex items-center justify-center gap-1.5 w-full mb-3 hover:text-[#0F4C3A]"
+            >
+              View Booking &amp; Payment Policy ($200 Deposit / 48-Hour Hold)
+            </button>
+
+            <button
+              onClick={() => setShowPolicyModal(true)}
+              disabled={submitting || finalCost < 0}
+              className="w-full bg-[#0F4C3A] text-white py-4 rounded-xl text-xs uppercase tracking-widest font-black transition hover:bg-[#1a5b48] disabled:opacity-50 shadow-lg"
+            >
+              Confirm &amp; Pay ${customDeposit.toFixed(2)} Deposit
+            </button>
+          </div>
         </div>
       )}
+
+      <BookingPolicyModal
+        isOpen={showPolicyModal}
+        onClose={() => setShowPolicyModal(false)}
+        onAccept={handleReserve}
+      />
 
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm text-center">
@@ -273,7 +348,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
       )}
 
       {clientSecret && bookingId && (
-        <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'stripe' } }}>
+        <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
           <StripePaymentForm
             bookingId={bookingId}
             onSuccess={handlePaymentSuccess}

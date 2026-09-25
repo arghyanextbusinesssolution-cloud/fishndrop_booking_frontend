@@ -1,97 +1,158 @@
 "use client";
 
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
-import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
-
-const schema = z
-  .object({
-    name: z.string().min(2).max(50),
-    email: z.string().email(),
-    password: z.string().min(8).regex(/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/, "Must contain uppercase, number, and special character"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-type FormValues = z.infer<typeof schema>;
 
 export function RegisterForm() {
   const router = useRouter();
-  const { register: registerUser, loading, error } = useAuth();
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({ resolver: zodResolver(schema) });
-  
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { sendOTP, verifyOTP } = useAuth();
 
-  const onSubmit = async (values: FormValues) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+
+  const handleSendOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || name.trim().length < 2) {
+      toast.error("Please enter your name");
+      return;
+    }
+    if (!phone || phone.trim().length < 8) {
+      toast.error("Please enter a valid phone number");
+      return;
+    }
+
+    setSendingOtp(true);
     try {
-      const data = await registerUser({ 
-        name: values.name, 
-        email: values.email, 
-        password: values.password 
-      });
-      toast.success("Account created successfully! Welcome.");
+      await sendOTP(phone);
+      setOtpSent(true);
+      toast.success("Verification code sent via SMS!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send SMS OTP");
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyAndRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp || otp.trim().length < 6) {
+      toast.error("Please enter the 6-digit verification code");
+      return;
+    }
+
+    setVerifyingOtp(true);
+    try {
+      const data = await verifyOTP(phone, otp, name, email);
+      toast.success("Account created and verified successfully!");
       const destination = data.user.role === "admin" ? "/admin" : "/user";
       router.push(destination);
-    } catch {}
+    } catch (err: any) {
+      toast.error(err.message || "OTP verification failed");
+    } finally {
+      setVerifyingOtp(false);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div><Label htmlFor="name">Name</Label><Input id="name" {...register("name")} />{errors.name && <p className="mt-1 text-sm text-[var(--error)]">{errors.name.message}</p>}</div>
-      <div><Label htmlFor="email">Email</Label><Input id="email" type="email" {...register("email")} />{errors.email && <p className="mt-1 text-sm text-[var(--error)]">{errors.email.message}</p>}</div>
-      <div>
-        <Label htmlFor="password">Password</Label>
-        <div className="relative">
-          <Input 
-            id="password" 
-            type={showPassword ? "text" : "password"} 
-            {...register("password")} 
-            className="pr-10"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
-          >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
-        </div>
-        {errors.password && <p className="mt-1 text-sm text-[var(--error)]">{errors.password.message}</p>}
-      </div>
+    <div className="space-y-4">
+      {!otpSent ? (
+        <form onSubmit={handleSendOTP} className="space-y-4">
+          <div>
+            <Label htmlFor="name" className="text-white/80">Full Name</Label>
+            <Input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="John Doe"
+              className="bg-black/30 border-[#C8A96A]/30 text-white mt-1"
+            />
+          </div>
 
-      <div>
-        <Label htmlFor="confirmPassword">Confirm password</Label>
-        <div className="relative">
-          <Input 
-            id="confirmPassword" 
-            type={showConfirmPassword ? "text" : "password"} 
-            {...register("confirmPassword")} 
-            className="pr-10"
-          />
-          <button
-            type="button"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--foreground-muted)] hover:text-[var(--foreground)]"
+          <div>
+            <Label htmlFor="email" className="text-white/80">Email Address</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="john@example.com"
+              className="bg-black/30 border-[#C8A96A]/30 text-white mt-1"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="phone" className="text-white/80">Phone Number</Label>
+            <Input
+              id="phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+91 917679672137 or +1 (555) 000-0000"
+              className="bg-black/30 border-[#C8A96A]/30 text-white mt-1"
+            />
+            <p className="mt-1.5 text-xs text-white/50">
+              We'll send a code to verify your phone via SMS. No password needed.
+            </p>
+          </div>
+
+          <Button
+            type="submit"
+            isLoading={sendingOtp}
+            disabled={sendingOtp || !phone || !name}
+            className="w-full bg-[#C8A96A] text-white hover:bg-[#b59858] transition-all duration-300 font-label text-[11px] tracking-[0.2em] uppercase font-bold py-6 shadow-lg shadow-[#C8A96A]/20"
           >
-            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-          </button>
-        </div>
-        {errors.confirmPassword && <p className="mt-1 text-sm text-[var(--error)]">{errors.confirmPassword.message}</p>}
-      </div>
-      {error && <p className="text-sm text-[var(--error)]">{error}</p>}
-      <Button type="submit" isLoading={loading} disabled={loading} className="w-full bg-[var(--accent)] text-black hover:bg-[var(--accent-hover)]">{loading ? "Creating account..." : "Create account"}</Button>
-    </form>
+            {sendingOtp ? "Sending SMS..." : "Send Verification Code"}
+          </Button>
+        </form>
+      ) : (
+        <form onSubmit={handleVerifyAndRegister} className="space-y-4 animate-in fade-in duration-300">
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <Label htmlFor="otp" className="text-white/80">Enter 6-Digit Verification Code</Label>
+              <button
+                type="button"
+                onClick={() => setOtpSent(false)}
+                className="text-xs text-[#C8A96A] hover:underline"
+              >
+                Change Phone
+              </button>
+            </div>
+            <Input
+              id="otp"
+              type="text"
+              inputMode="numeric"
+              maxLength={6}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder="123456"
+              className="bg-black/30 border-[#C8A96A]/30 text-white tracking-widest font-mono text-center text-xl"
+            />
+            <p className="mt-1 text-xs text-white/50">
+              Sent via SMS to <span className="text-white">{phone}</span>.
+            </p>
+          </div>
+
+          <Button
+            type="submit"
+            isLoading={verifyingOtp}
+            disabled={verifyingOtp || otp.length < 6}
+            className="w-full bg-[#C8A96A] text-white hover:bg-[#b59858] transition-all duration-300 font-label text-[11px] tracking-[0.2em] uppercase font-bold py-6 shadow-lg shadow-[#C8A96A]/20"
+          >
+            {verifyingOtp ? "Verifying..." : "Verify & Complete Registration"}
+          </Button>
+        </form>
+      )}
+    </div>
   );
 }

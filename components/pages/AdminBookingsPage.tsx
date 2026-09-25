@@ -6,7 +6,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { Booking } from "@/types";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { cn } from "@/lib/utils";
-import { CalendarDays, Search, ChevronLeft, ChevronRight, XCircle, Download } from "lucide-react";
+import { CalendarDays, Search, ChevronLeft, ChevronRight, XCircle, Download, Music, UtensilsCrossed } from "lucide-react";
 import { CalendarDropdown } from "@/components/shared/CalendarDropdown";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { exportBookingsToCSV } from "@/lib/exportCsv";
@@ -116,6 +116,42 @@ function OccasionBadge({ occasion }: { occasion?: string }) {
   return (
     <span className="px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold whitespace-nowrap inline-flex items-center gap-1 shrink-0">
       ✨ {label}
+    </span>
+  );
+}
+
+const CATERING_LABEL_MAP: Record<string, string> = {
+  seafood_buffet: "Seafood Extravaganza Buffet",
+  tropica_signature: "Tropica Signature Experience",
+  cocktail_canapes: "Cocktail and Canapes Reception",
+  bbq_grill: "Tropical BBQ and Grill",
+  vegan_garden: "Garden and Vegan Feast",
+  kids_friendly: "Family and Kids Menu",
+  custom: "Custom Menu",
+};
+
+function DjBadge({ needDj, bookingType }: { needDj?: boolean; bookingType: string }) {
+  if (bookingType !== "private_event") return <span className="text-secondary text-xs">—</span>;
+  return (
+    <span className={cn(
+      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold whitespace-nowrap shrink-0",
+      needDj
+        ? "bg-primary/10 text-primary border-primary/20"
+        : "bg-surface-container text-secondary border-outline-variant/20"
+    )}>
+      <Music className="w-2.5 h-2.5" />
+      {needDj ? "DJ Yes" : "No DJ"}
+    </span>
+  );
+}
+
+function CateringBadge({ cateringMenu, bookingType }: { cateringMenu?: string; bookingType: string }) {
+  if (bookingType !== "private_event") return <span className="text-secondary text-xs">—</span>;
+  const label = cateringMenu ? (CATERING_LABEL_MAP[cateringMenu] || cateringMenu) : "Not set";
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold whitespace-nowrap shrink-0 bg-primary/5 text-primary border-primary/15">
+      <UtensilsCrossed className="w-2.5 h-2.5" />
+      {label}
     </span>
   );
 }
@@ -417,10 +453,19 @@ export default function AdminBookingsPage() {
                       <span className="text-secondary text-[10px]">{formatDateTime(b.createdAt)}</span>
                     </div>
                     <div>
-                      <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Amount & Payment</span>
+                      <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Amount &amp; Payment</span>
                       <span className="font-headline text-sm italic text-on-surface">${b.totalAmount}</span>
                       <div className="mt-0.5"><PaymentBadge status={b.paymentStatus} remainingStatus={b.remainingPaymentStatus} /></div>
                     </div>
+                    {b.bookingType === "private_event" && (
+                      <div className="col-span-2 pt-2 border-t border-outline-variant/10 space-y-2">
+                        <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Event Preferences</span>
+                        <div className="flex flex-wrap gap-2">
+                          <DjBadge needDj={b.needDj} bookingType={b.bookingType} />
+                          <CateringBadge cateringMenu={b.cateringMenu} bookingType={b.bookingType} />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-end gap-2 pt-2">
@@ -449,7 +494,7 @@ export default function AdminBookingsPage() {
               <table className="min-w-[1200px] w-full text-left">
                 <thead className="bg-surface-container border-b border-outline-variant/10">
                   <tr>
-                    {["#", "Category", "Type", "Guest Name", "Occasion", "Email", "Phone", "Event Date", "Tried Date", "Time", "Party", "Tables", "Amount", "Payment", "Status", "Actions"].map(h => (
+                    {["#", "Category", "Type", "Guest Name", "Occasion", "Email", "Phone", "Event Date", "Tried Date", "Time", "Party", "Tables", "DJ", "Catering Menu", "Amount", "Payment", "Status", "Actions"].map(h => (
                       <th key={h} className="px-4 py-4 text-[9px] uppercase tracking-widest text-outline font-bold whitespace-nowrap">
                         {h}
                       </th>
@@ -495,6 +540,12 @@ export default function AdminBookingsPage() {
                         ) : (
                           b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—"
                         )}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <DjBadge needDj={b.needDj} bookingType={b.bookingType} />
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap max-w-[160px]">
+                        <CateringBadge cateringMenu={b.cateringMenu} bookingType={b.bookingType} />
                       </td>
                       <td className="px-4 py-4">
                         {b.bookingType === "private_event" ? (

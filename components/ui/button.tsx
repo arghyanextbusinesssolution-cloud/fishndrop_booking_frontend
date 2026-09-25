@@ -1,4 +1,4 @@
-import { Button as ButtonPrimitive } from "@base-ui/react/button"
+import * as React from "react"
 import { Loader2 } from "lucide-react"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -41,30 +41,39 @@ const buttonVariants = cva(
   }
 )
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  children,
-  isLoading = false,
-  disabled,
-  ...props
-}: ButtonPrimitive.Props &
-  VariantProps<typeof buttonVariants> & {
-    isLoading?: boolean
-  }) {
-  return (
-    <ButtonPrimitive
-      data-slot="button"
-      suppressHydrationWarning
-      className={cn(buttonVariants({ variant, size, className }))}
-      disabled={disabled || isLoading}
-      {...props}
-    >
-      {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
-      {children}
-    </ButtonPrimitive>
-  )
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  isLoading?: boolean
 }
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      className,
+      variant = "default",
+      size = "default",
+      children,
+      isLoading = false,
+      disabled,
+      ...props
+    },
+    ref
+  ) => {
+    return (
+      <button
+        ref={ref}
+        data-slot="button"
+        className={cn(buttonVariants({ variant, size, className }))}
+        disabled={disabled || isLoading}
+        {...props}
+      >
+        {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : null}
+        {children}
+      </button>
+    )
+  }
+)
+Button.displayName = "Button"
 
 export { Button, buttonVariants }

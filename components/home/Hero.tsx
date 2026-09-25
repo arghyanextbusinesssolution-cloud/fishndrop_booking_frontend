@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
-import { NavSpinnerLink, SpinnerButton } from '@/components/shared/NavSpinnerLink';
+import React from 'react';
+import { NavSpinnerLink } from '@/components/shared/NavSpinnerLink';
 
 interface HeroProps {
     onTableReservationClick?: () => void;
@@ -52,21 +52,6 @@ export const Hero = ({ onTableReservationClick }: HeroProps) => {
                     >
                         BOOK A TOUR
                     </NavSpinnerLink>
-                    {onTableReservationClick ? (
-                        <SpinnerButton
-                            onClickAsync={onTableReservationClick}
-                            className="w-full md:w-auto border border-[#C8A96A]/30 text-[#C8A96A] px-8 md:px-10 py-4 md:py-5 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:bg-[#C8A96A]/10 transition-all font-body"
-                        >
-                            TABLE RESERVATION
-                        </SpinnerButton>
-                    ) : (
-                        <a
-                            href="#reservations"
-                            className="w-full md:w-auto border border-[#C8A96A]/30 text-[#C8A96A] px-8 md:px-10 py-4 md:py-5 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:bg-[#C8A96A]/10 transition-all"
-                        >
-                            TABLE RESERVATION
-                        </a>
-                    )}
                 </div>
             </div>
 

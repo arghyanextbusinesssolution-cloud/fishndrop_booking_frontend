@@ -18,8 +18,8 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center px-4" style={{ backgroundColor: '#0F3D2E' }}>
       <div className="w-full max-w-md rounded-2xl border border-[#C8A96A]/20 bg-black/40 backdrop-blur-xl p-8 shadow-2xl">
-        <Link href="/" className="mb-10 flex justify-center">
-          <div className="relative w-64 h-24 hover:scale-105 transition-all duration-300">
+        <Link href="/" className="mb-6 flex justify-center">
+          <div className="relative w-48 h-28 md:w-52 md:h-32 hover:scale-105 transition-all duration-300">
             <Image
               src="/tropica-logo.png"
               alt="Tropica Sanctuary"
