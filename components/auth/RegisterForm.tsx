@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import toast from "react-[#C8A96A]" ? null : "react-hot-toast";
-import toastHot from "react-hot-toast";
+import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,15 +31,15 @@ export function RegisterForm() {
   const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || name.trim().length < 2) {
-      toastHot.error("Please enter your full name");
+      toast.error("Please enter your full name");
       return;
     }
     if (!email || !email.includes("@")) {
-      toastHot.error("Please enter a valid email address");
+      toast.error("Please enter a valid email address");
       return;
     }
     if (!password || password.length < 6) {
-      toastHot.error("Password must be at least 6 characters");
+      toast.error("Password must be at least 6 characters");
       return;
     }
 
@@ -52,11 +51,11 @@ export function RegisterForm() {
         password,
         phone: phone.trim() || undefined
       });
-      toastHot.success("Account created successfully!");
+      toast.success("Account created successfully!");
       const destination = data.user?.role === "admin" ? "/admin" : "/user";
       router.push(destination);
     } catch (err: any) {
-      toastHot.error(err.message || "Registration failed. Please try again.");
+      toast.error(err.message || "Registration failed. Please try again.");
     } finally {
       setRegistering(false);
     }
