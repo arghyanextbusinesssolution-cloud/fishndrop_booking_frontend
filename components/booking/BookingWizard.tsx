@@ -309,10 +309,10 @@ export const BookingWizard = () => {
       )}
 
       <main className="flex-grow flex flex-col items-center overflow-hidden">
-        <div ref={scrollContainerRef} className="w-full flex-grow flex flex-col items-center pt-24 md:pt-32 pb-16 px-4 md:px-12 overflow-y-auto scrollbar-hide">
+        <div ref={scrollContainerRef} className="w-full flex-grow flex flex-col items-center pt-16 sm:pt-20 md:pt-28 pb-8 px-2 sm:px-6 md:px-12 overflow-y-auto scrollbar-hide">
           {/* Progress Stepper */}
-          <div className="max-w-4xl w-full mb-16 px-4 shrink-0">
-            <div className="flex items-center justify-between mb-4">
+          <div className="max-w-4xl w-full mb-4 sm:mb-8 px-2 shrink-0">
+            <div className="flex items-center justify-between mb-2">
               <span className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] font-bold">Step {step} of 8</span>
               <span className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] font-bold">{Math.round((step / 8) * 100)}%</span>
             </div>
@@ -322,7 +322,7 @@ export const BookingWizard = () => {
           </div>
 
           {/* Wizard Content */}
-          <div className={cn("w-full max-w-6xl relative pb-20", (isSubmitting || isRestoring) && "opacity-50 pointer-events-none")}>
+          <div className={cn("w-full max-w-6xl relative pb-6", (isSubmitting || isRestoring) && "opacity-50 pointer-events-none")}>
             {(isSubmitting || isRestoring) && (
               <LoadingSpinner fullPage message={isRestoring ? "Restoring journey..." : "Crafting your experience & connecting to payment..."} />
             )}
@@ -340,7 +340,7 @@ export const BookingWizard = () => {
             </AnimatePresence>
 
             {/* Persistent Navigation */}
-            <div className="mt-12 pt-8 border-t border-outline-variant/10 flex flex-col sm:flex-row justify-between items-center gap-6">
+            <div className="mt-6 pt-4 border-t border-outline-variant/10 flex flex-col sm:flex-row justify-between items-center gap-4">
               <button onClick={handleBack} className="text-[#E5E7EB]/40 hover:text-[#E5E7EB] font-body text-[10px] tracking-widest uppercase font-bold transition-all flex items-center gap-3 group">
                 <div className="w-6 h-px bg-[#E5E7EB]/20 group-hover:bg-[#E5E7EB] group-hover:w-10 transition-all" />
                 Go Back

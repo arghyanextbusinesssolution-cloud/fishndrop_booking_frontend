@@ -139,27 +139,27 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
   };
 
   return (
-    <div className="max-w-md mx-auto space-y-6 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-md mx-auto space-y-3 pt-1 sm:pt-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
       {!clientSecret && !bookingId && !submitting && (
-        <div className="space-y-6 bg-[#f7f6f2] rounded-xl p-6 shadow-lg">
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-black/10 pb-4">
+        <div className="space-y-4 bg-[#f7f6f2] rounded-xl p-4 sm:p-6 shadow-lg">
+          <div className="flex justify-between items-center gap-3 border-b border-black/10 pb-3">
             <div>
-              <p className="font-label text-[10px] tracking-[0.3em] uppercase text-[#1a1c1b]/60 font-bold max-w-[80px] leading-tight">Total Amount</p>
-              <p className="font-headline text-5xl text-[#C8A96A] font-bold tracking-tighter">${finalPrice.toFixed(2)}</p>
+              <p className="font-label text-[9px] sm:text-[10px] tracking-[0.2em] uppercase text-[#1a1c1b]/60 font-bold leading-tight">Total Amount</p>
+              <p className="font-headline text-3xl sm:text-5xl text-[#C8A96A] font-bold tracking-tighter">${finalPrice.toFixed(2)}</p>
             </div>
             {appliedCoupon && (
-              <div className="text-left sm:text-right">
-                <p className="text-[10px] tracking-widest uppercase text-emerald-600 font-bold">Discount Applied</p>
-                <p className="font-semibold text-emerald-600">-${appliedCoupon.discountAmount.toFixed(2)}</p>
+              <div className="text-right">
+                <p className="text-[9px] tracking-widest uppercase text-emerald-600 font-bold">Discount Applied</p>
+                <p className="font-semibold text-xs sm:text-sm text-emerald-600">-${appliedCoupon.discountAmount.toFixed(2)}</p>
                 <p className="text-[10px] text-gray-500 line-through">Orig: ${totalPrice.toFixed(2)}</p>
               </div>
             )}
           </div>
 
           {!appliedCoupon ? (
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold flex items-center gap-2">
+            <div className="space-y-1.5">
+              <label className="text-[9px] sm:text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold flex items-center gap-1.5">
                 <Ticket className="w-3 h-3" /> Referral Code
               </label>
               <div className="flex gap-2">
@@ -168,13 +168,13 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                   placeholder="Enter code"
-                  className="flex-1 bg-white border border-[#C8A96A]/30 rounded-lg px-4 py-2 text-sm text-[#1a1c1b] focus:outline-none focus:border-[#C8A96A]"
+                  className="flex-1 bg-white border border-[#C8A96A]/30 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-[#1a1c1b] focus:outline-none focus:border-[#C8A96A]"
                 />
                 <button
                   type="button"
                   onClick={handleApplyCoupon}
                   disabled={isValidating || !couponCode}
-                  className="bg-[#C8A96A] text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider disabled:opacity-50 min-w-[80px] flex justify-center items-center"
+                  className="bg-[#C8A96A] text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider disabled:opacity-50 min-w-[70px] flex justify-center items-center"
                 >
                   {isValidating ? <Loader2 className="w-3 h-3 animate-spin" /> : "Apply"}
                 </button>

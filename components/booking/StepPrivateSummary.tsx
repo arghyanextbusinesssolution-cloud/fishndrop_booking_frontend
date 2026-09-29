@@ -201,21 +201,21 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
   const cateringLabel = CATERING_LABEL_MAP[bookingData.cateringMenu] || bookingData.cateringMenu || "Not selected";
 
   return (
-    <div className="max-w-md mx-auto space-y-6 pt-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-md mx-auto space-y-3 pt-1 sm:pt-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {!clientSecret && !bookingId && !submitting && (
-        <div className="bg-[#f7f6f2] rounded-xl p-6 shadow-lg space-y-6">
+        <div className="bg-[#f7f6f2] rounded-xl p-4 sm:p-6 shadow-lg space-y-4">
 
           {/* Deposit / Total Header */}
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-            <div className="flex justify-between items-center w-full">
-              <p className="font-label text-[10px] tracking-[0.3em] uppercase text-[#1a1c1b]/60 font-bold max-w-[80px] leading-tight">Deposit Limit</p>
-              <p className="font-headline text-5xl text-[#C8A96A] font-bold tracking-tighter">
+          <div className="flex justify-between items-center gap-3">
+            <div>
+              <p className="font-label text-[9px] sm:text-[10px] tracking-[0.2em] uppercase text-[#1a1c1b]/60 font-bold leading-tight">Deposit Limit</p>
+              <p className="font-headline text-3xl sm:text-5xl text-[#C8A96A] font-bold tracking-tighter">
                 ${customDeposit.toFixed(2)}
               </p>
             </div>
-            <div className="w-full sm:w-auto text-left sm:text-right sm:border-l border-black/10 sm:pl-4">
-              <p className="text-[10px] uppercase tracking-widest text-[#1a1c1b]/60">Total Cost</p>
-              <p className="font-semibold text-[#1a1c1b]">${finalCost.toFixed(2)}</p>
+            <div className="text-right border-l border-black/10 pl-3">
+              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-[#1a1c1b]/60">Total Cost</p>
+              <p className="font-semibold text-sm sm:text-base text-[#1a1c1b]">${finalCost.toFixed(2)}</p>
               {appliedCoupon && (
                 <p className="text-[10px] text-gray-500 line-through">Orig: ${baseCost.toFixed(2)}</p>
               )}
@@ -223,15 +223,15 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
           </div>
 
           {/* Preferences Summary — read-only from Step 4 */}
-          <div className="pt-4 border-t border-black/10 space-y-3">
-            <p className="text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold">Event Preferences (from step 4)</p>
+          <div className="pt-3 border-t border-black/10 space-y-2.5">
+            <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold">Event Preferences (from step 4)</p>
 
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-white border border-[#1a1c1b]/10">
+            <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white border border-[#1a1c1b]/10">
               <Music className="w-4 h-4 text-[#C8A96A] flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-[10px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">DJ Service</p>
+                <p className="text-[9px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">DJ Service</p>
                 <p className={cn(
-                  "text-sm font-bold mt-0.5",
+                  "text-xs sm:text-sm font-bold mt-0.5",
                   bookingData.needDj ? "text-[#0F4C3A]" : "text-[#1a1c1b]/60"
                 )}>
                   {bookingData.needDj ? "✓ Yes — DJ Requested (+$300 USD)" : "No DJ"}
@@ -239,20 +239,20 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-white border border-[#1a1c1b]/10">
+            <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white border border-[#1a1c1b]/10">
               <UtensilsCrossed className="w-4 h-4 text-[#C8A96A] flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-[10px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">Catering Menu</p>
-                <p className="text-sm font-bold text-[#1a1c1b] mt-0.5">{cateringLabel}</p>
+                <p className="text-[9px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">Catering Menu</p>
+                <p className="text-xs sm:text-sm font-bold text-[#1a1c1b] mt-0.5">{cateringLabel}</p>
               </div>
             </div>
           </div>
 
           {/* Coupon */}
-          <div className="space-y-4 pt-4 border-t border-black/10">
+          <div className="space-y-3 pt-3 border-t border-black/10">
             {!appliedCoupon ? (
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold flex items-center gap-2">
+              <div className="space-y-1.5">
+                <label className="text-[9px] sm:text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold flex items-center gap-1.5">
                   <Ticket className="w-3 h-3" /> Referral Code
                 </label>
                 <div className="flex gap-2">
@@ -261,20 +261,20 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                     placeholder="Enter code"
-                    className="flex-1 bg-white border border-[#C8A96A]/30 rounded-lg px-4 py-2 text-sm text-[#1a1c1b] focus:outline-none focus:border-[#C8A96A]"
+                    className="flex-1 bg-white border border-[#C8A96A]/30 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-[#1a1c1b] focus:outline-none focus:border-[#C8A96A]"
                   />
                   <button
                     type="button"
                     onClick={handleApplyCoupon}
                     disabled={isValidating || !couponCode}
-                    className="bg-[#C8A96A] text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider disabled:opacity-50 min-w-[80px] flex justify-center items-center"
+                    className="bg-[#C8A96A] text-white px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider disabled:opacity-50 min-w-[70px] flex justify-center items-center"
                   >
                     {isValidating ? <Loader2 className="w-3 h-3 animate-spin" /> : "Apply"}
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 p-3 rounded-lg">
+              <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 p-2.5 rounded-lg">
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-500" />
                   <div>
@@ -288,7 +288,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
               </div>
             )}
 
-            <label className="text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold block">
+            <label className="text-[9px] sm:text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold block">
               Adjust your initial payment amount (Min: ${minDeposit})
             </label>
             <input
@@ -306,11 +306,11 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
             </div>
           </div>
 
-          <div className="pt-2">
+          <div className="pt-1 space-y-2">
             <button
               type="button"
               onClick={() => setShowPolicyModal(true)}
-              className="text-[11px] text-[#C8A96A] underline font-semibold flex items-center justify-center gap-1.5 w-full mb-3 hover:text-[#0F4C3A]"
+              className="text-[10px] sm:text-[11px] text-[#C8A96A] underline font-semibold flex items-center justify-center gap-1.5 w-full hover:text-[#0F4C3A]"
             >
               View Booking &amp; Payment Policy ($200 Deposit / 48-Hour Hold)
             </button>
@@ -318,7 +318,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
             <button
               onClick={() => setShowPolicyModal(true)}
               disabled={submitting || finalCost < 0}
-              className="w-full bg-[#0F4C3A] text-white py-4 rounded-xl text-xs uppercase tracking-widest font-black transition hover:bg-[#1a5b48] disabled:opacity-50 shadow-lg"
+              className="w-full bg-[#0F4C3A] text-white py-3 sm:py-3.5 rounded-xl text-xs uppercase tracking-widest font-black transition hover:bg-[#1a5b48] disabled:opacity-50 shadow-lg"
             >
               Confirm &amp; Pay ${customDeposit.toFixed(2)} Deposit
             </button>

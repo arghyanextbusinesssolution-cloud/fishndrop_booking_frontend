@@ -103,7 +103,7 @@ export const PrivateBookingWizard = () => {
   };
 
   const steps = [
-    { num: 1, title: "Phone OTP" },
+    { num: 1, title: "Guest Details" },
     { num: 2, title: "Calendar Date" },
     { num: 3, title: "Time Slot" },
     { num: 4, title: "Occasion" },
@@ -170,10 +170,10 @@ export const PrivateBookingWizard = () => {
   };
 
   return (
-    <div className={cn("mx-auto flex flex-col mt-6 md:mt-8 transition-all duration-700", currentStep === 6 ? "max-w-7xl" : "max-w-4xl")}>
+    <div className={cn("mx-auto flex flex-col mt-2 md:mt-4 transition-all duration-700", currentStep === 6 ? "max-w-7xl" : "max-w-4xl")}>
       {/* Progress Tracker - Scrollable horizontally on mobile */}
-      <div className="mb-12 px-4 md:px-0">
-        <div className="overflow-x-auto pb-6 scrollbar-hide">
+      <div className="mb-4 sm:mb-8 px-2 md:px-0">
+        <div className="overflow-x-auto pb-3 scrollbar-hide">
           <div className="flex items-center justify-between relative min-w-[480px] md:min-w-0">
             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[1px] bg-white/10" />
             <div
@@ -184,10 +184,10 @@ export const PrivateBookingWizard = () => {
               const isCompleted = currentStep > step.num;
               const isCurrent = currentStep === step.num;
               return (
-                <div key={step.num} className="relative z-10 flex flex-col items-center gap-3">
+                <div key={step.num} className="relative z-10 flex flex-col items-center gap-2">
                   <div
                     className={cn(
-                      "w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center font-headline transition-all duration-500 text-sm md:text-base",
+                      "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-headline transition-all duration-500 text-xs md:text-base",
                       isCompleted
                         ? "bg-[#C8A96A] text-[#0d1612] font-bold shadow-[0_0_15px_rgba(200,169,106,0.4)]"
                         : isCurrent
@@ -199,7 +199,7 @@ export const PrivateBookingWizard = () => {
                   </div>
                   <span
                     className={cn(
-                      "absolute -bottom-6 w-max font-label text-[8px] md:text-[10px] uppercase tracking-widest transition-colors duration-300",
+                      "absolute -bottom-5 w-max font-label text-[8px] md:text-[10px] uppercase tracking-widest transition-colors duration-300",
                       isCurrent || isCompleted ? "text-[#C8A96A]" : "text-white/40"
                     )}
                   >
@@ -212,13 +212,13 @@ export const PrivateBookingWizard = () => {
         </div>
       </div>
 
-      <div className="flex-1 bg-background/40 backdrop-blur-md border border-white/5 rounded-2xl p-6 md:p-10 shadow-2xl relative overflow-hidden">
+      <div className="flex-1 bg-background/40 backdrop-blur-md border border-white/5 rounded-2xl p-3.5 sm:p-6 md:p-8 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#C8A96A]/50 to-transparent opacity-50" />
 
         {renderStep()}
 
         {/* Navigation */}
-        <div className="mt-12 pt-8 border-t border-white/10 flex justify-between items-center">
+        <div className="mt-6 pt-4 border-t border-white/10 flex justify-between items-center">
           <button
             onClick={handleBack}
             className="text-white/60 hover:text-white transition-colors font-label tracking-widest text-xs uppercase px-4 py-2 font-bold"
