@@ -6,7 +6,8 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { Booking } from "@/types";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { cn } from "@/lib/utils";
-import { CalendarDays, Search, ChevronLeft, ChevronRight, XCircle, Download, Music, UtensilsCrossed } from "lucide-react";
+import api from "@/lib/axios";
+import { CalendarDays, Search, ChevronLeft, ChevronRight, XCircle, Download, Music, UtensilsCrossed, CheckCircle2, Eye, ShieldCheck, X } from "lucide-react";
 import { CalendarDropdown } from "@/components/shared/CalendarDropdown";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { exportBookingsToCSV } from "@/lib/exportCsv";
@@ -64,7 +65,16 @@ function CategoryBadge({ status, paymentStatus }: { status: string; paymentStatu
   );
 }
 
-function PaymentBadge({ status, remainingStatus }: { status?: string, remainingStatus?: string }) {
+function PaymentBadge({ status, remainingStatus, paymentMethod, zelleVerificationStatus }: { status?: string, remainingStatus?: string, paymentMethod?: string, zelleVerificationStatus?: string }) {
+  if (paymentMethod === "zelle") {
+    return (
+      <div className="flex flex-col gap-1 items-start">
+        <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-purple-50 text-purple-800 border-purple-200 whitespace-nowrap inline-flex items-center justify-center shrink-0">
+          ⚡ Zelle ({zelleVerificationStatus === "verified" ? "Verified" : zelleVerificationStatus === "mismatched" ? "Mismatch" : "Pending GHL"})
+        </span>
+      </div>
+    );
+  }
   if (status === "paid" || (status === "deposit_paid" && remainingStatus === "paid")) {
     return (
       <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-emerald-50 text-emerald-700 border-emerald-200 whitespace-nowrap inline-flex items-center justify-center shrink-0">
@@ -149,9 +159,9 @@ function CateringBadge({ cateringMenu, bookingType }: { cateringMenu?: string; b
   if (bookingType !== "private_event") return <span className="text-secondary text-xs">—</span>;
   const label = cateringMenu ? (CATERING_LABEL_MAP[cateringMenu] || cateringMenu) : "Not set";
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold whitespace-nowrap shrink-0 bg-primary/5 text-primary border-primary/15">
-      <UtensilsCrossed className="w-2.5 h-2.5" />
-      {label}
+    <span className="inline-flex items-start gap-1.5 px-2.5 py-1 rounded-lg border text-[9px] uppercase tracking-widest font-bold bg-primary/5 text-primary border-primary/15 min-w-[110px] max-w-[180px]">
+      <UtensilsCrossed className="w-2.5 h-2.5 shrink-0 mt-0.5" />
+      <span className="break-words leading-tight">{label}</span>
     </span>
   );
 }
@@ -183,6 +193,7 @@ export default function AdminBookingsPage() {
   const [query, setQuery] = useState("");
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [selectedProofModal, setSelectedProofModal] = useState<{ url: string; booking: Booking; proofType?: "deposit" | "balance" } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -206,6 +217,19 @@ export default function AdminBookingsPage() {
     void load();
   }, [load]);
 
+  const handleVerifyZelle = async (bookingId: string, action: "verify" | "reject") => {
+    try {
+      const { data } = await api.patch(`/admin/bookings/${bookingId}/verify-zelle`, { action });
+      if (data.success) {
+        toast.success(action === "verify" ? "Zelle payment manually verified & confirmed!" : "Zelle payment marked as mismatched.");
+        setSelectedProofModal(null);
+        await load();
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to update Zelle verification");
+    }
+  };
+
   const handleExportCSV = async () => {
     setIsExporting(true);
     try {
@@ -227,7 +251,8 @@ export default function AdminBookingsPage() {
     ? bookings.filter((b) =>
       (b.customerName || b.user?.name || "").toLowerCase().includes(query.toLowerCase()) ||
       (b.customerEmail || b.user?.email || "").toLowerCase().includes(query.toLowerCase()) ||
-      (b.customerPhone || "").toLowerCase().includes(query.toLowerCase())
+      (b.customerPhone || "").toLowerCase().includes(query.toLowerCase()) ||
+      (b._id || "").toLowerCase().includes(query.toLowerCase())
     )
     : bookings;
 
@@ -455,7 +480,14 @@ export default function AdminBookingsPage() {
                     <div>
                       <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Amount &amp; Payment</span>
                       <span className="font-headline text-sm italic text-on-surface">${b.totalAmount}</span>
-                      <div className="mt-0.5"><PaymentBadge status={b.paymentStatus} remainingStatus={b.remainingPaymentStatus} /></div>
+                      <div className="mt-0.5">
+                        <PaymentBadge
+                          status={b.paymentStatus}
+                          remainingStatus={b.remainingPaymentStatus}
+                          paymentMethod={b.paymentMethod}
+                          zelleVerificationStatus={b.zelleVerificationStatus}
+                        />
+                      </div>
                     </div>
                     {b.bookingType === "private_event" && (
                       <div className="col-span-2 pt-2 border-t border-outline-variant/10 space-y-2">
@@ -468,7 +500,34 @@ export default function AdminBookingsPage() {
                     )}
                   </div>
 
-                  <div className="flex items-center justify-end gap-2 pt-2">
+                  <div className="flex items-center justify-end gap-2 pt-2 flex-wrap">
+                    {b.zelleProofUrl && (
+                      <button
+                        onClick={() => setSelectedProofModal({ url: b.zelleProofUrl!, booking: b, proofType: "deposit" })}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-purple-300 bg-purple-50 text-purple-800 text-[9px] uppercase tracking-widest font-bold hover:bg-purple-100 transition-colors"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        Deposit Proof
+                      </button>
+                    )}
+                    {b.remainingZelleProofUrl && (
+                      <button
+                        onClick={() => setSelectedProofModal({ url: b.remainingZelleProofUrl!, booking: b, proofType: "balance" })}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-300 bg-blue-50 text-blue-800 text-[9px] uppercase tracking-widest font-bold hover:bg-blue-100 transition-colors"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        Balance Proof
+                      </button>
+                    )}
+                    {b.paymentMethod === "zelle" && b.zelleVerificationStatus !== "verified" && (
+                      <button
+                        onClick={() => handleVerifyZelle(b._id, "verify")}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-emerald-300 bg-emerald-50 text-emerald-800 text-[9px] uppercase tracking-widest font-bold hover:bg-emerald-100 transition-colors"
+                      >
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        Verify Zelle
+                      </button>
+                    )}
                     {b.status === "confirmed" && (
                       <button
                         onClick={() => setPendingAction({ bookingId: b._id, action: "cancel" })}
@@ -491,11 +550,11 @@ export default function AdminBookingsPage() {
 
             {/* Desktop Table Layout (Visible on Medium+ Screens) */}
             <div className="hidden md:block overflow-x-auto w-full" style={{ WebkitOverflowScrolling: "touch" }}>
-              <table className="min-w-[1200px] w-full text-left">
+              <table className="min-w-[1280px] w-full text-left">
                 <thead className="bg-surface-container border-b border-outline-variant/10">
                   <tr>
                     {["#", "Category", "Type", "Guest Name", "Occasion", "Email", "Phone", "Event Date", "Tried Date", "Time", "Party", "Tables", "DJ", "Catering Menu", "Amount", "Payment", "Status", "Actions"].map(h => (
-                      <th key={h} className="px-4 py-4 text-[9px] uppercase tracking-widest text-outline font-bold whitespace-nowrap">
+                      <th key={h} className="px-3 py-3 text-[9px] uppercase tracking-widest text-outline font-bold whitespace-nowrap">
                         {h}
                       </th>
                     ))}
@@ -504,80 +563,127 @@ export default function AdminBookingsPage() {
                 <tbody className="divide-y divide-outline-variant/10">
                   {filtered.map((b, i) => (
                     <tr key={b._id} className="hover:bg-surface-container/50 transition-colors">
-                      <td className="px-4 py-4 font-body text-sm text-secondary">{(page - 1) * 10 + i + 1}</td>
-                      <td className="px-4 py-4"><CategoryBadge status={b.status} paymentStatus={b.paymentStatus} /></td>
-                      <td className="px-4 py-4"><TypeBadge type={b.bookingType} /></td>
-                      <td className="px-4 py-4 font-headline text-base italic text-on-surface whitespace-nowrap">
+                      <td className="px-3 py-2.5 font-body text-xs text-secondary">{(page - 1) * 10 + i + 1}</td>
+                      <td className="px-3 py-2.5"><CategoryBadge status={b.status} paymentStatus={b.paymentStatus} /></td>
+                      <td className="px-3 py-2.5"><TypeBadge type={b.bookingType} /></td>
+                      <td className="px-3 py-2.5 font-headline text-sm italic text-on-surface whitespace-nowrap">
                         {b.customerName || b.user?.name}
                       </td>
-                      <td className="px-4 py-4"><OccasionBadge occasion={b.occasion} /></td>
-                      <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap">
+                      <td className="px-3 py-2.5"><OccasionBadge occasion={b.occasion} /></td>
+                      <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap">
                         {b.customerEmail || b.user?.email}
                       </td>
-                      <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap font-mono">
+                      <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap font-mono">
                         {b.customerPhone || "—"}
                       </td>
-                      <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap">
+                      <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap">
                         {formatDate(b.bookingDate)}
                       </td>
-                      <td className="px-4 py-4 font-body text-xs text-secondary whitespace-nowrap">
+                      <td className="px-3 py-2.5 font-body text-[10px] text-secondary whitespace-nowrap">
                         {formatDateTime(b.createdAt)}
                       </td>
-                      <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap">
+                      <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap">
                         <div className="flex flex-col">
                           <span>{b.bookingTime}</span>
                           {b.bookingType === "private_event" && (
                             <span className="text-[9px] text-primary font-bold uppercase tracking-widest">
-                              {b.durationHours} Hours
+                              {b.durationHours}h
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-4 font-body text-sm text-secondary">{b.partySize} pax</td>
-                      <td className="px-4 py-4 font-body text-sm font-bold text-primary italic whitespace-nowrap">
+                      <td className="px-3 py-2.5 font-body text-xs text-secondary">{b.partySize} pax</td>
+                      <td className="px-3 py-2.5 font-body text-xs font-bold text-primary italic whitespace-nowrap">
                         {b.bookingType === "private_event" ? (
-                          <span className="text-[10px] uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded border border-primary/10">Full Venue</span>
+                          <span className="text-[9px] uppercase tracking-widest bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">Full Venue</span>
                         ) : (
                           b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—"
                         )}
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap">
+                      <td className="px-3 py-2.5 whitespace-nowrap">
                         <DjBadge needDj={b.needDj} bookingType={b.bookingType} />
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap max-w-[160px]">
+                      <td className="px-3 py-2.5 max-w-[180px]">
                         <CateringBadge cateringMenu={b.cateringMenu} bookingType={b.bookingType} />
                       </td>
-                      <td className="px-4 py-4">
+                      <td className="px-3 py-2.5">
                         {b.bookingType === "private_event" ? (
-                          <div className="flex flex-col gap-1">
-                            <span className="font-headline text-base italic text-on-surface">${b.totalAmount} <span className="text-[10px] text-outline font-sans not-italic">Total</span></span>
-                            {(b.depositAmount ?? 0) > 0 && <span className="text-[10px] text-primary uppercase tracking-widest font-bold">${b.depositAmount ?? 0} Deposit</span>}
+                          <div className="flex flex-col">
+                            <span className="font-headline text-sm italic text-on-surface whitespace-nowrap">${b.totalAmount} <span className="text-[9px] text-outline font-sans not-italic">Total</span></span>
+                            {(b.depositAmount ?? 0) > 0 && <span className="text-[9px] text-primary uppercase tracking-widest font-bold whitespace-nowrap">${b.depositAmount} Dep.</span>}
+                            {(b.remainingAmount ?? 0) > 0 && <span className="text-[9px] text-blue-600 uppercase tracking-widest font-bold whitespace-nowrap">${b.remainingAmount} Bal.</span>}
                           </div>
                         ) : (
-                          <span className="font-headline text-base italic text-on-surface">${b.totalAmount}</span>
+                          <span className="font-headline text-sm italic text-on-surface">${b.totalAmount}</span>
                         )}
                       </td>
-                      <td className="px-4 py-4"><PaymentBadge status={b.paymentStatus} remainingStatus={b.remainingPaymentStatus} /></td>
-                      <td className="px-4 py-4"><StatusBadge status={b.status} /></td>
-                      <td className="px-4 py-4">
-                        <div className="flex gap-2">
+                      <td className="px-3 py-2.5">
+                        <PaymentBadge
+                          status={b.paymentStatus}
+                          remainingStatus={b.remainingPaymentStatus}
+                          paymentMethod={b.paymentMethod}
+                          zelleVerificationStatus={b.zelleVerificationStatus}
+                        />
+                      </td>
+                      <td className="px-3 py-2.5"><StatusBadge status={b.status} /></td>
+                      <td className="px-3 py-2.5 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 flex-nowrap">
+                          {/* Deposit Proof - icon only */}
+                          {b.zelleProofUrl && (
+                            <button
+                              onClick={() => setSelectedProofModal({ url: b.zelleProofUrl!, booking: b, proofType: "deposit" })}
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-purple-300 bg-purple-50 text-purple-800 text-[9px] font-bold hover:bg-purple-100 transition-colors"
+                              title="Deposit Proof"
+                            >
+                              <Eye className="w-3 h-3" />
+                              <span className="hidden lg:inline">Dep.</span>
+                            </button>
+                          )}
+                          {/* Balance Proof - icon only */}
+                          {b.remainingZelleProofUrl && (
+                            <button
+                              onClick={() => setSelectedProofModal({ url: b.remainingZelleProofUrl!, booking: b, proofType: "balance" })}
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-blue-300 bg-blue-50 text-blue-800 text-[9px] font-bold hover:bg-blue-100 transition-colors"
+                              title="Balance Proof"
+                            >
+                              <Eye className="w-3 h-3" />
+                              <span className="hidden lg:inline">Bal.</span>
+                            </button>
+                          )}
+                          {/* Verify Zelle */}
+                          {b.paymentMethod === "zelle" && b.zelleVerificationStatus !== "verified" && (
+                            <button
+                              onClick={() => handleVerifyZelle(b._id, "verify")}
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 text-[9px] font-bold hover:bg-emerald-100 transition-colors"
+                              title="Verify Zelle Payment"
+                            >
+                              <ShieldCheck className="w-3 h-3" />
+                              <span className="hidden lg:inline">Verify</span>
+                            </button>
+                          )}
+                          {/* Cancel */}
                           {b.status === "confirmed" && (
                             <button
                               onClick={() => setPendingAction({ bookingId: b._id, action: "cancel" })}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-200 text-red-600 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50 transition-colors"
+                              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-red-200 text-red-600 text-[9px] font-bold hover:bg-red-50 transition-colors"
+                              title="Cancel Booking"
                             >
                               <XCircle className="w-3 h-3" strokeWidth={2} />
-                              Cancel
+                              <span className="hidden lg:inline">Cancel</span>
                             </button>
                           )}
+                          {/* Delete */}
                           <button
                             onClick={() => setPendingAction({ bookingId: b._id, action: "delete" })}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-700 text-red-700 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50/50 transition-colors"
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg border border-red-700 text-red-700 text-[9px] font-bold hover:bg-red-50/50 transition-colors"
+                            title="Delete Booking"
                           >
-                            Delete
+                            <span className="hidden lg:inline">Delete</span>
+                            <span className="lg:hidden text-[10px]">✕</span>
                           </button>
                         </div>
                       </td>
+
                     </tr>
                   ))}
                 </tbody>
@@ -586,6 +692,61 @@ export default function AdminBookingsPage() {
           </>
         )}
       </div>
+
+      {/* Zelle Proof Lightbox Modal */}
+      {selectedProofModal && (
+        <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 relative shadow-2xl">
+            <button
+              onClick={() => setSelectedProofModal(null)}
+              className="absolute top-4 right-4 p-1.5 text-gray-400 hover:text-gray-900 rounded-full hover:bg-gray-100 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <span className={`text-[10px] uppercase tracking-widest font-extrabold block ${selectedProofModal.proofType === "balance" ? "text-blue-700" : "text-purple-700"}`}>
+                {selectedProofModal.proofType === "balance" ? "🏦 Remaining Balance Zelle Proof" : "💳 Deposit Zelle Proof"}
+              </span>
+              <h3 className="text-lg font-bold text-gray-900">
+                {selectedProofModal.booking.customerName}
+                {selectedProofModal.proofType === "balance"
+                  ? ` — Balance $${(selectedProofModal.booking.remainingAmount || 0).toLocaleString()}`
+                  : ` — Deposit $${(selectedProofModal.booking.depositAmount || selectedProofModal.booking.totalAmount).toLocaleString()}`
+                }
+              </h3>
+              <p className="text-xs text-gray-500 font-mono">Booking ID: {selectedProofModal.booking._id}</p>
+              {selectedProofModal.booking.zelleNotes && (
+                <p className="text-xs text-gray-400 italic mt-1">{selectedProofModal.booking.zelleNotes}</p>
+              )}
+            </div>
+
+            <div className="rounded-xl overflow-hidden border border-gray-200 bg-black max-h-[60vh] flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={selectedProofModal.url}
+                alt="Zelle Screenshot Proof"
+                className="max-h-[60vh] w-auto object-contain"
+              />
+            </div>
+
+            <div className="flex justify-between items-center pt-2 gap-3">
+              <button
+                onClick={() => handleVerifyZelle(selectedProofModal.booking._id, "reject")}
+                className="px-4 py-2 border border-red-300 text-red-700 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-50"
+              >
+                Flag Mismatch
+              </button>
+              <button
+                onClick={() => handleVerifyZelle(selectedProofModal.booking._id, "verify")}
+                className="px-5 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 shadow-md flex items-center gap-1.5"
+              >
+                <CheckCircle2 className="w-4 h-4" /> Approve Zelle Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (

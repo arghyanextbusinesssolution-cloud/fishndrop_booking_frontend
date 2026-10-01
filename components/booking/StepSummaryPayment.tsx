@@ -63,6 +63,34 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
     toast.success("Coupon removed");
   };
 
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "zelle">("card");
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [copiedZelle, setCopiedZelle] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error("Screenshot file size must be under 10MB");
+        return;
+      }
+      setScreenshotFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setScreenshotPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCopyZelle = () => {
+    navigator.clipboard.writeText("payments@fishndrop.com");
+    setCopiedZelle(true);
+    toast.success("Zelle email copied!");
+    setTimeout(() => setCopiedZelle(false), 2000);
+  };
+
   const handleReserve = async () => {
     setSubmitting(true);
     setError(null);
@@ -73,6 +101,19 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
         bookingData.guestDetails?.email?.trim() ||
         (cleanPhone ? `guest_${cleanPhone}@tropica.com` : `guest_${Date.now()}@tropica.com`);
       const customerPhone = bookingData.guestDetails?.phone || "";
+
+      let zelleProofUrl = "";
+      if (paymentMethod === "zelle" && screenshotPreview) {
+        // First upload screenshot proof
+        try {
+          const { data: uploadRes } = await api.post("/upload-cake-photo", { imageBase64: screenshotPreview });
+          if (uploadRes.success && uploadRes.url) {
+            zelleProofUrl = uploadRes.url;
+          }
+        } catch (upErr) {
+          console.warn("Proof upload failed during reserve, will proceed with standard Zelle flow:", upErr);
+        }
+      }
 
       const payload = {
         partySize: bookingData.guests,
@@ -90,6 +131,8 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
           ? bookingData.customCakeDetails.retailPrice
           : bookingData.addons?.includes("cake") ? 50 : 0,
         couponCode: appliedCoupon?.code || undefined,
+        paymentMethod,
+        zelleProofUrl: zelleProofUrl || undefined
       };
 
       const { data } = await api.post("/bookings/reserve", payload);
@@ -100,6 +143,24 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
         }
         setBookingId(data.booking._id);
 
+        if (paymentMethod === "zelle") {
+          // If Zelle, upload proof if not already uploaded or attach booking ID
+          if (screenshotPreview && !zelleProofUrl) {
+            try {
+              await api.post("/payments/upload-zelle-proof", {
+                bookingId: data.booking._id,
+                imageBase64: screenshotPreview
+              });
+            } catch (proofErr) {
+              console.warn("Direct Zelle proof upload error:", proofErr);
+            }
+          }
+          toast.success("Zelle booking submitted! Redirecting to verification status...");
+          router.push(`/user/payment/zelle-pending?bookingId=${data.booking._id}`);
+          return;
+        }
+
+        // Stripe card payment flow
         const { data: piData } = await api.post(
           "/payments/create-payment-intent",
           { bookingId: data.booking._id },
@@ -157,6 +218,94 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
             )}
           </div>
 
+          {/* Payment Method Selector */}
+          <div className="space-y-2 pt-1">
+            <label className="text-[9px] sm:text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold block">
+              Choose Payment Method
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("card")}
+                className={`py-3 px-3 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-1 ${
+                  paymentMethod === "card"
+                    ? "bg-[#0F4C3A] text-white border-[#0F4C3A] shadow-md"
+                    : "bg-white text-[#1a1c1b] border-gray-200 hover:border-[#C8A96A]"
+                }`}
+              >
+                <span>💳 Credit / Debit Card</span>
+                <span className="text-[9px] opacity-80">Instant Card Checkout</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("zelle")}
+                className={`py-3 px-3 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-1 ${
+                  paymentMethod === "zelle"
+                    ? "bg-[#6B1D2F] text-white border-[#6B1D2F] shadow-md"
+                    : "bg-white text-[#1a1c1b] border-gray-200 hover:border-[#6B1D2F]"
+                }`}
+              >
+                <span>⚡ Zelle Pay</span>
+                <span className="text-[9px] opacity-80">GHL Instant Verification</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Zelle Instructions & Screenshot Box */}
+          {paymentMethod === "zelle" && (
+            <div className="p-4 rounded-xl bg-purple-50 border border-purple-200 space-y-3 animate-in fade-in duration-300">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest text-purple-700 font-bold">Zelle Recipient</p>
+                  <p className="text-sm font-extrabold text-purple-950 font-mono">payments@fishndrop.com</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyZelle}
+                  className="px-3 py-1 bg-purple-600 text-white rounded-lg text-[10px] uppercase tracking-wider font-bold hover:bg-purple-700 transition"
+                >
+                  {copiedZelle ? "Copied!" : "Copy Email"}
+                </button>
+              </div>
+
+              <div className="p-3 bg-white/80 rounded-lg border border-purple-100 space-y-1.5 text-xs text-purple-900">
+                <p className="font-bold text-[11px] text-purple-950">📋 Instructions:</p>
+                <ol className="list-decimal pl-4 space-y-1 text-[11px] text-gray-700">
+                  <li>Send exact amount <strong className="text-purple-950">${finalPrice.toFixed(2)}</strong> via Zelle to <span className="font-mono font-bold">payments@fishndrop.com</span></li>
+                  <li>Paste your generated <strong className="text-purple-950">Booking ID</strong> in your Zelle payment memo/notes.</li>
+                  <li>Upload payment screenshot proof below.</li>
+                  <li>Booking stays <span className="font-bold text-amber-600">Pending</span> until GoHighLevel (GHL) reads your payment email, verifies your Booking ID &amp; amount, and confirms your slot!</li>
+                </ol>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase tracking-widest text-purple-900 font-bold block">
+                  📷 Upload Zelle Screenshot (Required for faster verification)
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="block w-full text-xs text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer"
+                />
+                {screenshotPreview && (
+                  <div className="mt-2 relative rounded-lg overflow-hidden border border-purple-300 max-h-40">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={screenshotPreview} alt="Zelle Proof" className="object-cover w-full h-full" />
+                    <button
+                      type="button"
+                      onClick={() => { setScreenshotFile(null); setScreenshotPreview(null); }}
+                      className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full text-xs"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {!appliedCoupon ? (
             <div className="space-y-1.5">
               <label className="text-[9px] sm:text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold flex items-center gap-1.5">
@@ -206,9 +355,15 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
           <button
             onClick={() => setShowPolicyModal(true)}
             disabled={submitting}
-            className="w-full bg-gold-gradient text-on-primary py-4 rounded-xl text-xs uppercase tracking-widest font-black shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
+            className={`w-full text-on-primary py-4 rounded-xl text-xs uppercase tracking-widest font-black shadow-lg transition-all ${
+              paymentMethod === "zelle"
+                ? "bg-gradient-to-r from-purple-800 to-indigo-900 shadow-purple-900/30 hover:scale-[1.02]"
+                : "bg-gold-gradient shadow-primary/20 hover:scale-[1.02]"
+            }`}
           >
-            Confirm &amp; Reserve (${finalPrice.toFixed(2)})
+            {paymentMethod === "zelle"
+              ? `Confirm & Pay with Zelle ($${finalPrice.toFixed(2)})`
+              : `Confirm & Reserve ($${finalPrice.toFixed(2)})`}
           </button>
         </div>
       )}
@@ -227,7 +382,7 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
       )}
 
       {submitting && !clientSecret && (
-        <LoadingSpinner fullPage message="Connecting to Stripe secure checkout..." />
+        <LoadingSpinner fullPage message={paymentMethod === "zelle" ? "Submitting Zelle booking & sending to GHL..." : "Connecting to Stripe secure checkout..."} />
       )}
 
 

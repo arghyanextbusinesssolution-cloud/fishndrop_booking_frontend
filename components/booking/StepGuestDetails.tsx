@@ -216,6 +216,21 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
         <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#C8A96A] to-transparent" />
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#C8A96A]/10 rounded-full blur-3xl pointer-events-none" />
 
+        {/* Logged in User Badge Indicator */}
+        {user && (
+          <div className="mb-6 p-3.5 bg-[#C8A96A]/10 border border-[#C8A96A]/30 rounded-xl flex items-center justify-between text-xs text-[#E8CB8A]">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>
+                Logged in as <strong className="text-white">{user.name || "Guest User"}</strong> ({user.email})
+              </span>
+            </div>
+            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+              Verified
+            </span>
+          </div>
+        )}
+
         {/* Navigation Mode Switcher Toggle Tabs */}
         <div className="grid grid-cols-2 gap-2 p-1.5 bg-black/60 rounded-xl border border-[#C8A96A]/30 mb-6">
           <button
@@ -228,7 +243,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
                 : "text-white/60 hover:text-white"
             )}
           >
-            <Mail className="w-4 h-4" /> Email &amp; Password
+            <Mail className="w-4 h-4" /> {user ? "Guest Details" : "Email & Password"}
           </button>
           <button
             type="button"
@@ -247,7 +262,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
           </button>
         </div>
 
-        {/* TAB 1: Email & Password / Guest Info Form (Default) */}
+        {/* TAB 1: Email / Guest Info Form */}
         {activeTab === "email" && (
           <form onSubmit={handleSubmit(onSubmitForm, onInvalid)} className="space-y-6 animate-in fade-in duration-300">
             <div className="space-y-4">
@@ -320,28 +335,30 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
                 </div>
               </div>
 
-              {/* Password (Optional Account Password) */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.15em] text-[#C8A96A] font-bold">
-                  <Lock className="w-3.5 h-3.5 text-[#C8A96A]" />
-                  Password <span className="text-white/40 text-[10px] font-normal lowercase">(optional for fast login)</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    {...register("password")}
-                    placeholder="••••••••"
-                    className="w-full bg-black/60 border border-white/15 hover:border-[#C8A96A]/40 focus:border-[#C8A96A] focus:ring-2 focus:ring-[#C8A96A]/20 rounded-xl px-4 py-3.5 text-base font-body text-white placeholder:text-white/25 pr-10 transition-all outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+              {/* Password Input: HIDDEN when user is logged in */}
+              {!user && (
+                <div className="space-y-2">
+                  <label className="flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.15em] text-[#C8A96A] font-bold">
+                    <Lock className="w-3.5 h-3.5 text-[#C8A96A]" />
+                    Password <span className="text-white/40 text-[10px] font-normal lowercase">(optional for fast login)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      {...register("password")}
+                      placeholder="••••••••"
+                      className="w-full bg-black/60 border border-white/15 hover:border-[#C8A96A]/40 focus:border-[#C8A96A] focus:ring-2 focus:ring-[#C8A96A]/20 rounded-xl px-4 py-3.5 text-base font-body text-white placeholder:text-white/25 pr-10 transition-all outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Terms & Conditions Checkbox */}

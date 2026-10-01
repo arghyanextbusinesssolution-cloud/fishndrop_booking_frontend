@@ -45,6 +45,13 @@ export interface Booking {
   durationHours?: number;
   needDj?: boolean;
   cateringMenu?: string;
+  paymentMethod?: "card" | "zelle";
+  zelleProofUrl?: string;
+  remainingZelleProofUrl?: string;
+  zelleVerificationStatus?: "none" | "pending_ghl_verification" | "verified" | "mismatched" | "manual_review";
+  zelleTransactionId?: string;
+  zelleNotes?: string;
+  zelleUploadedAt?: string;
   createdAt: string;
 }
 

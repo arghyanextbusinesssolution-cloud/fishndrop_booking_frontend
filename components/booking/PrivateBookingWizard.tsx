@@ -171,27 +171,31 @@ export const PrivateBookingWizard = () => {
 
   return (
     <div className={cn("mx-auto flex flex-col mt-2 md:mt-4 transition-all duration-700", currentStep === 6 ? "max-w-7xl" : "max-w-4xl")}>
-      {/* Progress Tracker - Scrollable horizontally on mobile */}
-      <div className="mb-4 sm:mb-8 px-2 md:px-0">
-        <div className="overflow-x-auto pb-3 scrollbar-hide">
-          <div className="flex items-center justify-between relative min-w-[480px] md:min-w-0">
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[1px] bg-white/10" />
+      {/* Progress Tracker */}
+      <div className="mb-4 sm:mb-6 px-2 md:px-0">
+        <div className="overflow-x-auto pb-4 pt-1 scrollbar-hide">
+          <div className="flex items-start justify-between relative min-w-[580px] md:min-w-0 px-3">
+            {/* Background line aligned with circle center */}
+            <div className="absolute left-6 right-6 top-4 md:top-5 h-[2px] bg-white/10 -z-0" />
+            
+            {/* Active filled line */}
             <div
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-[1px] bg-[#C8A96A] transition-all duration-500 ease-out"
-              style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
+              className="absolute left-6 top-4 md:top-5 h-[2px] bg-[#C8A96A] transition-all duration-500 ease-out -z-0"
+              style={{ width: `calc(${((currentStep - 1) / (steps.length - 1)) * 100}% - 1.5rem)` }}
             />
+
             {steps.map((step) => {
               const isCompleted = currentStep > step.num;
               const isCurrent = currentStep === step.num;
               return (
-                <div key={step.num} className="relative z-10 flex flex-col items-center gap-2">
+                <div key={step.num} className="relative z-10 flex flex-col items-center text-center gap-1.5 w-20 sm:w-24 md:w-28">
                   <div
                     className={cn(
-                      "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-headline transition-all duration-500 text-xs md:text-base",
+                      "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-headline transition-all duration-500 text-xs md:text-base shrink-0 shadow-md",
                       isCompleted
                         ? "bg-[#C8A96A] text-[#0d1612] font-bold shadow-[0_0_15px_rgba(200,169,106,0.4)]"
                         : isCurrent
-                          ? "bg-[#0d1612] border-2 border-[#C8A96A] text-[#C8A96A] font-bold shadow-[0_0_20px_rgba(200,169,106,0.3)]"
+                          ? "bg-[#0d1612] border-2 border-[#C8A96A] text-[#C8A96A] font-bold shadow-[0_0_20px_rgba(200,169,106,0.3)] ring-4 ring-[#C8A96A]/20"
                           : "bg-[#0d1612] border-2 border-white/10 text-white/40"
                     )}
                   >
@@ -199,8 +203,8 @@ export const PrivateBookingWizard = () => {
                   </div>
                   <span
                     className={cn(
-                      "absolute -bottom-5 w-max font-label text-[8px] md:text-[10px] uppercase tracking-widest transition-colors duration-300",
-                      isCurrent || isCompleted ? "text-[#C8A96A]" : "text-white/40"
+                      "font-label text-[9px] md:text-[10px] uppercase tracking-wider leading-tight text-center font-medium transition-colors duration-300",
+                      isCurrent || isCompleted ? "text-[#C8A96A] font-bold" : "text-white/40"
                     )}
                   >
                     {step.title}
