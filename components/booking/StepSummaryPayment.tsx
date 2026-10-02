@@ -85,7 +85,7 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
   };
 
   const handleCopyZelle = () => {
-    navigator.clipboard.writeText("payments@fishndrop.com");
+    navigator.clipboard.writeText("bookings@tropica.nyc");
     setCopiedZelle(true);
     toast.success("Zelle email copied!");
     setTimeout(() => setCopiedZelle(false), 2000);
@@ -247,7 +247,7 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
                 }`}
               >
                 <span>⚡ Zelle Pay</span>
-                <span className="text-[9px] opacity-80">GHL Instant Verification</span>
+                <span className="text-[9px] opacity-80">Backend Verification</span>
               </button>
             </div>
           </div>
@@ -258,7 +258,8 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10px] uppercase tracking-widest text-purple-700 font-bold">Zelle Recipient</p>
-                  <p className="text-sm font-extrabold text-purple-950 font-mono">payments@fishndrop.com</p>
+                  <p className="text-sm font-extrabold text-purple-950 font-mono">bookings@tropica.nyc</p>
+                  <p className="text-[11px] font-bold text-purple-800">Tag: <span className="font-mono text-purple-950">tropica-nyc</span></p>
                 </div>
                 <button
                   type="button"
@@ -272,10 +273,10 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
               <div className="p-3 bg-white/80 rounded-lg border border-purple-100 space-y-1.5 text-xs text-purple-900">
                 <p className="font-bold text-[11px] text-purple-950">📋 Instructions:</p>
                 <ol className="list-decimal pl-4 space-y-1 text-[11px] text-gray-700">
-                  <li>Send exact amount <strong className="text-purple-950">${finalPrice.toFixed(2)}</strong> via Zelle to <span className="font-mono font-bold">payments@fishndrop.com</span></li>
+                  <li>Send exact amount <strong className="text-purple-950">${finalPrice.toFixed(2)}</strong> via Zelle to <span className="font-mono font-bold">bookings@tropica.nyc</span> (Tag: <span className="font-mono font-bold">tropica-nyc</span>)</li>
                   <li>Paste your generated <strong className="text-purple-950">Booking ID</strong> in your Zelle payment memo/notes.</li>
                   <li>Upload payment screenshot proof below.</li>
-                  <li>Booking stays <span className="font-bold text-amber-600">Pending</span> until GoHighLevel (GHL) reads your payment email, verifies your Booking ID &amp; amount, and confirms your slot!</li>
+                  <li>Booking stays <span className="font-bold text-amber-600">Pending</span> until the backend team verifies your payment email, Booking ID &amp; amount, and confirms your slot!</li>
                 </ol>
               </div>
 

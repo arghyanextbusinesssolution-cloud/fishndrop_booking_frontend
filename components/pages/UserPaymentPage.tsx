@@ -418,7 +418,7 @@ export default function UserPaymentPage() {
                   <div>
                     <h3 className="text-lg font-bold text-[var(--text-primary)]">Pay via Zelle</h3>
                     <p className="mt-1.5 text-xs text-[var(--text-secondary)] leading-relaxed">
-                      Send payment using Zelle, then upload your transaction screenshot below for GHL email verification.
+                      Send payment using Zelle, then upload your transaction screenshot below for backend team verification.
                     </p>
                   </div>
 
@@ -427,15 +427,20 @@ export default function UserPaymentPage() {
                     <div className="flex items-center justify-between text-xs border-b border-[var(--border)] pb-2">
                       <span className="text-[var(--text-secondary)]">Zelle Recipient:</span>
                       <div className="flex items-center gap-1 font-mono font-bold text-[var(--accent)]">
-                        <span>payments@fishndrop.com</span>
+                        <span>bookings@tropica.nyc</span>
                         <button
                           type="button"
-                          onClick={() => handleCopy("payments@fishndrop.com", "email")}
+                          onClick={() => handleCopy("bookings@tropica.nyc", "email")}
                           className="p-1 hover:text-white transition-colors"
                         >
                           {copiedEmail ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
                         </button>
                       </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs border-b border-[var(--border)] pb-2">
+                      <span className="text-[var(--text-secondary)]">Zelle Tag:</span>
+                      <span className="font-mono font-bold text-[var(--accent)]">tropica-nyc</span>
                     </div>
 
                     <div className="flex items-center justify-between text-xs border-b border-[var(--border)] pb-2">
@@ -461,7 +466,7 @@ export default function UserPaymentPage() {
                   <div className="rounded-lg bg-amber-500/10 border border-amber-500/30 p-2.5 flex items-start gap-2 text-xs text-amber-200">
                     <AlertCircle size={15} className="mt-0.5 text-amber-400 shrink-0" />
                     <span>
-                      IMPORTANT: You MUST include <strong>{zelleMemoText}</strong> in your Zelle transfer memo for automatic GHL verification.
+                      IMPORTANT: You MUST include <strong>{zelleMemoText}</strong> in your Zelle transfer memo for automatic backend verification.
                     </span>
                   </div>
 

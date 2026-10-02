@@ -68,7 +68,7 @@ function ZellePendingContent() {
   };
 
   const handleCopyEmail = () => {
-    navigator.clipboard.writeText("payments@fishndrop.com");
+    navigator.clipboard.writeText("bookings@tropica.nyc");
     setCopiedEmail(true);
     toast.success("Zelle email copied!");
     setTimeout(() => setCopiedEmail(false), 2000);
@@ -163,7 +163,7 @@ function ZellePendingContent() {
               </span>
               <h1 className="text-2xl sm:text-3xl font-black text-gray-900">Booking Verified &amp; Confirmed!</h1>
               <p className="text-sm text-gray-600">
-                GoHighLevel verified your Zelle payment! Your table reservation is officially confirmed and your slot is locked.
+                Our backend team verified your Zelle payment! Your table reservation is officially confirmed and your slot is locked.
               </p>
             </div>
 
@@ -207,7 +207,7 @@ function ZellePendingContent() {
               </span>
               <h1 className="text-2xl font-black text-gray-900">Payment Details Mismatched</h1>
               <p className="text-sm text-gray-600">
-                GoHighLevel or our team detected a mismatched payment amount or detail. Your booking remains <strong>Pending</strong> while our support team looks into it.
+                Our backend team detected a mismatched payment amount or detail. Your booking remains <strong>Pending</strong> while our support team looks into it.
               </p>
             </div>
 
@@ -230,7 +230,7 @@ function ZellePendingContent() {
             </div>
 
             <div className="text-center space-y-2">
-              <p className="text-xs text-gray-500">Questions? Contact us at support@fishndrop.com</p>
+              <p className="text-xs text-gray-500">Questions? Contact us at bookings@tropica.nyc</p>
               <button
                 onClick={() => router.push("/user/bookings")}
                 className="w-full py-3 bg-gray-900 text-white rounded-xl font-bold text-xs uppercase tracking-wider"
@@ -254,7 +254,7 @@ function ZellePendingContent() {
 
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-900 text-[10px] uppercase tracking-widest font-extrabold rounded-full">
                 <Loader2 className="w-3 h-3 animate-spin text-purple-700" />
-                GoHighLevel (GHL) Verifying Payment...
+                Backend Team Verifying Payment...
               </div>
 
               <h1 className="text-2xl sm:text-3xl font-black text-gray-900">
@@ -262,8 +262,8 @@ function ZellePendingContent() {
               </h1>
               <p className="text-xs sm:text-sm text-gray-600 max-w-md mx-auto">
                 {isBalancePayment
-                  ? <>Your <strong>remaining balance</strong> of <strong>${expectedAmount.toFixed(2)}</strong> is Pending. GHL verifies your Zelle email and marks your booking as <strong>fully paid</strong> automatically!</>
-                  : <>Your booking is <strong>Pending</strong>. GHL automatically reads your Zelle confirmation email, matches your <strong>Booking ID</strong> &amp; <strong>Amount</strong>, and confirms your slot automatically!</>}
+                  ? <>Your <strong>remaining balance</strong> of <strong>${expectedAmount.toFixed(2)}</strong> is Pending. Our backend team verifies your Zelle email and marks your booking as <strong>fully paid</strong> automatically!</>
+                  : <>Your booking is <strong>Pending</strong>. Our backend team automatically reads your Zelle confirmation email, matches your <strong>Booking ID</strong> &amp; <strong>Amount</strong>, and confirms your slot!</>}
               </p>
             </div>
 
@@ -293,7 +293,8 @@ function ZellePendingContent() {
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-[10px] uppercase tracking-widest text-purple-700 font-bold">Zelle Email</p>
-                  <p className="text-sm font-extrabold text-purple-950 font-mono">payments@fishndrop.com</p>
+                  <p className="text-sm font-extrabold text-purple-950 font-mono">bookings@tropica.nyc</p>
+                  <p className="text-[11px] font-bold text-purple-800">Tag: <span className="font-mono text-purple-950">tropica-nyc</span></p>
                 </div>
                 <button
                   type="button"
@@ -317,7 +318,7 @@ function ZellePendingContent() {
                 <div>
                   <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Payment Screenshot Proof</h3>
                   <p className="text-[11px] text-gray-500">
-                    {proofUrl ? `✓ ${isBalancePayment ? "Balance" : "Deposit"} screenshot uploaded & sent to GHL` : `Upload ${isBalancePayment ? "remaining balance" : "payment"} proof screenshot to assist GHL verification`}
+                    {proofUrl ? `✓ ${isBalancePayment ? "Balance" : "Deposit"} screenshot uploaded & sent to backend team` : `Upload ${isBalancePayment ? "remaining balance" : "payment"} proof screenshot to assist backend team verification`}
                   </p>
                 </div>
                 <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase ${
@@ -359,7 +360,7 @@ function ZellePendingContent() {
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-start gap-2">
               <ShieldCheck className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
               <p className="text-[11px] leading-relaxed">
-                <strong>How it works:</strong> GoHighLevel checks incoming Zelle email alerts every few seconds. Once matched with Booking ID <strong>{booking._id}</strong>, your reservation automatically flips to confirmed! You can leave this page open or check back in your dashboard.
+                <strong>How it works:</strong> Our backend team verifies incoming Zelle payment emails. Once matched with Booking ID <strong>{booking._id}</strong>, your reservation automatically flips to confirmed! You can leave this page open or check back in your dashboard.
               </p>
             </div>
 
