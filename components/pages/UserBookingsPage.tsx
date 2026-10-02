@@ -3,9 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useBookings } from "@/hooks/useBookings";
 import { Booking } from "@/types";
-import { CalendarDays, Loader2, Info } from "lucide-react";
+import { CalendarDays, Loader2, Info, Eye, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import toast from "react-hot-toast";
+
+import { CancelBookingModal } from "@/components/booking/CancelBookingModal";
+import { ZelleProofLightboxModal } from "@/components/booking/ZelleProofLightboxModal";
 
 const OCCASION_IMAGES = {
   birthday: "https://images.unsplash.com/photo-1484659619207-9165d119dafe?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHJlc3R1cmFudHxlbnwwfHwwfHx8MA%3D%3D",
@@ -15,24 +19,16 @@ const OCCASION_IMAGES = {
 };
 
 export default function UserBookingsPage() {
-  const { getMyBookings, startRemainingPayment } = useBookings();
+  const { getMyBookings, cancelBooking } = useBookings();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [payingId, setPayingId] = useState<string | null>(null);
 
-  const handlePayRemaining = async (bookingId: string) => {
-    setPayingId(bookingId);
-    try {
-      const url = await startRemainingPayment(bookingId);
-      window.location.href = url;
-    } catch {
-      alert("Failed to initiate checkout. Please try again.");
-      setPayingId(null);
-    }
-  };
+  // Modals
+  const [cancellingBooking, setCancellingBooking] = useState<Booking | null>(null);
+  const [previewProof, setPreviewProof] = useState<{ url: string; booking: Booking; proofType: "deposit" | "balance" } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -52,6 +48,16 @@ export default function UserBookingsPage() {
     void load();
   }, [load]);
 
+  const handleConfirmCancel = async (bookingId: string) => {
+    try {
+      await cancelBooking(bookingId);
+      toast.success("Booking cancelled successfully.");
+      await load();
+    } catch {
+      toast.error("Failed to cancel booking. Please try again.");
+    }
+  };
+
   if (loading && page === 1) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -62,6 +68,27 @@ export default function UserBookingsPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6 md:p-12 lg:p-24 space-y-16 md:space-y-24">
+      {/* Lightbox Modal */}
+      {previewProof && (
+        <ZelleProofLightboxModal
+          isOpen={!!previewProof}
+          imageUrl={previewProof.url}
+          booking={previewProof.booking}
+          proofType={previewProof.proofType}
+          onClose={() => setPreviewProof(null)}
+        />
+      )}
+
+      {/* Cancel Modal */}
+      {cancellingBooking && (
+        <CancelBookingModal
+          isOpen={!!cancellingBooking}
+          booking={cancellingBooking}
+          onClose={() => setCancellingBooking(null)}
+          onConfirmCancel={handleConfirmCancel}
+        />
+      )}
+
       {/* Header */}
       <header className="space-y-4">
         <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-primary block">Your Chronicle</span>
@@ -106,70 +133,117 @@ export default function UserBookingsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-          {bookings.map((booking) => (
-            <div key={booking._id} className="group space-y-8 relative">
-              <div className="bg-surface-container-lowest p-2 rounded-xl ambient-shadow ring-1 ring-outline-variant/10 transition-transform duration-700 group-hover:scale-[1.02]">
-                <div className="aspect-[16/10] rounded-lg overflow-hidden relative">
-                  <img
-                    src={OCCASION_IMAGES[booking.occasion as keyof typeof OCCASION_IMAGES] || OCCASION_IMAGES.other}
-                    alt={booking.occasion}
-                    className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
-                  />
-                  <div className={cn(
-                    "absolute top-4 right-4 px-3 py-1 rounded-full text-[8px] uppercase tracking-widest font-bold border backdrop-blur-md",
-                    booking.status === 'confirmed' ? "bg-primary/20 border-primary/30 text-primary" : "bg-error/10 border-error/20 text-error"
-                  )}>
-                    {booking.status}
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-4 px-2">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <p className="text-[9px] uppercase tracking-widest font-bold text-primary opacity-60 uppercase">{booking.occasion}</p>
-                    <h4 className="font-headline text-3xl italic text-on-surface leading-tight transition-colors group-hover:text-primary">
-                      {new Date(booking.bookingDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                    </h4>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[9px] uppercase tracking-widest font-bold text-outline">Sanctuary</p>
-                    <p className="font-headline text-2xl italic text-on-surface">Table {booking.tables?.[0]?.tableNumber || "Salon"}</p>
-                  </div>
-                </div>
+          {bookings.map((booking) => {
+            const isZelle = booking.paymentMethod === "zelle";
+            const isZelleVerified = booking.zelleVerificationStatus === "verified";
+            const isZelleMismatched = booking.zelleVerificationStatus === "mismatched";
+            const isCancelled = booking.status === "cancelled";
 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-outline-variant/10">
-                  <div>
-                    <p className="text-[8px] uppercase tracking-widest text-outline font-bold">Ensemble</p>
-                    <p className="text-sm font-body font-light text-on-surface italic">{booking.partySize} Guests</p>
-                  </div>
-                  <div>
-                    <p className="text-[8px] uppercase tracking-widest text-outline font-bold">Moment</p>
-                    <p className="text-sm font-body font-light text-on-surface italic">{booking.bookingTime}</p>
-                  </div>
-                </div>
+            return (
+              <div key={booking._id} className="group space-y-6 relative">
+                <div className="bg-surface-container-lowest p-2 rounded-xl ambient-shadow ring-1 ring-outline-variant/10 transition-transform duration-700 group-hover:scale-[1.02]">
+                  <div className="aspect-[16/10] rounded-lg overflow-hidden relative">
+                    <img
+                      src={OCCASION_IMAGES[booking.occasion as keyof typeof OCCASION_IMAGES] || OCCASION_IMAGES.other}
+                      alt={booking.occasion}
+                      className="w-full h-full object-cover grayscale transition-all duration-1000 group-hover:grayscale-0 group-hover:scale-105"
+                    />
+                    <div className="absolute top-4 right-4 flex flex-col gap-1 items-end">
+                      <div className={cn(
+                        "px-3 py-1 rounded-full text-[8px] uppercase tracking-widest font-bold border backdrop-blur-md",
+                        booking.status === 'confirmed' ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400" : "bg-error/20 border-error/30 text-error"
+                      )}>
+                        {booking.status}
+                      </div>
 
-                {/* Additional Details */}
-                {(booking.complimentaryDrinks > 0 || booking.cakeDetails) && (
-                  <div className="pt-4 flex items-center justify-between border-t border-outline-variant/10">
-                    <div className="flex gap-2">
-                      {booking.complimentaryDrinks > 0 && (
-                        <span className="text-[8px] px-2 py-0.5 rounded bg-primary/5 text-primary font-bold uppercase tracking-widest border border-primary/10 transition-all hover:bg-primary hover:text-white pointer-events-none">
-                          +{booking.complimentaryDrinks} Drinks
-                        </span>
-                      )}
-                      {booking.cakeDetails && (
-                        <span className="text-[8px] px-2 py-0.5 rounded bg-gold-gradient/10 text-primary font-bold uppercase tracking-widest border border-primary/10">
-                          Cake Incl.
-                        </span>
+                      {isZelle && (
+                        <div className={cn(
+                          "px-2.5 py-0.5 rounded-full text-[8px] uppercase tracking-widest font-extrabold border backdrop-blur-md",
+                          isZelleVerified
+                            ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-300"
+                            : isZelleMismatched
+                              ? "bg-red-500/20 border-red-500/30 text-red-300"
+                              : "bg-purple-500/20 border-purple-500/30 text-purple-300"
+                        )}>
+                          {isZelleVerified ? "Zelle Verified" : isZelleMismatched ? "Zelle Mismatch" : "Pending Verification"}
+                        </div>
                       )}
                     </div>
-                    <Info className="w-3 h-3 text-outline/30" />
                   </div>
-                )}
+                </div>
 
+                <div className="space-y-4 px-2">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <p className="text-[9px] uppercase tracking-widest font-bold text-primary opacity-60 uppercase">{booking.occasion}</p>
+                      <h4 className="font-headline text-3xl italic text-on-surface leading-tight transition-colors group-hover:text-primary">
+                        {new Date(booking.bookingDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                      </h4>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[9px] uppercase tracking-widest font-bold text-outline">Sanctuary</p>
+                      <p className="font-headline text-2xl italic text-on-surface">Table {booking.tables?.[0]?.tableNumber || "Salon"}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-outline-variant/10">
+                    <div>
+                      <p className="text-[8px] uppercase tracking-widest text-outline font-bold">Ensemble</p>
+                      <p className="text-sm font-body font-light text-on-surface italic">{booking.partySize} Guests</p>
+                    </div>
+                    <div>
+                      <p className="text-[8px] uppercase tracking-widest text-outline font-bold">Moment</p>
+                      <p className="text-sm font-body font-light text-on-surface italic">{booking.bookingTime}</p>
+                    </div>
+                  </div>
+
+                  {/* Additional Details & Proof Links */}
+                  <div className="pt-4 space-y-2 border-t border-outline-variant/10">
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-2">
+                        {booking.complimentaryDrinks > 0 && (
+                          <span className="text-[8px] px-2 py-0.5 rounded bg-primary/5 text-primary font-bold uppercase tracking-widest border border-primary/10">
+                            +{booking.complimentaryDrinks} Drinks
+                          </span>
+                        )}
+                        {booking.cakeDetails && (
+                          <span className="text-[8px] px-2 py-0.5 rounded bg-gold-gradient/10 text-primary font-bold uppercase tracking-widest border border-primary/10">
+                            Cake Incl.
+                          </span>
+                        )}
+                      </div>
+                      <Info className="w-3 h-3 text-outline/30" />
+                    </div>
+
+                    {booking.zelleProofUrl && (
+                      <div className="pt-1">
+                        <button
+                          onClick={() => setPreviewProof({ url: booking.zelleProofUrl!, booking, proofType: "deposit" })}
+                          className="inline-flex items-center gap-1 text-[10px] text-purple-400 hover:text-purple-300 underline font-bold"
+                        >
+                          <Eye className="w-3 h-3" /> View Uploaded Zelle Receipt
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Cancel Booking Action */}
+                  {!isCancelled && (
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        onClick={() => setCancellingBooking(booking)}
+                        className="inline-flex items-center gap-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-3 py-1.5 rounded text-[10px] font-bold tracking-widest uppercase transition-colors"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                        <span>Cancel Booking</span>
+                      </button>
+                    </div>
+                  )}
+
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

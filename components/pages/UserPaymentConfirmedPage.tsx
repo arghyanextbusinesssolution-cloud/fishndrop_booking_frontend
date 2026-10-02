@@ -93,7 +93,7 @@ export default function UserPaymentConfirmedPage() {
           <h1 className="mt-5 text-3xl font-bold" style={{ color: GOLD }}>Payment confirmed</h1>
           <p className="mt-2 text-sm text-white/60">
             {isPrivate && !isFullyPaid
-              ? "Your deposit is secured. Please pay the remaining balance 48 hours before your event."
+              ? "Your deposit is secured. Please pay the remaining balance at least 72 hours before your event."
               : isPrivate && isFullyPaid
                 ? "Your venue is fully booked and confirmed. See you on the day!"
                 : "Your table reservation is paid and secured."}
@@ -189,7 +189,7 @@ export default function UserPaymentConfirmedPage() {
               {!isFullyPaid && (
                 <div className="flex items-center justify-between text-sm rounded-lg px-3 py-2" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
                   <span className="text-red-400 font-medium">Remaining Balance</span>
-                  <span className="font-bold text-red-400">${(booking.remainingAmount || 0).toLocaleString()} <span className="text-xs font-normal opacity-70">(Due 48 hrs before event)</span></span>
+                  <span className="font-bold text-red-400">${(booking.remainingAmount || 0).toLocaleString()} <span className="text-xs font-normal opacity-70">(Due at least 72 hrs before event)</span></span>
                 </div>
               )}
               {isFullyPaid && (

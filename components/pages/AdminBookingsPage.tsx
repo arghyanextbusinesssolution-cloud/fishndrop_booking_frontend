@@ -217,11 +217,11 @@ export default function AdminBookingsPage() {
     void load();
   }, [load]);
 
-  const handleVerifyZelle = async (bookingId: string, action: "verify" | "reject") => {
+  const handleVerifyZelle = async (bookingId: string, action: "verify" | "reject", proofType?: "deposit" | "balance") => {
     try {
-      const { data } = await api.patch(`/admin/bookings/${bookingId}/verify-zelle`, { action });
+      const { data } = await api.patch(`/admin/bookings/${bookingId}/verify-zelle`, { action, proofType });
       if (data.success) {
-        toast.success(action === "verify" ? "Zelle payment manually verified & confirmed!" : "Zelle payment marked as mismatched.");
+        toast.success(action === "verify" ? "Zelle payment manually verified & updated!" : "Zelle payment marked as mismatched.");
         setSelectedProofModal(null);
         await load();
       }
@@ -732,16 +732,16 @@ export default function AdminBookingsPage() {
 
             <div className="flex justify-between items-center pt-2 gap-3">
               <button
-                onClick={() => handleVerifyZelle(selectedProofModal.booking._id, "reject")}
+                onClick={() => handleVerifyZelle(selectedProofModal.booking._id, "reject", selectedProofModal.proofType)}
                 className="px-4 py-2 border border-red-300 text-red-700 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-50"
               >
                 Flag Mismatch
               </button>
               <button
-                onClick={() => handleVerifyZelle(selectedProofModal.booking._id, "verify")}
+                onClick={() => handleVerifyZelle(selectedProofModal.booking._id, "verify", selectedProofModal.proofType)}
                 className="px-5 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 shadow-md flex items-center gap-1.5"
               >
-                <CheckCircle2 className="w-4 h-4" /> Approve Zelle Payment
+                <CheckCircle2 className="w-4 h-4" /> Approve Zelle ({selectedProofModal.proofType === "balance" ? "Balance" : "Deposit"})
               </button>
             </div>
           </div>

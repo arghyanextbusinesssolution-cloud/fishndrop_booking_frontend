@@ -7,7 +7,7 @@ import { getStripe } from "@/lib/stripe";
 import { StripePaymentForm } from "./StripePaymentForm";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/axios";
-import { Loader2, Ticket, Check, X, Music, UtensilsCrossed } from "lucide-react";
+import { Loader2, Ticket, Check, X, Music, UtensilsCrossed, AlertCircle } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 
@@ -39,18 +39,19 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
   const { setAuth } = useAuthStore();
 
   const djCost = bookingData.needDj ? 300 : 0;
-  const baseCost = (bookingData.durationHours || 1) * 125 + djCost;
+  const extraHours = (bookingData.durationHours || 5) > 5 ? (bookingData.durationHours - 5) * 125 : 0;
+  const baseCost = 1000 + extraHours + djCost;
   const [submitting, setSubmitting] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
   const [isValidating, setIsValidating] = useState(false);
 
   const finalCost = appliedCoupon ? Math.max(0, baseCost - appliedCoupon.discountAmount) : baseCost;
-  const minDeposit = Math.min(finalCost, 200);
+  const minDeposit = Math.min(finalCost, 300);
   const [customDeposit, setCustomDeposit] = useState<number>(minDeposit);
 
   useEffect(() => {
-    setCustomDeposit(Math.min(finalCost, 200));
+    setCustomDeposit(Math.min(finalCost, 300));
   }, [finalCost]);
 
   const handleApplyCoupon = async () => {
@@ -279,6 +280,19 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
             </div>
           </div>
 
+          {/* 72-Hour Balance Deadline Notice */}
+          {finalCost - customDeposit > 0 && (
+            <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/30 text-xs text-amber-800 space-y-1">
+              <p className="font-bold flex items-center gap-1.5 text-amber-950">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span>72-Hour Balance Policy</span>
+              </p>
+              <p className="text-[11px] leading-relaxed text-amber-900">
+                The remaining <strong>${(finalCost - customDeposit).toFixed(2)}</strong> balance is due no later than <strong>72 hours before the event</strong>. If unpaid by that deadline, the reservation may be canceled.
+              </p>
+            </div>
+          )}
+
           {/* Payment Method Selector */}
           <div className="space-y-2 pt-2 border-t border-black/10">
             <label className="text-[9px] sm:text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold block">
@@ -457,7 +471,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
               onClick={() => setShowPolicyModal(true)}
               className="text-[10px] sm:text-[11px] text-[#C8A96A] underline font-semibold flex items-center justify-center gap-1.5 w-full hover:text-[#0F4C3A]"
             >
-              View Booking &amp; Payment Policy ($200 Deposit / 48-Hour Hold)
+              View Booking &amp; Payment Policy ($300 Deposit / 48-Hour Refund)
             </button>
 
             <button

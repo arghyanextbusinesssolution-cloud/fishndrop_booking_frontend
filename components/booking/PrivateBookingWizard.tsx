@@ -41,7 +41,7 @@ export const PrivateBookingWizard = () => {
   const [bookingData, setBookingData] = useState<PrivateBookingData>({
     date: null,
     guests: 20,
-    durationHours: 4,
+    durationHours: 5,
     time: null,
     occasion: "celebration",
     needDj: false,
@@ -108,7 +108,7 @@ export const PrivateBookingWizard = () => {
     { num: 3, title: "Time Slot" },
     { num: 4, title: "Occasion" },
     { num: 5, title: "Preferences & DJ" },
-    { num: 6, title: "Payment ($200 Deposit)" }
+    { num: 6, title: "Payment ($300 Deposit)" }
   ];
 
   const renderStep = () => {

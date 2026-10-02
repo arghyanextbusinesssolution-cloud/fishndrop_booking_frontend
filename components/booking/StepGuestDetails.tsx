@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { cn } from "@/lib/utils";
 import {
   Loader2,
   ArrowRight,
@@ -15,8 +14,6 @@ import {
   Lock,
   Eye,
   EyeOff,
-  Sparkles,
-  Clock,
   ShieldCheck
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
@@ -78,9 +75,6 @@ const parsePhoneNumber = (phoneStr: string) => {
 export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps) => {
   const { user } = useAuthStore();
   const [mounted, setMounted] = useState(false);
-
-  // Active Tab Toggle: Default is "email"
-  const [activeTab, setActiveTab] = useState<"email" | "phone">("email");
 
   const existingPhone = initialData?.phone || user?.phone || "";
   const initialParsed = parsePhoneNumber(existingPhone);
@@ -148,7 +142,6 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
         name: data.name?.trim() || user?.name || "Guest User",
         email: data.email?.trim() || user?.email || "",
         phone: activeFullPhone,
-        isPhoneVerified: false
       }
     });
   };
@@ -211,7 +204,7 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
         </div>
       </div>
 
-      {/* Right Column - Main Form & Toggle */}
+      {/* Right Column - Main Form */}
       <div className="lg:col-span-7 bg-[#0b1410] p-4 sm:p-6 md:p-8 lg:p-10 rounded-2xl sm:rounded-3xl border border-[#C8A96A]/30 relative overflow-hidden shadow-2xl backdrop-blur-md">
         <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#C8A96A] to-transparent" />
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#C8A96A]/10 rounded-full blur-3xl pointer-events-none" />
@@ -231,201 +224,137 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
           </div>
         )}
 
-        {/* Navigation Mode Switcher Toggle Tabs */}
-        <div className="grid grid-cols-2 gap-2 p-1.5 bg-black/60 rounded-xl border border-[#C8A96A]/30 mb-6">
-          <button
-            type="button"
-            onClick={() => setActiveTab("email")}
-            className={cn(
-              "py-2.5 px-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2",
-              activeTab === "email"
-                ? "bg-[#C8A96A] text-[#0d1612] shadow-md font-extrabold"
-                : "text-white/60 hover:text-white"
-            )}
-          >
-            <Mail className="w-4 h-4" /> {user ? "Guest Details" : "Email & Password"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("phone")}
-            className={cn(
-              "py-2.5 px-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 relative",
-              activeTab === "phone"
-                ? "bg-[#C8A96A] text-[#0d1612] shadow-md font-extrabold"
-                : "text-white/60 hover:text-white"
-            )}
-          >
-            <Smartphone className="w-4 h-4" /> Phone Login
-            <span className="ml-1 px-1.5 py-0.5 rounded-full text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase font-black tracking-tighter">
-              Soon
-            </span>
-          </button>
-        </div>
-
-        {/* TAB 1: Email / Guest Info Form */}
-        {activeTab === "email" && (
-          <form onSubmit={handleSubmit(onSubmitForm, onInvalid)} className="space-y-6 animate-in fade-in duration-300">
-            <div className="space-y-4">
-              {/* Guest Name */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.15em] text-[#C8A96A] font-bold">
-                  <User className="w-3.5 h-3.5 text-[#C8A96A]" />
-                  Full Name
-                </label>
-                <input
-                  {...register("name")}
-                  placeholder="e.g. Eleanor Vance"
-                  className="w-full bg-black/60 border border-white/15 hover:border-[#C8A96A]/40 focus:border-[#C8A96A] focus:ring-2 focus:ring-[#C8A96A]/20 rounded-xl px-4 py-3.5 text-base font-body text-white placeholder:text-white/25 transition-all outline-none"
-                />
-                {errors.name && (
-                  <p className="text-[11px] tracking-wide text-rose-400 font-medium">
-                    {errors.name.message as string}
-                  </p>
-                )}
-              </div>
-
-              {/* Email Address */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.15em] text-[#C8A96A] font-bold">
-                  <Mail className="w-3.5 h-3.5 text-[#C8A96A]" />
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  {...register("email")}
-                  placeholder="e.g. eleanor@example.com"
-                  className="w-full bg-black/60 border border-white/15 hover:border-[#C8A96A]/40 focus:border-[#C8A96A] focus:ring-2 focus:ring-[#C8A96A]/20 rounded-xl px-4 py-3.5 text-base font-body text-white placeholder:text-white/25 transition-all outline-none"
-                />
-                {errors.email && (
-                  <p className="text-[11px] tracking-wide text-rose-400 font-medium">
-                    {errors.email.message as string}
-                  </p>
-                )}
-              </div>
-
-              {/* Phone Number Input */}
-              <div className="space-y-2">
-                <label className="flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.15em] text-[#C8A96A] font-bold">
-                  <Smartphone className="w-3.5 h-3.5 text-[#C8A96A]" />
-                  Phone Number
-                </label>
-                <div className="group relative rounded-xl bg-black/60 border border-white/15 focus-within:border-[#C8A96A] focus-within:ring-2 focus-within:ring-[#C8A96A]/20 transition-all flex items-center p-1.5 shadow-inner">
-                  <div className="relative flex items-center flex-shrink-0">
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="appearance-none bg-transparent pl-2 pr-6 py-2 text-xs sm:text-sm font-semibold text-[#E8CB8A] focus:outline-none cursor-pointer"
-                    >
-                      {COUNTRY_CODES.map((item, i) => (
-                        <option key={i} value={item.code} className="bg-[#0c1612] text-white py-2">
-                          {item.label}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-3 h-3 text-[#C8A96A] absolute right-1 pointer-events-none opacity-80" />
-                  </div>
-                  <div className="h-5 w-px bg-[#C8A96A]/30 mx-1 flex-shrink-0" />
-                  <input
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(formatUSPhoneNumber(e.target.value))}
-                    placeholder="(513) 940-5811"
-                    className="flex-1 min-w-0 bg-transparent px-2 py-2 text-base font-mono font-bold text-white tracking-wide placeholder:text-white/25 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Password Input: HIDDEN when user is logged in */}
-              {!user && (
-                <div className="space-y-2">
-                  <label className="flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.15em] text-[#C8A96A] font-bold">
-                    <Lock className="w-3.5 h-3.5 text-[#C8A96A]" />
-                    Password <span className="text-white/40 text-[10px] font-normal lowercase">(optional for fast login)</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      {...register("password")}
-                      placeholder="••••••••"
-                      className="w-full bg-black/60 border border-white/15 hover:border-[#C8A96A]/40 focus:border-[#C8A96A] focus:ring-2 focus:ring-[#C8A96A]/20 rounded-xl px-4 py-3.5 text-base font-body text-white placeholder:text-white/25 pr-10 transition-all outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Terms & Conditions Checkbox */}
-            <div className="pt-2">
-              <label className="flex gap-3.5 cursor-pointer items-start select-none group">
-                <input
-                  type="checkbox"
-                  {...register("agreedToTerms")}
-                  className="mt-1 h-4 w-4 rounded border-white/30 bg-black/50 text-[#C8A96A] focus:ring-0 focus:ring-offset-0 cursor-pointer accent-[#C8A96A]"
-                />
-                <span className="text-xs text-white/70 group-hover:text-white/90 font-body leading-relaxed transition-colors">
-                  I agree to the{" "}
-                  <a href="/terms" target="_blank" className="text-[#C8A96A] underline hover:text-[#E0C68E] transition-colors">
-                    Terms &amp; Conditions
-                  </a>{" "}
-                  and consent to receiving table confirmation SMS &amp; Email updates.
-                </span>
+        <form onSubmit={handleSubmit(onSubmitForm, onInvalid)} className="space-y-6 animate-in fade-in duration-300">
+          <div className="space-y-4">
+            {/* Guest Name */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.15em] text-[#C8A96A] font-bold">
+                <User className="w-3.5 h-3.5 text-[#C8A96A]" />
+                Full Name
               </label>
-              {errors.agreedToTerms && (
-                <p className="text-[11px] tracking-wide text-rose-400 font-medium mt-1">
-                  {errors.agreedToTerms.message as string}
+              <input
+                {...register("name")}
+                placeholder="e.g. Eleanor Vance"
+                className="w-full bg-black/60 border border-white/15 hover:border-[#C8A96A]/40 focus:border-[#C8A96A] focus:ring-2 focus:ring-[#C8A96A]/20 rounded-xl px-4 py-3.5 text-base font-body text-white placeholder:text-white/25 transition-all outline-none"
+              />
+              {errors.name && (
+                <p className="text-[11px] tracking-wide text-rose-400 font-medium">
+                  {errors.name.message as string}
                 </p>
               )}
             </div>
 
-            {/* Submit Button */}
-            <div className="pt-4">
-              <button
-                type="submit"
-                className="w-full relative group overflow-hidden font-black text-xs tracking-[0.2em] uppercase px-8 py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 bg-gradient-to-r from-[#C8A96A] via-[#E0C68E] to-[#C8A96A] text-[#0a120e] shadow-xl shadow-[#C8A96A]/20 hover:shadow-2xl hover:shadow-[#C8A96A]/35 hover:scale-[1.01] active:scale-[0.99]"
-              >
-                <span>Continue to Next Step</span>
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* TAB 2: Phone Verification - Coming Soon View */}
-        {activeTab === "phone" && (
-          <div className="space-y-4 animate-in fade-in duration-300">
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[#16271f] via-[#0d1813] to-black border border-[#C8A96A]/40 p-6 text-center space-y-4 shadow-xl">
-              <div className="w-12 h-12 rounded-full bg-[#C8A96A]/20 border border-[#C8A96A]/40 flex items-center justify-center mx-auto text-[#C8A96A]">
-                <Clock className="w-6 h-6 animate-pulse" />
-              </div>
-
-              <div className="space-y-1">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-[#C8A96A]/20 text-[#E8CB8A] border border-[#C8A96A]/40">
-                  <Sparkles className="w-3.5 h-3.5" /> Coming Soon
-                </span>
-                <h3 className="font-headline italic text-2xl text-white pt-2">Phone SMS Verification</h3>
-                <p className="text-xs text-white/70 max-w-xs mx-auto leading-relaxed">
-                  SMS OTP verification is currently coming soon. You can enter your details and phone number directly in the Email &amp; Guest Details tab to proceed with your booking immediately!
+            {/* Email Address */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.15em] text-[#C8A96A] font-bold">
+                <Mail className="w-3.5 h-3.5 text-[#C8A96A]" />
+                Email Address
+              </label>
+              <input
+                type="email"
+                {...register("email")}
+                placeholder="e.g. eleanor@example.com"
+                className="w-full bg-black/60 border border-white/15 hover:border-[#C8A96A]/40 focus:border-[#C8A96A] focus:ring-2 focus:ring-[#C8A96A]/20 rounded-xl px-4 py-3.5 text-base font-body text-white placeholder:text-white/25 transition-all outline-none"
+              />
+              {errors.email && (
+                <p className="text-[11px] tracking-wide text-rose-400 font-medium">
+                  {errors.email.message as string}
                 </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab("email")}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#C8A96A] text-[#0d1612] font-black text-xs uppercase tracking-wider hover:bg-[#D6B97A] transition-all shadow-md"
-              >
-                <span>Switch to Guest Details</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              )}
             </div>
+
+            {/* Phone Number Input */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.15em] text-[#C8A96A] font-bold">
+                <Smartphone className="w-3.5 h-3.5 text-[#C8A96A]" />
+                Phone Number
+              </label>
+              <div className="group relative rounded-xl bg-black/60 border border-white/15 focus-within:border-[#C8A96A] focus-within:ring-2 focus-within:ring-[#C8A96A]/20 transition-all flex items-center p-1.5 shadow-inner">
+                <div className="relative flex items-center flex-shrink-0">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="appearance-none bg-transparent pl-2 pr-6 py-2 text-xs sm:text-sm font-semibold text-[#E8CB8A] focus:outline-none cursor-pointer"
+                  >
+                    {COUNTRY_CODES.map((item, i) => (
+                      <option key={i} value={item.code} className="bg-[#0c1612] text-white py-2">
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-3 h-3 text-[#C8A96A] absolute right-1 pointer-events-none opacity-80" />
+                </div>
+                <div className="h-5 w-px bg-[#C8A96A]/30 mx-1 flex-shrink-0" />
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(formatUSPhoneNumber(e.target.value))}
+                  placeholder="(513) 940-5811"
+                  className="flex-1 min-w-0 bg-transparent px-2 py-2 text-base font-mono font-bold text-white tracking-wide placeholder:text-white/25 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Password Input: HIDDEN when user is logged in */}
+            {!user && (
+              <div className="space-y-2">
+                <label className="flex items-center gap-1.5 font-label text-[11px] uppercase tracking-[0.15em] text-[#C8A96A] font-bold">
+                  <Lock className="w-3.5 h-3.5 text-[#C8A96A]" />
+                  Password <span className="text-white/40 text-[10px] font-normal lowercase">(optional to auto-create account)</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    {...register("password")}
+                    placeholder="••••••••"
+                    className="w-full bg-black/60 border border-white/15 hover:border-[#C8A96A]/40 focus:border-[#C8A96A] focus:ring-2 focus:ring-[#C8A96A]/20 rounded-xl px-4 py-3.5 text-base font-body text-white placeholder:text-white/25 pr-10 transition-all outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Terms & Conditions Checkbox */}
+          <div className="pt-2">
+            <label className="flex gap-3.5 cursor-pointer items-start select-none group">
+              <input
+                type="checkbox"
+                {...register("agreedToTerms")}
+                className="mt-1 h-4 w-4 rounded border-white/30 bg-black/50 text-[#C8A96A] focus:ring-0 focus:ring-offset-0 cursor-pointer accent-[#C8A96A]"
+              />
+              <span className="text-xs text-white/70 group-hover:text-white/90 font-body leading-relaxed transition-colors">
+                I agree to the{" "}
+                <a href="/terms" target="_blank" className="text-[#C8A96A] underline hover:text-[#E0C68E] transition-colors">
+                  Terms &amp; Conditions
+                </a>{" "}
+                and consent to receiving table confirmation SMS &amp; Email updates.
+              </span>
+            </label>
+            {errors.agreedToTerms && (
+              <p className="text-[11px] tracking-wide text-rose-400 font-medium mt-1">
+                {errors.agreedToTerms.message as string}
+              </p>
+            )}
+          </div>
+
+          {/* Submit Button */}
+          <div className="pt-4">
+            <button
+              type="submit"
+              className="w-full relative group overflow-hidden font-black text-xs tracking-[0.2em] uppercase px-8 py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 bg-gradient-to-r from-[#C8A96A] via-[#E0C68E] to-[#C8A96A] text-[#0a120e] shadow-xl shadow-[#C8A96A]/20 hover:shadow-2xl hover:shadow-[#C8A96A]/35 hover:scale-[1.01] active:scale-[0.99]"
+            >
+              <span>Continue to Next Step</span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

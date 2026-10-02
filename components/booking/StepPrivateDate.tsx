@@ -14,7 +14,7 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
     initialData.date ? new Date(initialData.date) : undefined
   );
   const [guests, setGuests] = useState<number>(initialData.guests || 2);
-  const [durationHours, setDurationHours] = useState<number>(initialData.durationHours || 4);
+  const [durationHours, setDurationHours] = useState<number>(initialData.durationHours || 5);
   const [maxCapacity, setMaxCapacity] = useState<number>(50);
 
   useEffect(() => {
@@ -44,19 +44,21 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
     }
   };
 
+  const calculatedCost = 1000 + (durationHours > 5 ? (durationHours - 5) * 125 : 0);
+
   return (
     <div className="space-y-8 animate-fade-in">
       <header className="space-y-3">
         <div className="flex items-center gap-4">
           <span className="font-headline italic text-[#C8A96A] text-base">02.</span>
           <div className="h-[1px] w-8 bg-white/20"></div>
-          <span className="font-label uppercase tracking-widest text-[10px] text-white/50 font-bold">Step 02 of 06 &bull; Calendar Date</span>
+          <span className="font-label uppercase tracking-widest text-[10px] text-white/50 font-bold">Step 02 of 06 &bull; Calendar Date &amp; Package</span>
         </div>
         <h2 className="font-headline italic text-4xl md:text-5xl text-white leading-tight">
           Reserve Our <span className="text-gold-gradient">Sanctuary</span>
         </h2>
         <p className="text-white/60 font-body text-lg font-light max-w-xl">
-          Book Tropica exclusively for your private event. Experience uninterrupted luxury.
+          Book Tropica exclusively with the <strong className="text-[#C8A96A]">Tropica October Booking Special</strong>.
         </p>
       </header>
 
@@ -73,7 +75,7 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
           </div>
         </div>
 
-        <div className="space-y-10">
+        <div className="space-y-8">
           {/* Guest Count */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -107,32 +109,44 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
                 <Clock className="w-4 h-4 text-primary" />
                 Duration (Hours)
               </label>
-              <span className="font-headline text-2xl text-white">{durationHours}</span>
+              <span className="font-headline text-2xl text-white">{durationHours} Hours</span>
             </div>
             <input
               type="range"
-              min="4"
+              min="5"
               max="12"
               value={durationHours}
               onChange={(e) => setDurationHours(parseInt(e.target.value))}
               className="w-full accent-primary"
             />
             <div className="flex justify-between text-xs text-white/40 font-mono">
-              <span>4 Hours</span>
+              <span>5 Hours (Special Package)</span>
               <span>12 Hours</span>
             </div>
           </div>
 
-          {/* Fixed Pricing Note */}
-          <div className="glass-card rounded-xl p-6 border-primary/20 bg-primary/5">
-            <h3 className="font-headline italic text-xl text-primary mb-2">Venue Buyout</h3>
-            <p className="text-white/60 font-body text-sm mb-4">
-              Private venue bookings are currently specialized at <span className="line-through opacity-50 mr-2">$250</span>
-              <span className="text-primary font-bold text-lg">$125 per hour</span>, regardless of guest count.
-            </p>
-            <div className="flex items-center justify-between border-t border-white/10 pt-4">
-              <span className="font-label uppercase text-[10px] tracking-widest text-white/50">Estimated Cost</span>
-              <span className="font-headline text-2xl text-white">${durationHours * 125}</span>
+          {/* Tropica October Booking Special Pricing Card */}
+          <div className="glass-card rounded-xl p-5 border-[#C8A96A]/30 bg-[#C8A96A]/10 space-y-3">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#C8A96A]">Special Offer</span>
+                <h3 className="font-headline italic text-xl text-white">Tropica October Booking Special</h3>
+              </div>
+              <span className="font-headline text-2xl text-[#C8A96A] font-bold">${calculatedCost.toLocaleString()}</span>
+            </div>
+            <div className="space-y-1.5 text-xs text-white/80 border-t border-white/10 pt-3">
+              <p className="flex items-center gap-2">
+                <span className="text-[#C8A96A] font-bold">✓ 5 Hours Total</span>
+                <span className="text-white/60 text-[11px]">(Includes 1 complimentary extra hour)</span>
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="text-[#C8A96A] font-bold">✓ 2 Bottles of Champagne</span>
+                <span className="text-white/60 text-[11px]">(Complimentary extras included)</span>
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="text-white font-bold">$300 Deposit</span>
+                <span className="text-white/60 text-[11px]">(Secures date &amp; time; $700 balance due 72h prior)</span>
+              </p>
             </div>
           </div>
 

@@ -469,7 +469,7 @@ export default function UserPaymentPage() {
                   <div className="space-y-2">
                     <label className="text-xs font-semibold text-[var(--text-primary)] flex items-center justify-between">
                       <span>Upload Zelle Payment Screenshot</span>
-                      <span className="text-[10px] text-[var(--text-secondary)]">Uploaded to Cloudinary</span>
+                      <span className="text-[10px] text-[var(--text-secondary)]">Uploateded to Cloudinary</span>
                     </label>
 
                     {screenshotPreview ? (
