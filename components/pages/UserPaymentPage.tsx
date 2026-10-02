@@ -425,22 +425,17 @@ export default function UserPaymentPage() {
                   {/* Zelle Instructions Box */}
                   <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
                     <div className="flex items-center justify-between text-xs border-b border-[var(--border)] pb-2">
-                      <span className="text-[var(--text-secondary)]">Zelle Recipient:</span>
+                      <span className="text-[var(--text-secondary)]">Zelle Tag Recipient:</span>
                       <div className="flex items-center gap-1 font-mono font-bold text-[var(--accent)]">
-                        <span>bookings@tropica.nyc</span>
+                        <span>tropica-nyc</span>
                         <button
                           type="button"
-                          onClick={() => handleCopy("bookings@tropica.nyc", "email")}
+                          onClick={() => handleCopy("tropica-nyc", "memo")}
                           className="p-1 hover:text-white transition-colors"
                         >
-                          {copiedEmail ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                          {copiedMemo ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
                         </button>
                       </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs border-b border-[var(--border)] pb-2">
-                      <span className="text-[var(--text-secondary)]">Zelle Tag:</span>
-                      <span className="font-mono font-bold text-[var(--accent)]">tropica-nyc</span>
                     </div>
 
                     <div className="flex items-center justify-between text-xs border-b border-[var(--border)] pb-2">
