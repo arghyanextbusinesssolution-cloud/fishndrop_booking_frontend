@@ -68,9 +68,9 @@ function ZellePendingContent() {
   };
 
   const handleCopyEmail = () => {
-    navigator.clipboard.writeText("tropica-nyc");
+    navigator.clipboard.writeText("tropicapayments@gmail.com");
     setCopiedEmail(true);
-    toast.success("Zelle Tag copied!");
+    toast.success("Zelle Email copied!");
     setTimeout(() => setCopiedEmail(false), 2000);
   };
 
@@ -292,15 +292,15 @@ function ZellePendingContent() {
             <div className="p-4 bg-purple-50 rounded-xl border border-purple-100 space-y-3">
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest text-purple-700 font-bold">Zelle Tag Recipient</p>
-                  <p className="text-sm font-extrabold text-purple-950 font-mono">tropica-nyc</p>
+                  <p className="text-[10px] uppercase tracking-widest text-purple-700 font-bold">Zelle Recipient Email</p>
+                  <p className="text-sm font-extrabold text-purple-950 font-mono">tropicapayments@gmail.com</p>
                 </div>
                 <button
                   type="button"
                   onClick={handleCopyEmail}
                   className="px-3 py-1 bg-purple-700 text-white text-[10px] font-bold rounded-lg uppercase tracking-wider hover:bg-purple-800 transition"
                 >
-                  {copiedEmail ? "Copied!" : "Copy Tag"}
+                  {copiedEmail ? "Copied!" : "Copy Email"}
                 </button>
               </div>
               <div className="flex justify-between items-center pt-2 border-t border-purple-200/60 text-xs">

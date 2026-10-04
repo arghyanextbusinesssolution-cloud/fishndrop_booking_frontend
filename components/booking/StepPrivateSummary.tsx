@@ -101,9 +101,9 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
   };
 
   const handleCopyZelle = () => {
-    navigator.clipboard.writeText("tropica-nyc");
+    navigator.clipboard.writeText("tropicapayments@gmail.com");
     setCopiedZelle(true);
-    toast.success("Zelle Tag copied!");
+    toast.success("Zelle Email copied!");
     setTimeout(() => setCopiedZelle(false), 2000);
   };
 
@@ -332,22 +332,22 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
             <div className="p-4 rounded-xl bg-purple-50 border border-purple-200 space-y-3 animate-in fade-in duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] uppercase tracking-widest text-purple-700 font-bold">Zelle Tag Recipient</p>
-                  <p className="text-sm font-extrabold text-purple-950 font-mono">tropica-nyc</p>
+                  <p className="text-[10px] uppercase tracking-widest text-purple-700 font-bold">Zelle Recipient Email</p>
+                  <p className="text-sm font-extrabold text-purple-950 font-mono">tropicapayments@gmail.com</p>
                 </div>
                 <button
                   type="button"
                   onClick={handleCopyZelle}
                   className="px-3 py-1 bg-purple-600 text-white rounded-lg text-[10px] uppercase tracking-wider font-bold hover:bg-purple-700 transition"
                 >
-                  {copiedZelle ? "Copied!" : "Copy Tag"}
+                  {copiedZelle ? "Copied!" : "Copy Email"}
                 </button>
               </div>
 
               <div className="p-3 bg-white/80 rounded-lg border border-purple-100 space-y-1.5 text-xs text-purple-900">
                 <p className="font-bold text-[11px] text-purple-950">📋 Private Event Zelle Instructions:</p>
                 <ol className="list-decimal pl-4 space-y-1 text-[11px] text-gray-700">
-                  <li>Send deposit of <strong className="text-purple-950">${customDeposit.toFixed(2)}</strong> via Zelle to tag <span className="font-mono font-bold">tropica-nyc</span></li>
+                  <li>Send deposit of <strong className="text-purple-950">${customDeposit.toFixed(2)}</strong> via Zelle to email <span className="font-mono font-bold">tropicapayments@gmail.com</span></li>
                   <li>Paste your generated <strong className="text-purple-950">Booking ID</strong> in your Zelle payment memo/notes.</li>
                   <li>Upload payment screenshot proof below.</li>
                   <li>Booking stays <span className="font-bold text-amber-600">Pending</span> until the backend team verifies your Zelle payment, Booking ID &amp; deposit amount, and confirms your venue slot!</li>
@@ -513,14 +513,35 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
       )}
 
       {clientSecret && bookingId && (
-        <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
-          <StripePaymentForm
-            bookingId={bookingId}
-            onSuccess={handlePaymentSuccess}
-            agreedToTerms={bookingData.guestDetails.agreedToTerms}
-            agreedToTransactional={bookingData.guestDetails.agreedToTransactional}
-          />
-        </Elements>
+        <div className="space-y-4">
+          <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
+            <StripePaymentForm
+              bookingId={bookingId}
+              onSuccess={handlePaymentSuccess}
+              agreedToTerms={bookingData.guestDetails.agreedToTerms}
+              agreedToTransactional={bookingData.guestDetails.agreedToTransactional}
+            />
+          </Elements>
+          <button
+            type="button"
+            onClick={async () => {
+              if (bookingId) {
+                try {
+                  await api.post("/bookings/cancel-unpaid", { bookingId });
+                  toast.success("Unpaid booking draft cancelled. Slot released.");
+                } catch (err) {
+                  console.warn("Cancel unpaid draft error:", err);
+                }
+              }
+              setBookingId(null);
+              setClientSecret(null);
+              if (onBack) onBack();
+            }}
+            className="w-full text-center py-2 text-xs text-red-500 hover:text-red-700 font-semibold tracking-wider uppercase transition-colors"
+          >
+            ← Cancel &amp; Change Booking Details
+          </button>
+        </div>
       )}
     </div>
   );

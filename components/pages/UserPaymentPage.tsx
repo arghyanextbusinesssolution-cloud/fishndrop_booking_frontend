@@ -425,15 +425,15 @@ export default function UserPaymentPage() {
                   {/* Zelle Instructions Box */}
                   <div className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
                     <div className="flex items-center justify-between text-xs border-b border-[var(--border)] pb-2">
-                      <span className="text-[var(--text-secondary)]">Zelle Tag Recipient:</span>
+                      <span className="text-[var(--text-secondary)]">Zelle Recipient Email:</span>
                       <div className="flex items-center gap-1 font-mono font-bold text-[var(--accent)]">
-                        <span>tropica-nyc</span>
+                        <span>tropicapayments@gmail.com</span>
                         <button
                           type="button"
-                          onClick={() => handleCopy("tropica-nyc", "memo")}
+                          onClick={() => handleCopy("tropicapayments@gmail.com", "email")}
                           className="p-1 hover:text-white transition-colors"
                         >
-                          {copiedMemo ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                          {copiedEmail ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
                         </button>
                       </div>
                     </div>
