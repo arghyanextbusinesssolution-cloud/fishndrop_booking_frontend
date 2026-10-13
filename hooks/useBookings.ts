@@ -104,11 +104,14 @@ export function useBookings() {
     }
   }, []);
 
-  const startRemainingPayment = useCallback(async (bookingId: string) => {
+  const startRemainingPayment = useCallback(async (bookingId: string, amount?: number) => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post<{ success: boolean; url: string }>("/payments/checkout-balance", { bookingId });
+      const { data } = await api.post<{ success: boolean; url: string }>("/payments/checkout-balance", {
+        bookingId,
+        amount: amount && amount > 0 ? amount : undefined
+      });
       if (!data.url) {
         throw new Error("Missing payment URL");
       }
@@ -149,5 +152,23 @@ export function useBookings() {
     }
   }, []);
 
-  return { getMyBookings, getAvailability, createBooking, getBookingById, startPayment, startRemainingPayment, verifyCheckoutSession, verifyPaymentIntent, cancelBooking, loading, error };
+  const respondToQuote = useCallback(async (bookingId: string, action: "accept" | "reject", notes?: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.patch<{ success: boolean; message: string; booking: Booking }>(`/bookings/${bookingId}/quote-response`, {
+        action,
+        notes
+      });
+      return data.booking;
+    } catch (err: any) {
+      const msg = err.response?.data?.message || `Failed to ${action} quote`;
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return { getMyBookings, getAvailability, createBooking, getBookingById, startPayment, startRemainingPayment, verifyCheckoutSession, verifyPaymentIntent, cancelBooking, respondToQuote, loading, error };
 }

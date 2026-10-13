@@ -7,7 +7,7 @@ interface ZelleProofLightboxModalProps {
   isOpen: boolean;
   imageUrl: string | null;
   booking: Booking | null;
-  proofType?: "deposit" | "balance";
+  proofType?: "deposit" | "balance" | "food";
   onClose: () => void;
 }
 
@@ -19,6 +19,18 @@ export const ZelleProofLightboxModal = ({
   onClose,
 }: ZelleProofLightboxModalProps) => {
   if (!isOpen || !imageUrl || !booking) return null;
+
+  const title =
+    proofType === "food"
+      ? "Food Catering Zelle Proof"
+      : proofType === "balance"
+      ? "Remaining Balance Zelle Proof"
+      : "Deposit Zelle Proof";
+
+  const status =
+    proofType === "food"
+      ? booking.foodPaymentStatus || "pending_verification"
+      : booking.zelleVerificationStatus || "pending";
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-300">
@@ -33,7 +45,7 @@ export const ZelleProofLightboxModal = ({
         <div className="space-y-1">
           <span className="text-[10px] uppercase tracking-widest font-extrabold text-purple-400 block flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5" />
-            {proofType === "balance" ? "Remaining Balance Zelle Proof" : "Deposit Zelle Proof"}
+            {title}
           </span>
           <h3 className="text-xl font-headline italic text-on-surface">
             {booking.customerName}
@@ -51,7 +63,7 @@ export const ZelleProofLightboxModal = ({
         </div>
 
         <div className="flex items-center justify-between pt-2 text-xs text-outline border-t border-outline-variant/10">
-          <span>Status: <strong className="text-primary capitalize">{booking.zelleVerificationStatus || "pending"}</strong></span>
+          <span>Status: <strong className="text-primary capitalize">{status}</strong></span>
           <button
             type="button"
             onClick={onClose}

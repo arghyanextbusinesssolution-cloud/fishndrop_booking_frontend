@@ -7,7 +7,7 @@ import { getStripe } from "@/lib/stripe";
 import { StripePaymentForm } from "./StripePaymentForm";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/axios";
-import { Loader2, Ticket, Check, X, Music, UtensilsCrossed, AlertCircle } from "lucide-react";
+import { Loader2, Ticket, Check, X, Music, UtensilsCrossed, AlertCircle, Sparkles, ChefHat } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 
@@ -20,15 +20,7 @@ interface StepPrivateSummaryProps {
 
 const stripePromise = getStripe();
 
-const CATERING_LABEL_MAP: Record<string, string> = {
-  seafood_buffet: "🦞 Seafood Extravaganza Buffet",
-  tropica_signature: "🍽️ Tropica Signature Experience",
-  cocktail_canapes: "🥂 Cocktail and Canapes Reception",
-  bbq_grill: "🔥 Tropical BBQ and Grill",
-  vegan_garden: "🌿 Garden and Vegan Feast",
-  kids_friendly: "🎉 Family and Kids Celebration Menu",
-  custom: "✍️ Custom Menu — Discuss With Us",
-};
+import { CATERING_LABEL_MAP } from "@/lib/cateringRestaurants";
 
 export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateSummaryProps) {
   const router = useRouter();
@@ -39,8 +31,11 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
   const { setAuth } = useAuthStore();
 
   const djCost = bookingData.needDj ? 300 : 0;
-  const extraHours = (bookingData.durationHours || 5) > 5 ? (bookingData.durationHours - 5) * 125 : 0;
-  const baseCost = 1000 + extraHours + djCost;
+  const extraHours = (bookingData.durationHours || 5) > 5 ? (bookingData.durationHours - 5) * 300 : 0;
+  const photographerCost = bookingData.needPhotographer
+    ? 300 + Math.max(0, (bookingData.photographerHours || 2) - 2) * 150
+    : 0;
+  const baseCost = 1500 + extraHours + djCost + photographerCost;
   const [submitting, setSubmitting] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
@@ -123,6 +118,22 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
         }
       }
 
+      let formattedNotes = bookingData.notes || "";
+      if (bookingData.selectedDishes && bookingData.selectedDishes.length > 0) {
+        const dishStrs = bookingData.selectedDishes.map((dish: string) => {
+          const qty = bookingData.dishQuantities?.[dish];
+          return qty && qty > 1 ? `${dish} (x${qty} platters)` : `${dish} (x1 platter)`;
+        });
+        const dishStr = `[Dishes: ${dishStrs.join(", ")}]`;
+        formattedNotes = formattedNotes ? `${formattedNotes} | ${dishStr}` : dishStr;
+      }
+      if (bookingData.cateringNotes) {
+        formattedNotes = formattedNotes ? `${formattedNotes} | [Dietary: ${bookingData.cateringNotes}]` : `[Dietary: ${bookingData.cateringNotes}]`;
+      }
+      if (bookingData.needDecoration && bookingData.decorationStyle) {
+        formattedNotes = formattedNotes ? `${formattedNotes} | [Decor: ${bookingData.decorationStyle}]` : `[Decor: ${bookingData.decorationStyle}]`;
+      }
+
       const payload = {
         customerName: bookingData.guestDetails.name,
         customerEmail: bookingData.guestDetails.email,
@@ -133,9 +144,12 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
         partySize: bookingData.guests,
         durationHours: bookingData.durationHours || 1,
         occasion: bookingData.occasion || "other",
-        notes: bookingData.notes || "",
+        notes: formattedNotes.slice(0, 500),
         needDj: bookingData.needDj ?? false,
-        cateringMenu: bookingData.cateringMenu || "seafood_buffet",
+        needPhotographer: bookingData.needPhotographer ?? false,
+        photographerHours: bookingData.needPhotographer ? (bookingData.photographerHours || 2) : 0,
+        cateringMenu: bookingData.cateringMenu || "jamaican_jerk_house",
+        dishQuantities: bookingData.dishQuantities || {},
         customDepositAmount: customDeposit,
         couponCode: appliedCoupon?.code || undefined,
         paymentMethod,
@@ -381,9 +395,51 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
             </div>
           )}
 
-          {/* Preferences Summary — read-only from Step 4 */}
+          {/* Preferences & Catering Dishes Summary */}
           <div className="pt-3 border-t border-black/10 space-y-2.5">
-            <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold">Event Preferences (from step 4)</p>
+            <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-[#1a1c1b]/60 font-bold">Event Preferences &amp; Catering</p>
+
+            <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white border border-[#1a1c1b]/10">
+              <UtensilsCrossed className="w-4 h-4 text-[#C8A96A] flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-[9px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">Catering Partner</p>
+                <p className="text-xs sm:text-sm font-bold text-[#1a1c1b] mt-0.5">{cateringLabel}</p>
+              </div>
+            </div>
+
+            {bookingData.selectedDishes && bookingData.selectedDishes.length > 0 && (
+              <div className="p-2.5 rounded-lg bg-white border border-[#1a1c1b]/10 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <p className="text-[9px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold flex items-center gap-1">
+                    <ChefHat className="w-3 h-3 text-[#C8A96A]" /> Selected Event Dishes ({bookingData.selectedDishes.length})
+                  </p>
+                  <span className="text-[9px] text-[#0F4C3A] font-bold">Included</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {bookingData.selectedDishes.map((dish: string, i: number) => {
+                    const qty = bookingData.dishQuantities?.[dish] || 1;
+                    return (
+                      <span
+                        key={i}
+                        className="text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-900 border border-amber-500/20 font-medium flex items-center gap-1.5"
+                      >
+                        <span>✓ {dish}</span>
+                        <span className="font-bold text-amber-800 bg-amber-500/20 px-1 rounded text-[9px]">
+                          {qty} {qty === 1 ? "platter" : "platters"}
+                        </span>
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {bookingData.cateringNotes && (
+              <div className="p-2.5 rounded-lg bg-white border border-[#1a1c1b]/10">
+                <p className="text-[9px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">Dietary / Special Notes</p>
+                <p className="text-xs text-[#1a1c1b]/80 italic mt-0.5 leading-relaxed font-body">"{bookingData.cateringNotes}"</p>
+              </div>
+            )}
 
             <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white border border-[#1a1c1b]/10">
               <Music className="w-4 h-4 text-[#C8A96A] flex-shrink-0" />
@@ -398,13 +454,39 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
               </div>
             </div>
 
+            {bookingData.needDecoration && (
+              <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white border border-[#1a1c1b]/10">
+                <Sparkles className="w-4 h-4 text-[#C8A96A] flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-[9px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">Event Decoration</p>
+                  <p className="text-xs sm:text-sm font-bold text-[#1a1c1b] mt-0.5 capitalize">
+                    ✓ {bookingData.decorationStyle?.replace(/_/g, " ") || "Custom Decoration"}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Photographer Add-On Row */}
             <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white border border-[#1a1c1b]/10">
-              <UtensilsCrossed className="w-4 h-4 text-[#C8A96A] flex-shrink-0" />
+              <span className="text-base flex-shrink-0">📷</span>
               <div className="flex-1">
-                <p className="text-[9px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">Catering Menu</p>
-                <p className="text-xs sm:text-sm font-bold text-[#1a1c1b] mt-0.5">{cateringLabel}</p>
+                <p className="text-[9px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">Event Photographer</p>
+                <p className={cn(
+                  "text-xs sm:text-sm font-bold mt-0.5",
+                  bookingData.needPhotographer ? "text-[#0F4C3A]" : "text-[#1a1c1b]/60"
+                )}>
+                  {bookingData.needPhotographer
+                    ? `✓ ${bookingData.photographerHours || 2} hrs (+$${photographerCost} USD)`
+                    : "No Photographer"}
+                </p>
+                {bookingData.needPhotographer && (bookingData.photographerHours || 2) > 2 && (
+                  <p className="text-[10px] text-[#1a1c1b]/40 mt-0.5">
+                    $300 base + {(bookingData.photographerHours - 2)} extra hr{(bookingData.photographerHours - 2) > 1 ? "s" : ""} × $150
+                  </p>
+                )}
               </div>
             </div>
+
           </div>
 
           {/* Coupon */}
@@ -495,6 +577,12 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
         isOpen={showPolicyModal}
         onClose={() => setShowPolicyModal(false)}
         onAccept={handleReserve}
+        amount={customDeposit}
+        totalPrice={finalCost}
+        remainingBalance={Math.max(0, finalCost - customDeposit)}
+        durationHours={bookingData.durationHours || 5}
+        needDj={bookingData.needDj}
+        needPhotographer={bookingData.needPhotographer}
       />
 
       {error && (

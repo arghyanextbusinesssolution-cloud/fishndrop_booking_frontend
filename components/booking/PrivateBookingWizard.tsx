@@ -6,6 +6,7 @@ import { StepPrivateDate } from "./StepPrivateDate";
 import { StepPrivateTime } from "./StepPrivateTime";
 import { StepOccasionSelection } from "./StepOccasionSelection";
 import { StepEventPreferences } from "./StepEventPreferences";
+import { StepMenuSelection } from "./StepMenuSelection";
 import { StepGuestDetails } from "./StepGuestDetails";
 import StepPrivateSummary from "./StepPrivateSummary";
 import { Check } from "lucide-react";
@@ -19,7 +20,12 @@ interface PrivateBookingData {
   time: string | null;
   occasion: string;
   needDj: boolean;
+  needPhotographer: boolean;
+  photographerHours: number;
   cateringMenu: string;
+  selectedDishes?: string[];
+  dishQuantities?: Record<string, number>;
+  cateringNotes?: string;
   needDecoration: boolean;
   decorationStyle?: string;
   guestDetails: {
@@ -45,7 +51,12 @@ export const PrivateBookingWizard = () => {
     time: null,
     occasion: "celebration",
     needDj: false,
-    cateringMenu: "seafood_buffet",
+    needPhotographer: false,
+    photographerHours: 2,
+    cateringMenu: "none",
+    selectedDishes: [],
+    dishQuantities: {},
+    cateringNotes: "",
     needDecoration: false,
     decorationStyle: "tropical_arch",
     guestDetails: {
@@ -89,12 +100,25 @@ export const PrivateBookingWizard = () => {
 
   const handleNext = (stepData: any) => {
     updateData(stepData);
-    if (currentStep < 6) {
+    if (currentStep === 5) {
+      const chosenCatering = stepData.cateringMenu ?? bookingData.cateringMenu;
+      if (!chosenCatering || chosenCatering === "none") {
+        setCurrentStep(7);
+        return;
+      }
+    }
+    if (currentStep < 7) {
       setCurrentStep((prev) => prev + 1);
     }
   };
 
   const handleBack = () => {
+    if (currentStep === 7) {
+      if (!bookingData.cateringMenu || bookingData.cateringMenu === "none") {
+        setCurrentStep(5);
+        return;
+      }
+    }
     if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1);
     } else {
@@ -108,7 +132,8 @@ export const PrivateBookingWizard = () => {
     { num: 3, title: "Time Slot" },
     { num: 4, title: "Occasion" },
     { num: 5, title: "Preferences & DJ" },
-    { num: 6, title: "Payment ($300 Deposit)" }
+    { num: 6, title: "Curate Menu" },
+    { num: 7, title: "Payment ($300 Deposit)" }
   ];
 
   const renderStep = () => {
@@ -155,9 +180,22 @@ export const PrivateBookingWizard = () => {
             initialCateringMenu={bookingData.cateringMenu}
             initialNeedDecoration={bookingData.needDecoration}
             initialDecorationStyle={bookingData.decorationStyle}
+            initialNeedPhotographer={bookingData.needPhotographer}
+            initialPhotographerHours={bookingData.photographerHours}
           />
         );
       case 6:
+        return (
+          <StepMenuSelection
+            restaurantId={bookingData.cateringMenu}
+            initialSelectedDishes={bookingData.selectedDishes}
+            initialDishQuantities={bookingData.dishQuantities}
+            initialCateringNotes={bookingData.cateringNotes}
+            onNext={handleNext}
+            onChangeRestaurant={(newRestaurantId) => updateData({ cateringMenu: newRestaurantId })}
+          />
+        );
+      case 7:
         return (
           <StepPrivateSummary
             bookingData={bookingData}
@@ -170,11 +208,43 @@ export const PrivateBookingWizard = () => {
   };
 
   return (
-    <div className={cn("mx-auto flex flex-col mt-2 md:mt-4 transition-all duration-700", currentStep === 6 ? "max-w-7xl" : "max-w-4xl")}>
-      {/* Progress Tracker */}
-      <div className="mb-4 sm:mb-6 px-2 md:px-0">
+    <div className={cn("mx-auto flex flex-col mt-2 md:mt-4 transition-all duration-700", currentStep === 7 ? "max-w-7xl" : "max-w-4xl")}>
+      {/* ─── Mobile-Friendly Progress Header (< sm screens) ─── */}
+      <div className="sm:hidden mb-4 px-1 space-y-2">
+        <div className="flex items-center justify-between text-xs font-medium">
+          <span className="font-label text-[10px] uppercase tracking-wider text-[#C8A96A] font-bold">
+            Step {currentStep} of {steps.length}
+          </span>
+          <span className="text-[11px] font-semibold text-white/90 truncate max-w-[200px]">
+            {steps[currentStep - 1]?.title}
+          </span>
+        </div>
+        {/* Compact Segmented Progress Bar for mobile */}
+        <div className="grid grid-cols-7 gap-1">
+          {steps.map((step) => {
+            const isCompleted = currentStep > step.num;
+            const isCurrent = currentStep === step.num;
+            return (
+              <div
+                key={step.num}
+                className={cn(
+                  "h-1.5 rounded-full transition-all duration-300",
+                  isCompleted
+                    ? "bg-[#C8A96A]"
+                    : isCurrent
+                      ? "bg-[#C8A96A] ring-2 ring-[#C8A96A]/40 shadow-sm"
+                      : "bg-white/15"
+                )}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ─── Desktop Stepper Tracker (sm+ screens) ─── */}
+      <div className="hidden sm:block mb-4 sm:mb-6 px-2 md:px-0">
         <div className="overflow-x-auto pb-4 pt-1 scrollbar-hide">
-          <div className="flex items-start justify-between relative min-w-[580px] md:min-w-0 px-3">
+          <div className="flex items-start justify-between relative min-w-[620px] md:min-w-0 px-3">
             {/* Background line aligned with circle center */}
             <div className="absolute left-6 right-6 top-4 md:top-5 h-[2px] bg-white/10 -z-0" />
             
@@ -188,7 +258,7 @@ export const PrivateBookingWizard = () => {
               const isCompleted = currentStep > step.num;
               const isCurrent = currentStep === step.num;
               return (
-                <div key={step.num} className="relative z-10 flex flex-col items-center text-center gap-1.5 w-20 sm:w-24 md:w-28">
+                <div key={step.num} className="relative z-10 flex flex-col items-center text-center gap-1.5 w-16 sm:w-20 md:w-24">
                   <div
                     className={cn(
                       "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-headline transition-all duration-500 text-xs md:text-base shrink-0 shadow-md",
@@ -221,7 +291,7 @@ export const PrivateBookingWizard = () => {
 
         {renderStep()}
 
-        {/* Navigation */}
+        {/* Navigation Back / Cancel */}
         <div className="mt-6 pt-4 border-t border-white/10 flex justify-between items-center">
           <button
             onClick={handleBack}

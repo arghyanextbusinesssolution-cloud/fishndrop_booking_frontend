@@ -44,7 +44,7 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
     }
   };
 
-  const calculatedCost = 1000 + (durationHours > 5 ? (durationHours - 5) * 125 : 0);
+  const calculatedCost = 1500 + (durationHours > 5 ? (durationHours - 5) * 300 : 0);
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -58,7 +58,7 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
           Reserve Our <span className="text-gold-gradient">Sanctuary</span>
         </h2>
         <p className="text-white/60 font-body text-lg font-light max-w-xl">
-          Book Tropica exclusively with the <strong className="text-[#C8A96A]">Tropica October Booking Special</strong>.
+          Book Tropica exclusively with the <strong className="text-[#C8A96A]">Tropica Private Venue Booking</strong>.
         </p>
       </header>
 
@@ -120,32 +120,34 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
               className="w-full accent-primary"
             />
             <div className="flex justify-between text-xs text-white/40 font-mono">
-              <span>5 Hours (Special Package)</span>
-              <span>12 Hours</span>
+              <span>5 Hours ($1,500 Base)</span>
+              <span>12 Hours ($300/Extra Hr)</span>
             </div>
           </div>
 
-          {/* Tropica October Booking Special Pricing Card */}
+          {/* Tropica Private Venue Booking Pricing Card */}
           <div className="glass-card rounded-xl p-5 border-[#C8A96A]/30 bg-[#C8A96A]/10 space-y-3">
             <div className="flex justify-between items-start">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#C8A96A]">Special Offer</span>
-                <h3 className="font-headline italic text-xl text-white">Tropica October Booking Special</h3>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#C8A96A]">Private Venue Package</span>
+                <h3 className="font-headline italic text-xl text-white">Tropica Venue Buyout</h3>
               </div>
               <span className="font-headline text-2xl text-[#C8A96A] font-bold">${calculatedCost.toLocaleString()}</span>
             </div>
             <div className="space-y-1.5 text-xs text-white/80 border-t border-white/10 pt-3">
               <p className="flex items-center gap-2">
-                <span className="text-[#C8A96A] font-bold">✓ 5 Hours Total</span>
-                <span className="text-white/60 text-[11px]">(Includes 1 complimentary extra hour)</span>
+                <span className="text-[#C8A96A] font-bold">✓ {durationHours} Hours Total</span>
+                <span className="text-white/60 text-[11px]">
+                  {durationHours > 5 ? `(5 hrs base + ${durationHours - 5} extra hrs @ $300/hr)` : "(5 hours base venue buyout)"}
+                </span>
               </p>
               <p className="flex items-center gap-2">
                 <span className="text-[#C8A96A] font-bold">✓ 2 Bottles of Champagne</span>
-                <span className="text-white/60 text-[11px]">(Complimentary extras included)</span>
+                <span className="text-white/60 text-[11px]">(Complimentary welcome champagne)</span>
               </p>
               <p className="flex items-center gap-2">
                 <span className="text-white font-bold">$300 Deposit</span>
-                <span className="text-white/60 text-[11px]">(Secures date &amp; time; $700 balance due 72h prior)</span>
+                <span className="text-white/60 text-[11px]">(Secures date &amp; time; ${(calculatedCost - 300).toLocaleString()} balance due 72h prior)</span>
               </p>
             </div>
           </div>

@@ -30,6 +30,7 @@ export function exportBookingsToCSV(bookings: Booking[], filenamePrefix = "booki
     "Status",
     "Occasion",
     "DJ Service",
+    "Photographer",
     "Catering Menu",
     "Notes"
   ];
@@ -77,6 +78,7 @@ export function exportBookingsToCSV(bookings: Booking[], filenamePrefix = "booki
       escapeCsvCell(b.status || "pending"),
       escapeCsvCell(b.occasion || ""),
       escapeCsvCell(b.needDj === true ? "Yes" : b.needDj === false ? "No" : ""),
+      escapeCsvCell(b.needPhotographer === true ? `Yes (${b.photographerHours || 2}h)` : b.needPhotographer === false ? "No" : ""),
       escapeCsvCell(b.cateringMenu || ""),
       escapeCsvCell(b.notes || "")
     ].join(",");

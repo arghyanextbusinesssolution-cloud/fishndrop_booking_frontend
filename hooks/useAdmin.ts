@@ -49,7 +49,7 @@ export function useAdmin() {
     }
   }, []);
 
-  const getAllBookings = useCallback(async (page = 1, status = "all", date?: string, limit = 10) => {
+  const getAllBookings = useCallback(async (page = 1, status = "all", date?: string, limit = 10, type?: string) => {
     setLoading(true);
     setError(null);
     try {
@@ -57,7 +57,8 @@ export function useAdmin() {
         page,
         limit,
         status: status === "all" ? undefined : status,
-        date: date || undefined
+        date: date || undefined,
+        type: type || undefined,
       };
       console.log("[useAdmin] getAllBookings request params:", params);
       const { data } = await api.get<BookingResponse>("/admin/bookings", {

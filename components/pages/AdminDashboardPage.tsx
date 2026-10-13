@@ -9,7 +9,7 @@ import api from "@/lib/axios";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { TrendingUp, TrendingDown, Zap, Calendar, Users, LayoutGrid, Download } from "lucide-react";
+import { TrendingUp, TrendingDown, Zap, Calendar, Users, LayoutGrid, Download, DollarSign, ArrowUpRight } from "lucide-react";
 import { exportBookingsToCSV } from "@/lib/exportCsv";
 
 const HERO_IMG = "https://images.unsplash.com/photo-1414235077428-338988692286?auto=format&fit=crop&q=80&w=1600";
@@ -51,9 +51,15 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<TableStats | null>(null);
   const [recent, setRecent] = useState<Booking[]>([]);
   const [todayCount, setTodayCount] = useState(0);
+  const [financialSummary, setFinancialSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const hasLoadedRef = useRef(false);
+
+  const isOwnerOrAdmin =
+    (user?.role === "admin" || user?.role === "owner") &&
+    !user?.name?.toLowerCase().includes("sarah") &&
+    !user?.email?.toLowerCase().includes("sarah");
 
   useEffect(() => {
     if (hasLoadedRef.current) return;
@@ -70,6 +76,17 @@ export default function AdminDashboardPage() {
         setStats(statsData);
         setRecent(bookingsData.data.bookings as Booking[]);
         setTodayCount(todayData.data.total || 0);
+
+        if (isOwnerOrAdmin) {
+          try {
+            const finRes = await api.get("/admin/financials/stats", { params: { timeRange: "all" } });
+            if (finRes.data?.success) {
+              setFinancialSummary(finRes.data.data.summary);
+            }
+          } catch {
+            // Non-blocking if financials not available
+          }
+        }
       } catch {
         setStats(null);
         setRecent([]);
@@ -78,7 +95,7 @@ export default function AdminDashboardPage() {
       }
     };
     void load();
-  }, [getStats]);
+  }, [getStats, isOwnerOrAdmin]);
 
   const handleExportCSV = async () => {
     setIsExporting(true);
@@ -157,6 +174,69 @@ export default function AdminDashboardPage() {
           </p>
         </div>
       </section>
+
+      {/* Owner Dashboard Quick Financial Widget */}
+      {isOwnerOrAdmin && financialSummary && (
+        <section className="p-6 rounded-2xl bg-gradient-to-br from-[#0c2016] via-[#091811] to-[#06100b] border border-[#C8A96A]/30 space-y-4 shadow-xl">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-[#C8A96A]/10 text-[#C8A96A] border border-[#C8A96A]/20">
+                <DollarSign className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="font-headline text-2xl italic text-white">Owner Financial Overview</h2>
+                <p className="text-white/50 text-xs">Executive summary of platform revenue, collections and payables</p>
+              </div>
+            </div>
+            <Link
+              href="/admin/financials"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#C8A96A] via-[#E0C68E] to-[#C8A96A] text-[#0a120e] text-xs font-bold uppercase tracking-wider hover:opacity-95 shadow-md flex items-center gap-1.5 transition-all"
+            >
+              <span>View Financial Dashboard</span>
+              <ArrowUpRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 pt-2">
+            <div className="p-4 rounded-xl bg-black/40 border border-white/5">
+              <span className="text-[10px] uppercase font-bold text-[#C8A96A] tracking-wider block">Contracted</span>
+              <span className="font-headline text-xl italic text-white mt-1 block">
+                ${(financialSummary.totalContractedRevenue || 0).toLocaleString()}
+              </span>
+            </div>
+            <div className="p-4 rounded-xl bg-black/40 border border-white/5">
+              <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider block">Collected</span>
+              <span className="font-headline text-xl italic text-emerald-400 mt-1 block">
+                ${(financialSummary.totalCollected || 0).toLocaleString()}
+              </span>
+            </div>
+            <div className="p-4 rounded-xl bg-black/40 border border-white/5">
+              <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider block">Outstanding</span>
+              <span className="font-headline text-xl italic text-amber-400 mt-1 block">
+                ${(financialSummary.outstandingBalance || 0).toLocaleString()}
+              </span>
+            </div>
+            <div className="p-4 rounded-xl bg-black/40 border border-white/5">
+              <span className="text-[10px] uppercase font-bold text-blue-400 tracking-wider block">Upcoming</span>
+              <span className="font-headline text-xl italic text-blue-300 mt-1 block">
+                ${(financialSummary.upcomingExpected || 0).toLocaleString()}
+              </span>
+            </div>
+            <div className="p-4 rounded-xl bg-black/40 border border-white/5">
+              <span className="text-[10px] uppercase font-bold text-rose-400 tracking-wider block">Vendor Payables</span>
+              <span className="font-headline text-xl italic text-rose-400 mt-1 block">
+                ${(financialSummary.vendorPayables || 0).toLocaleString()}
+              </span>
+            </div>
+            <div className="p-4 rounded-xl bg-black/40 border border-[#C8A96A]/20">
+              <span className="text-[10px] uppercase font-bold text-[#E8CB8A] tracking-wider block">Net Profit</span>
+              <span className="font-headline text-xl italic text-white mt-1 block">
+                ${(financialSummary.netProfit || 0).toLocaleString()}
+              </span>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Stats Grid */}
       <section className="space-y-5">

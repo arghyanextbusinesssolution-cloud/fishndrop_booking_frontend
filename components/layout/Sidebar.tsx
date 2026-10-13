@@ -9,9 +9,21 @@ export function Sidebar({ closeMobile }: { closeMobile?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, clearAuth } = useAuthStore();
-  const links = user?.role === "admin"
-    ? [{ href: "/admin", label: "Dashboard" }, { href: "/admin/bookings", label: "All Bookings" }, { href: "/admin/tables", label: "Tables" }, { href: "/admin/coupons", label: "Coupons" }]
-    : [{ href: "/user", label: "Dashboard" }, { href: "/user/book", label: "Book a Table" }, { href: "/user/bookings", label: "My Bookings" }];
+  const isOwnerOrAdmin =
+    (user?.role === "admin" || user?.role === "owner") &&
+    !user?.name?.toLowerCase().includes("sarah") &&
+    !user?.email?.toLowerCase().includes("sarah");
+
+  const links = (user?.role === "admin" || user?.role === "owner")
+    ? [
+        { href: "/admin", label: "Dashboard" },
+        ...(isOwnerOrAdmin ? [{ href: "/admin/financials", label: "Financials" }] : []),
+        { href: "/admin/bookings", label: "All Bookings" },
+        { href: "/admin/catering", label: "Restaurants & Catering" },
+        { href: "/admin/tables", label: "Tables" },
+        { href: "/admin/coupons", label: "Coupons" }
+      ]
+    : [{ href: "/user", label: "Dashboard" }, { href: "/user/book", label: "Book a Table" }, { href: "/user/bookings", label: "My Bookings" }, { href: "/user/venue-bookings", label: "Venue Bookings" }];
 
   return (
     <aside className="flex h-full w-64 flex-col bg-[var(--surface)] p-4">

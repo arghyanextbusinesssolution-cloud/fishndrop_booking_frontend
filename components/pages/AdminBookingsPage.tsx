@@ -2,15 +2,42 @@
 
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import Link from "next/link";
 import { useAdmin } from "@/hooks/useAdmin";
 import { Booking } from "@/types";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { cn } from "@/lib/utils";
 import api from "@/lib/axios";
-import { CalendarDays, Search, ChevronLeft, ChevronRight, XCircle, Download, Music, UtensilsCrossed, CheckCircle2, Eye, ShieldCheck, X } from "lucide-react";
+import {
+  CalendarDays,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  XCircle,
+  Download,
+  Music,
+  UtensilsCrossed,
+  CheckCircle2,
+  Eye,
+  ShieldCheck,
+  X,
+  DollarSign,
+  Sparkles,
+  ChefHat,
+  TableProperties,
+  User,
+  FileText,
+  Save,
+  ArrowRight,
+  Send,
+  Loader2,
+  Camera
+} from "lucide-react";
 import { CalendarDropdown } from "@/components/shared/CalendarDropdown";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { exportBookingsToCSV } from "@/lib/exportCsv";
+import { CATERING_LABEL_MAP, parseCateringDetails } from "@/lib/cateringRestaurants";
+import { OfferQuoteModal } from "@/components/admin/OfferQuoteModal";
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString("en-US", {
@@ -130,16 +157,6 @@ function OccasionBadge({ occasion }: { occasion?: string }) {
   );
 }
 
-const CATERING_LABEL_MAP: Record<string, string> = {
-  seafood_buffet: "Seafood Extravaganza Buffet",
-  tropica_signature: "Tropica Signature Experience",
-  cocktail_canapes: "Cocktail and Canapes Reception",
-  bbq_grill: "Tropical BBQ and Grill",
-  vegan_garden: "Garden and Vegan Feast",
-  kids_friendly: "Family and Kids Menu",
-  custom: "Custom Menu",
-};
-
 function DjBadge({ needDj, bookingType }: { needDj?: boolean; bookingType: string }) {
   if (bookingType !== "private_event") return <span className="text-secondary text-xs">—</span>;
   return (
@@ -151,6 +168,29 @@ function DjBadge({ needDj, bookingType }: { needDj?: boolean; bookingType: strin
     )}>
       <Music className="w-2.5 h-2.5" />
       {needDj ? "DJ Yes" : "No DJ"}
+    </span>
+  );
+}
+
+function getPhotographerCost(b: Booking) {
+  if (!b.needPhotographer) return 0;
+  const hrs = b.photographerHours || 2;
+  return 300 + Math.max(0, hrs - 2) * 150;
+}
+
+function PhotographerBadge({ needPhotographer, photographerHours, bookingType }: { needPhotographer?: boolean; photographerHours?: number; bookingType: string }) {
+  if (bookingType !== "private_event") return <span className="text-secondary text-xs">—</span>;
+  const hours = photographerHours || 2;
+  const cost = 300 + Math.max(0, hours - 2) * 150;
+  return (
+    <span className={cn(
+      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold whitespace-nowrap shrink-0",
+      needPhotographer
+        ? "bg-[#C8A96A]/15 text-[#E8CB8A] border-[#C8A96A]/30"
+        : "bg-surface-container text-secondary border-outline-variant/20"
+    )}>
+      <Camera className="w-2.5 h-2.5" />
+      {needPhotographer ? `Photo ${hours}h ($${cost})` : "No Photo"}
     </span>
   );
 }
@@ -194,6 +234,7 @@ export default function AdminBookingsPage() {
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [selectedProofModal, setSelectedProofModal] = useState<{ url: string; booking: Booking; proofType?: "deposit" | "balance" } | null>(null);
+  const [quoteModalBooking, setQuoteModalBooking] = useState<Booking | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -428,270 +469,383 @@ export default function AdminBookingsPage() {
         </div>
       </div>
 
-      {/* Bookings Table / Mobile Cards */}
-      <div className="rounded-xl shadow-sm border border-outline-variant/10 bg-surface-container-lowest overflow-hidden">
-        {filtered.length === 0 ? (
-          <p className="p-10 text-center font-body text-secondary italic text-sm">
-            No records found for this category.
-          </p>
-        ) : (
-          <>
-            {/* Mobile Card Layout (Visible on Small Screens) */}
-            <div className="block md:hidden divide-y divide-outline-variant/10">
-              {filtered.map((b, i) => (
-                <div key={b._id} className="p-5 space-y-4 hover:bg-surface-container/30 transition-colors">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono text-secondary font-bold">#{(page - 1) * 10 + i + 1}</span>
-                      <CategoryBadge status={b.status} paymentStatus={b.paymentStatus} />
-                      <TypeBadge type={b.bookingType} />
-                    </div>
-                    <StatusBadge status={b.status} />
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <h3 className="font-headline text-lg italic text-on-surface">
-                        {b.customerName || b.user?.name}
-                      </h3>
-                      <OccasionBadge occasion={b.occasion} />
-                    </div>
-                    <p className="text-xs text-secondary font-body">{b.customerEmail || b.user?.email}</p>
-                    <p className="text-xs font-mono text-secondary">{b.customerPhone || "—"}</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 p-3 rounded-lg bg-surface-container/40 text-xs font-body">
-                    <div>
-                      <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Event Date</span>
-                      <span className="text-on-surface font-semibold">{formatDate(b.bookingDate)}</span>
-                      <span className="text-[10px] text-secondary block">{b.bookingTime}</span>
-                    </div>
-                    <div>
-                      <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Party / Tables</span>
-                      <span className="text-on-surface font-semibold">{b.partySize} pax</span>
-                      <span className="text-[10px] text-primary block font-bold">
-                        {b.bookingType === "private_event" ? "Full Venue" : (b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—")}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Tried Date</span>
-                      <span className="text-secondary text-[10px]">{formatDateTime(b.createdAt)}</span>
-                    </div>
-                    <div>
-                      <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Amount &amp; Payment</span>
-                      <span className="font-headline text-sm italic text-on-surface">${b.totalAmount}</span>
-                      <div className="mt-0.5">
-                        <PaymentBadge
-                          status={b.paymentStatus}
-                          remainingStatus={b.remainingPaymentStatus}
-                          paymentMethod={b.paymentMethod}
-                          zelleVerificationStatus={b.zelleVerificationStatus}
-                        />
-                      </div>
-                    </div>
-                    {b.bookingType === "private_event" && (
-                      <div className="col-span-2 pt-2 border-t border-outline-variant/10 space-y-2">
-                        <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Event Preferences</span>
-                        <div className="flex flex-wrap gap-2">
-                          <DjBadge needDj={b.needDj} bookingType={b.bookingType} />
-                          <CateringBadge cateringMenu={b.cateringMenu} bookingType={b.bookingType} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-end gap-2 pt-2 flex-wrap">
-                    {b.zelleProofUrl && (
-                      <button
-                        onClick={() => setSelectedProofModal({ url: b.zelleProofUrl!, booking: b, proofType: "deposit" })}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-purple-300 bg-purple-50 text-purple-800 text-[9px] uppercase tracking-widest font-bold hover:bg-purple-100 transition-colors"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        Deposit Proof
-                      </button>
-                    )}
-                    {b.remainingZelleProofUrl && (
-                      <button
-                        onClick={() => setSelectedProofModal({ url: b.remainingZelleProofUrl!, booking: b, proofType: "balance" })}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-300 bg-blue-50 text-blue-800 text-[9px] uppercase tracking-widest font-bold hover:bg-blue-100 transition-colors"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        Balance Proof
-                      </button>
-                    )}
-                    {b.paymentMethod === "zelle" && b.zelleVerificationStatus !== "verified" && (
-                      <button
-                        onClick={() => handleVerifyZelle(b._id, "verify")}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-emerald-300 bg-emerald-50 text-emerald-800 text-[9px] uppercase tracking-widest font-bold hover:bg-emerald-100 transition-colors"
-                      >
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                        Verify Zelle
-                      </button>
-                    )}
-                    {b.status === "confirmed" && (
-                      <button
-                        onClick={() => setPendingAction({ bookingId: b._id, action: "cancel" })}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-200 text-red-600 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50 transition-colors"
-                      >
-                        <XCircle className="w-3.5 h-3.5" strokeWidth={2} />
-                        Cancel
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setPendingAction({ bookingId: b._id, action: "delete" })}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-700 text-red-700 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50/50 transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Desktop Table Layout (Visible on Medium+ Screens) */}
-            <div className="hidden md:block overflow-x-auto w-full" style={{ WebkitOverflowScrolling: "touch" }}>
-              <table className="min-w-[1280px] w-full text-left">
-                <thead className="bg-surface-container border-b border-outline-variant/10">
-                  <tr>
-                    {["#", "Category", "Type", "Guest Name", "Occasion", "Email", "Phone", "Event Date", "Tried Date", "Time", "Party", "Tables", "DJ", "Catering Menu", "Amount", "Payment", "Status", "Actions"].map(h => (
-                      <th key={h} className="px-3 py-3 text-[9px] uppercase tracking-widest text-outline font-bold whitespace-nowrap">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/10">
+      {/* Full Width Bookings Table */}
+      <div className="w-full space-y-4">
+          <div className="rounded-xl shadow-sm border border-outline-variant/10 bg-surface-container-lowest overflow-hidden">
+            {filtered.length === 0 ? (
+              <p className="p-10 text-center font-body text-secondary italic text-sm">
+                No records found for this category.
+              </p>
+            ) : (
+              <>
+                {/* Mobile Card Layout (Visible on Small Screens) */}
+                <div className="block md:hidden divide-y divide-outline-variant/10">
                   {filtered.map((b, i) => (
-                    <tr key={b._id} className="hover:bg-surface-container/50 transition-colors">
-                      <td className="px-3 py-2.5 font-body text-xs text-secondary">{(page - 1) * 10 + i + 1}</td>
-                      <td className="px-3 py-2.5"><CategoryBadge status={b.status} paymentStatus={b.paymentStatus} /></td>
-                      <td className="px-3 py-2.5"><TypeBadge type={b.bookingType} /></td>
-                      <td className="px-3 py-2.5 font-headline text-sm italic text-on-surface whitespace-nowrap">
-                        {b.customerName || b.user?.name}
-                      </td>
-                      <td className="px-3 py-2.5"><OccasionBadge occasion={b.occasion} /></td>
-                      <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap">
-                        {b.customerEmail || b.user?.email}
-                      </td>
-                      <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap font-mono">
-                        {b.customerPhone || "—"}
-                      </td>
-                      <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap">
-                        {formatDate(b.bookingDate)}
-                      </td>
-                      <td className="px-3 py-2.5 font-body text-[10px] text-secondary whitespace-nowrap">
-                        {formatDateTime(b.createdAt)}
-                      </td>
-                      <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap">
-                        <div className="flex flex-col">
-                          <span>{b.bookingTime}</span>
-                          {b.bookingType === "private_event" && (
-                            <span className="text-[9px] text-primary font-bold uppercase tracking-widest">
-                              {b.durationHours}h
+                    <div
+                      key={b._id}
+                      className="p-5 space-y-4 hover:bg-surface-container/30 transition-colors"
+                    >
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono text-secondary font-bold">#{(page - 1) * 10 + i + 1}</span>
+                            <CategoryBadge status={b.status} paymentStatus={b.paymentStatus} />
+                            <TypeBadge type={b.bookingType} />
+                          </div>
+                          <StatusBadge status={b.status} />
+                        </div>
+
+                        <div className="space-y-1">
+                          <div className="flex items-baseline justify-between gap-2">
+                            <h3 className="font-headline text-lg italic text-on-surface">
+                              {b.customerName || b.user?.name}
+                            </h3>
+                            <OccasionBadge occasion={b.occasion} />
+                          </div>
+                          <p className="text-xs text-secondary font-body">{b.customerEmail || b.user?.email}</p>
+                          <p className="text-xs font-mono text-secondary">{b.customerPhone || "—"}</p>
+                        </div>
+
+                        {b.offerPrice && (
+                          <div className="p-2.5 rounded-lg bg-gold-gradient/10 border border-primary/20 flex items-center justify-between text-xs">
+                            <span className="text-[10px] uppercase font-bold text-primary">Negotiated Offer Quote:</span>
+                            <span className="font-headline italic font-bold text-primary">${b.offerPrice.toFixed(2)}</span>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-3 p-3 rounded-lg bg-surface-container/40 text-xs font-body">
+                          <div>
+                            <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Event Date</span>
+                            <span className="text-on-surface font-semibold">{formatDate(b.bookingDate)}</span>
+                            <span className="text-[10px] text-secondary block">{b.bookingTime}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Party / Tables</span>
+                            <span className="text-on-surface font-semibold">{b.partySize} pax</span>
+                            <span className="text-[10px] text-primary block font-bold">
+                              {b.bookingType === "private_event" ? "Full Venue" : (b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—")}
                             </span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Tried Date</span>
+                            <span className="text-secondary text-[10px]">{formatDateTime(b.createdAt)}</span>
+                          </div>
+                          <div>
+                            <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Amount &amp; Payment</span>
+                            <span className="font-headline text-sm italic text-on-surface">${b.totalAmount}</span>
+                            {b.bookingType === "private_event" && (
+                              <div className="flex flex-wrap gap-1 mt-0.5">
+                                {b.needDj && (
+                                  <span className="text-[8px] font-bold text-primary bg-primary/10 border border-primary/20 px-1 py-0.2 rounded">
+                                    Incl. DJ (+$300)
+                                  </span>
+                                )}
+                                {b.needPhotographer && (
+                                  <span className="text-[8px] font-bold text-[#C8A96A] bg-[#C8A96A]/10 border border-[#C8A96A]/25 px-1 py-0.2 rounded">
+                                    Incl. 📷 Photo (+${getPhotographerCost(b)})
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            <div className="mt-0.5">
+                              <PaymentBadge
+                                status={b.paymentStatus}
+                                remainingStatus={b.remainingPaymentStatus}
+                                paymentMethod={b.paymentMethod}
+                                zelleVerificationStatus={b.zelleVerificationStatus}
+                              />
+                            </div>
+                          </div>
+                          {b.bookingType === "private_event" && (
+                            <div className="col-span-2 pt-2 border-t border-outline-variant/10 space-y-2">
+                              <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Event Preferences</span>
+                              <div className="flex flex-wrap gap-2">
+                                <DjBadge needDj={b.needDj} bookingType={b.bookingType} />
+                                <PhotographerBadge needPhotographer={b.needPhotographer} photographerHours={b.photographerHours} bookingType={b.bookingType} />
+                                <CateringBadge cateringMenu={b.cateringMenu} bookingType={b.bookingType} />
+                              </div>
+                            </div>
                           )}
                         </div>
-                      </td>
-                      <td className="px-3 py-2.5 font-body text-xs text-secondary">{b.partySize} pax</td>
-                      <td className="px-3 py-2.5 font-body text-xs font-bold text-primary italic whitespace-nowrap">
-                        {b.bookingType === "private_event" ? (
-                          <span className="text-[9px] uppercase tracking-widest bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">Full Venue</span>
-                        ) : (
-                          b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—"
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        <DjBadge needDj={b.needDj} bookingType={b.bookingType} />
-                      </td>
-                      <td className="px-3 py-2.5 max-w-[180px]">
-                        <CateringBadge cateringMenu={b.cateringMenu} bookingType={b.bookingType} />
-                      </td>
-                      <td className="px-3 py-2.5">
-                        {b.bookingType === "private_event" ? (
-                          <div className="flex flex-col">
-                            <span className="font-headline text-sm italic text-on-surface whitespace-nowrap">${b.totalAmount} <span className="text-[9px] text-outline font-sans not-italic">Total</span></span>
-                            {(b.depositAmount ?? 0) > 0 && <span className="text-[9px] text-primary uppercase tracking-widest font-bold whitespace-nowrap">${b.depositAmount} Dep.</span>}
-                            {(b.remainingAmount ?? 0) > 0 && <span className="text-[9px] text-blue-600 uppercase tracking-widest font-bold whitespace-nowrap">${b.remainingAmount} Bal.</span>}
-                          </div>
-                        ) : (
-                          <span className="font-headline text-sm italic text-on-surface">${b.totalAmount}</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <PaymentBadge
-                          status={b.paymentStatus}
-                          remainingStatus={b.remainingPaymentStatus}
-                          paymentMethod={b.paymentMethod}
-                          zelleVerificationStatus={b.zelleVerificationStatus}
-                        />
-                      </td>
-                      <td className="px-3 py-2.5"><StatusBadge status={b.status} /></td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5 flex-nowrap">
-                          {/* Deposit Proof - icon only */}
+
+                        <div className="flex items-center justify-end gap-2 pt-2 flex-wrap">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setQuoteModalBooking(b);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary/40 bg-primary/10 text-primary text-[9px] uppercase tracking-widest font-bold hover:bg-primary/20 transition-colors"
+                          >
+                            <DollarSign className="w-3.5 h-3.5" />
+                            Offer Quote
+                          </button>
                           {b.zelleProofUrl && (
                             <button
-                              onClick={() => setSelectedProofModal({ url: b.zelleProofUrl!, booking: b, proofType: "deposit" })}
-                              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-purple-300 bg-purple-50 text-purple-800 text-[9px] font-bold hover:bg-purple-100 transition-colors"
-                              title="Deposit Proof"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedProofModal({ url: b.zelleProofUrl!, booking: b, proofType: "deposit" });
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-purple-300 bg-purple-50 text-purple-800 text-[9px] uppercase tracking-widest font-bold hover:bg-purple-100 transition-colors"
                             >
-                              <Eye className="w-3 h-3" />
-                              <span className="hidden lg:inline">Dep.</span>
+                              <Eye className="w-3.5 h-3.5" />
+                              Deposit Proof
                             </button>
                           )}
-                          {/* Balance Proof - icon only */}
                           {b.remainingZelleProofUrl && (
                             <button
-                              onClick={() => setSelectedProofModal({ url: b.remainingZelleProofUrl!, booking: b, proofType: "balance" })}
-                              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-blue-300 bg-blue-50 text-blue-800 text-[9px] font-bold hover:bg-blue-100 transition-colors"
-                              title="Balance Proof"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedProofModal({ url: b.remainingZelleProofUrl!, booking: b, proofType: "balance" });
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-300 bg-blue-50 text-blue-800 text-[9px] uppercase tracking-widest font-bold hover:bg-blue-100 transition-colors"
                             >
-                              <Eye className="w-3 h-3" />
-                              <span className="hidden lg:inline">Bal.</span>
+                              <Eye className="w-3.5 h-3.5" />
+                              Balance Proof
                             </button>
                           )}
-                          {/* Verify Zelle */}
                           {b.paymentMethod === "zelle" && b.zelleVerificationStatus !== "verified" && (
                             <button
-                              onClick={() => handleVerifyZelle(b._id, "verify")}
-                              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 text-[9px] font-bold hover:bg-emerald-100 transition-colors"
-                              title="Verify Zelle Payment"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleVerifyZelle(b._id, "verify");
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-emerald-300 bg-emerald-50 text-emerald-800 text-[9px] uppercase tracking-widest font-bold hover:bg-emerald-100 transition-colors"
                             >
-                              <ShieldCheck className="w-3 h-3" />
-                              <span className="hidden lg:inline">Verify</span>
+                              <ShieldCheck className="w-3.5 h-3.5" />
+                              Verify Zelle
                             </button>
                           )}
-                          {/* Cancel */}
                           {b.status === "confirmed" && (
                             <button
-                              onClick={() => setPendingAction({ bookingId: b._id, action: "cancel" })}
-                              className="flex items-center gap-1 px-2 py-1 rounded-lg border border-red-200 text-red-600 text-[9px] font-bold hover:bg-red-50 transition-colors"
-                              title="Cancel Booking"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPendingAction({ bookingId: b._id, action: "cancel" });
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-200 text-red-600 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50 transition-colors"
                             >
-                              <XCircle className="w-3 h-3" strokeWidth={2} />
-                              <span className="hidden lg:inline">Cancel</span>
+                              <XCircle className="w-3.5 h-3.5" strokeWidth={2} />
+                              Cancel
                             </button>
                           )}
-                          {/* Delete */}
                           <button
-                            onClick={() => setPendingAction({ bookingId: b._id, action: "delete" })}
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg border border-red-700 text-red-700 text-[9px] font-bold hover:bg-red-50/50 transition-colors"
-                            title="Delete Booking"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPendingAction({ bookingId: b._id, action: "delete" });
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-700 text-red-700 text-[9px] uppercase tracking-widest font-bold hover:bg-red-50/50 transition-colors"
                           >
-                            <span className="hidden lg:inline">Delete</span>
-                            <span className="lg:hidden text-[10px]">✕</span>
+                            Delete
                           </button>
                         </div>
-                      </td>
+                      </div>
+                    ))}
+                </div>
 
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-      </div>
+                {/* Desktop Table Layout (Visible on Medium+ Screens) */}
+                <div className="hidden md:block overflow-x-auto w-full" style={{ WebkitOverflowScrolling: "touch" }}>
+                  <table className="min-w-[1280px] w-full text-left">
+                    <thead className="bg-surface-container border-b border-outline-variant/10">
+                      <tr>
+                        {["#", "Category", "Type", "Guest Name", "Occasion", "Email", "Phone", "Event Date", "Tried Date", "Time", "Party", "Tables", "DJ", "Photo", "Catering Menu", "Amount & Offer", "Payment", "Status", "Actions"].map(h => (
+                          <th key={h} className="px-3 py-3 text-[9px] uppercase tracking-widest text-outline font-bold whitespace-nowrap">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-outline-variant/10">
+                      {filtered.map((b, i) => (
+                        <tr
+                          key={b._id}
+                          className="hover:bg-surface-container/50 transition-colors"
+                        >
+                            <td className="px-3 py-2.5 font-body text-xs text-secondary">{(page - 1) * 10 + i + 1}</td>
+                            <td className="px-3 py-2.5"><CategoryBadge status={b.status} paymentStatus={b.paymentStatus} /></td>
+                            <td className="px-3 py-2.5"><TypeBadge type={b.bookingType} /></td>
+                            <td className="px-3 py-2.5 font-headline text-sm italic text-on-surface whitespace-nowrap">
+                              {b.customerName || b.user?.name}
+                            </td>
+                            <td className="px-3 py-2.5"><OccasionBadge occasion={b.occasion} /></td>
+                            <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap">
+                              {b.customerEmail || b.user?.email}
+                            </td>
+                            <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap font-mono">
+                              {b.customerPhone || "—"}
+                            </td>
+                            <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap">
+                              {formatDate(b.bookingDate)}
+                            </td>
+                            <td className="px-3 py-2.5 font-body text-[10px] text-secondary whitespace-nowrap">
+                              {formatDateTime(b.createdAt)}
+                            </td>
+                            <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap">
+                              <div className="flex flex-col">
+                                <span>{b.bookingTime}</span>
+                                {b.bookingType === "private_event" && (
+                                  <span className="text-[9px] text-primary font-bold uppercase tracking-widest">
+                                    {b.durationHours}h
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2.5 font-body text-xs text-secondary">{b.partySize} pax</td>
+                            <td className="px-3 py-2.5 font-body text-xs font-bold text-primary italic whitespace-nowrap">
+                              {b.bookingType === "private_event" ? (
+                                <span className="text-[9px] uppercase tracking-widest bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">Full Venue</span>
+                              ) : (
+                                b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—"
+                              )}
+                            </td>
+                            <td className="px-3 py-2.5 whitespace-nowrap">
+                              <DjBadge needDj={b.needDj} bookingType={b.bookingType} />
+                            </td>
+                            <td className="px-3 py-2.5 whitespace-nowrap">
+                              <PhotographerBadge needPhotographer={b.needPhotographer} photographerHours={b.photographerHours} bookingType={b.bookingType} />
+                            </td>
+                            <td className="px-3 py-2.5 max-w-[180px]">
+                              <CateringBadge cateringMenu={b.cateringMenu} bookingType={b.bookingType} />
+                            </td>
+                            <td className="px-3 py-2.5">
+                              <div className="flex flex-col">
+                                <span className="font-headline text-sm italic text-on-surface whitespace-nowrap">${b.totalAmount}</span>
+                                {b.bookingType === "private_event" && (
+                                  <div className="flex flex-col gap-0.5 pt-0.5">
+                                    {b.needDj && (
+                                      <span className="text-[8px] font-bold text-primary bg-primary/10 border border-primary/20 px-1 py-0.2 rounded whitespace-nowrap inline-block">
+                                        Incl. DJ (+$300)
+                                      </span>
+                                    )}
+                                    {b.needPhotographer && (
+                                      <span className="text-[8px] font-bold text-[#C8A96A] bg-[#C8A96A]/10 border border-[#C8A96A]/25 px-1 py-0.2 rounded whitespace-nowrap inline-block">
+                                        Incl. 📷 Photo (+${getPhotographerCost(b)})
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                                {b.offerPrice ? (
+                                  <span className="text-[9px] text-amber-700 bg-amber-50 border border-amber-200 px-1 py-0.5 rounded font-mono font-bold mt-0.5 inline-block">
+                                    Offer: ${b.offerPrice}
+                                  </span>
+                                ) : null}
+                                {b.bookingType === "private_event" && (
+                                  <div className="flex gap-1 pt-0.5">
+                                    {(b.depositAmount ?? 0) > 0 && <span className="text-[9px] text-primary uppercase tracking-widest font-bold whitespace-nowrap">${b.depositAmount} Dep.</span>}
+                                    {(b.remainingAmount ?? 0) > 0 && <span className="text-[9px] text-blue-600 uppercase tracking-widest font-bold whitespace-nowrap">${b.remainingAmount} Bal.</span>}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2.5">
+                              <PaymentBadge
+                                status={b.paymentStatus}
+                                remainingStatus={b.remainingPaymentStatus}
+                                paymentMethod={b.paymentMethod}
+                                zelleVerificationStatus={b.zelleVerificationStatus}
+                              />
+                            </td>
+                            <td className="px-3 py-2.5"><StatusBadge status={b.status} /></td>
+                            <td className="px-3 py-2.5 whitespace-nowrap">
+                              <div className="flex items-center gap-1.5 flex-nowrap">
+                                {/* Offer Quote action */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setQuoteModalBooking(b);
+                                  }}
+                                  className="flex items-center gap-1 px-2 py-1 rounded-lg border border-primary/40 bg-primary/10 text-primary text-[9px] font-bold hover:bg-primary/20 transition-colors"
+                                  title="Edit Offer Quote"
+                                >
+                                  <DollarSign className="w-3 h-3" />
+                                  <span className="hidden lg:inline">Quote</span>
+                                </button>
+                                {/* Deposit Proof - icon only */}
+                                {b.zelleProofUrl && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedProofModal({ url: b.zelleProofUrl!, booking: b, proofType: "deposit" });
+                                    }}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg border border-purple-300 bg-purple-50 text-purple-800 text-[9px] font-bold hover:bg-purple-100 transition-colors"
+                                    title="Deposit Proof"
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                    <span className="hidden lg:inline">Dep.</span>
+                                  </button>
+                                )}
+                                {/* Balance Proof - icon only */}
+                                {b.remainingZelleProofUrl && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedProofModal({ url: b.remainingZelleProofUrl!, booking: b, proofType: "balance" });
+                                    }}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg border border-blue-300 bg-blue-50 text-blue-800 text-[9px] font-bold hover:bg-blue-100 transition-colors"
+                                    title="Balance Proof"
+                                  >
+                                    <Eye className="w-3 h-3" />
+                                    <span className="hidden lg:inline">Bal.</span>
+                                  </button>
+                                )}
+                                {/* Verify Zelle */}
+                                {b.paymentMethod === "zelle" && b.zelleVerificationStatus !== "verified" && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleVerifyZelle(b._id, "verify");
+                                    }}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg border border-emerald-300 bg-emerald-50 text-emerald-800 text-[9px] font-bold hover:bg-emerald-100 transition-colors"
+                                    title="Verify Zelle Payment"
+                                  >
+                                    <ShieldCheck className="w-3 h-3" />
+                                    <span className="hidden lg:inline">Verify</span>
+                                  </button>
+                                )}
+                                {/* Cancel */}
+                                {b.status === "confirmed" && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setPendingAction({ bookingId: b._id, action: "cancel" });
+                                    }}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg border border-red-200 text-red-600 text-[9px] font-bold hover:bg-red-50 transition-colors"
+                                    title="Cancel Booking"
+                                  >
+                                    <XCircle className="w-3 h-3" strokeWidth={2} />
+                                    <span className="hidden lg:inline">Cancel</span>
+                                  </button>
+                                )}
+                                {/* Delete */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setPendingAction({ bookingId: b._id, action: "delete" });
+                                  }}
+                                  className="flex items-center gap-1 px-2 py-1 rounded-lg border border-red-700 text-red-700 text-[9px] font-bold hover:bg-red-50/50 transition-colors"
+                                  title="Delete Booking"
+                                >
+                                  <span className="hidden lg:inline">Delete</span>
+                                  <span className="lg:hidden text-[10px]">✕</span>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+      {/* Offer Quote Modal */}
+      {quoteModalBooking && (
+        <OfferQuoteModal
+          isOpen={!!quoteModalBooking}
+          booking={quoteModalBooking}
+          onClose={() => setQuoteModalBooking(null)}
+          onSuccess={() => void load()}
+        />
+      )}
 
       {/* Zelle Proof Lightbox Modal */}
       {selectedProofModal && (

@@ -12,11 +12,11 @@ export function useAuth() {
   const router = useRouter();
   const { setAuth, clearAuth } = useAuthStore();
 
-  const sendOTP = async (phone: string) => {
+  const sendOTP = async (phone: string, details?: { name?: string; email?: string }) => {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await api.post("/auth/send-otp", { phone });
+      const { data } = await api.post("/auth/send-otp", { phone, ...details });
       return data;
     } catch (err: any) {
       const msg = err.response?.data?.message || "Failed to send OTP via SMS";

@@ -16,6 +16,8 @@ import {
   Lock,
   Wrench,
   Ticket,
+  UtensilsCrossed,
+  DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -72,7 +74,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, clearAuth } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "owner";
+  const isOwnerOrAdmin =
+    isAdmin &&
+    !user?.name?.toLowerCase().includes("sarah") &&
+    !user?.email?.toLowerCase().includes("sarah");
 
   // Close mobile menu on path change
   useEffect(() => {
@@ -89,7 +95,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   const adminNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
+    ...(isOwnerOrAdmin
+      ? [{ icon: DollarSign, label: "Financials", href: "/admin/financials" }]
+      : []),
     { icon: CalendarDays, label: "Bookings", href: "/admin/bookings" },
+    { icon: UtensilsCrossed, label: "Restaurants & Catering", href: "/admin/catering" },
     { icon: TableProperties, label: "Tables", href: "/admin/tables" },
     { icon: CreditCard, label: "Payments", href: "/admin/payments" },
     { icon: Lock, label: "Slot Locks", href: "/admin/locks" },
@@ -100,7 +110,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const userNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/user" },
     { icon: CalendarDays, label: "Reservations", href: "/user/bookings" },
-    { icon: TableProperties, label: "Venue Bookings", href: "/user/venue-bookings" },
+    { icon: UtensilsCrossed, label: "Venue Bookings", href: "/user/venue-bookings" },
     { icon: User, label: "Dining Profile", href: "/user/profile" },
   ];
 

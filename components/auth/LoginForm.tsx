@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Smartphone } from "lucide-react";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -38,6 +38,12 @@ export function LoginForm() {
     } finally {
       setEmailLoading(false);
     }
+  };
+
+  const handleOtpSuccess = (user: any) => {
+    toast.success("Welcome back!");
+    const destination = user?.role === "admin" ? "/admin" : "/user";
+    window.location.assign(destination);
   };
 
   return (
@@ -86,6 +92,28 @@ export function LoginForm() {
           {emailLoading ? "Authenticating..." : "Sign In"}
         </Button>
       </form>
+
+      <div className="relative py-2">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-white/10" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-[#0b1410] px-3 text-white/50 font-semibold tracking-wider">Alternative Access</span>
+        </div>
+      </div>
+
+      <div className="p-4 rounded-xl bg-black/50 border border-dashed border-[#C8A96A]/30 text-center space-y-1.5">
+        <div className="flex items-center justify-center gap-2 text-[#E8CB8A] text-xs font-bold uppercase tracking-wider">
+          <Smartphone className="w-3.5 h-3.5 text-[#C8A96A]" />
+          <span>Phone SMS Sign In</span>
+          <span className="text-[9px] bg-amber-400/20 text-amber-300 border border-amber-400/30 px-1.5 py-0.5 rounded-full font-semibold">
+            Coming Soon
+          </span>
+        </div>
+        <p className="text-[11px] text-white/60 font-light">
+          SMS authentication is currently in development. Please sign in with your email and password above.
+        </p>
+      </div>
     </div>
   );
 }

@@ -3,7 +3,8 @@ export interface User {
   name: string;
   email: string;
   phone?: string;
-  role: "user" | "admin";
+  role: "user" | "admin" | "owner" | "staff";
+  isPhoneVerified?: boolean;
 }
 
 export interface AuthResponse {
@@ -17,6 +18,17 @@ export interface Table {
   tableNumber: number;
   capacity: 2 | 4;
   isAvailable: boolean;
+}
+
+export interface QuoteHistoryItem {
+  action: "inquiry_created" | "quote_sent" | "quote_accepted" | "quote_rejected" | "menu_updated";
+  actor: "admin" | "user";
+  actorName?: string;
+  price?: number;
+  notes?: string;
+  cateringMenu?: string;
+  dishes?: string[];
+  createdAt: string;
 }
 
 export interface Booking {
@@ -44,8 +56,32 @@ export interface Booking {
   remainingPaymentStatus?: "unpaid" | "paid";
   durationHours?: number;
   needDj?: boolean;
+  needPhotographer?: boolean;
+  photographerHours?: number;
   cateringMenu?: string;
+  offerPrice?: number;
+  negotiationNotes?: string;
+  offerStatus?: "pending" | "offered" | "accepted" | "declined";
+  foodBasePrice?: number;
+  foodServiceFee?: number;
+  foodPaymentStatus?: "unpaid" | "paid" | "pending_verification";
+  foodPaymentMethod?: "card" | "zelle";
+  foodZelleProofUrl?: string;
+  foodPaidAt?: string;
+  quoteHistory?: QuoteHistoryItem[];
   paymentMethod?: "card" | "zelle";
+  paymentBreakdown?: Array<{
+    _id?: string;
+    amount: number;
+    paymentMethod: "card" | "zelle";
+    paymentType: "deposit" | "balance_partial" | "balance_full" | "food_catering";
+    status: "verified" | "pending";
+    transactionId?: string;
+    proofUrl?: string;
+    iterationIndex?: number;
+    notes?: string;
+    paidAt: string;
+  }>;
   zelleProofUrl?: string;
   remainingZelleProofUrl?: string;
   zelleVerificationStatus?: "none" | "pending_ghl_verification" | "verified" | "mismatched" | "manual_review";
