@@ -11,12 +11,6 @@ interface StepOccasionSelectionProps {
 
 const occasionOptions = [
   {
-    id: "baby_shower",
-    label: "Baby Shower / Baby Event",
-    icon: Baby,
-    desc: "Celebrating a new arrival or family gathering. We ensure special high-comfort seating and tailored arrangements."
-  },
-  {
     id: "birthday",
     label: "Birthday Celebration",
     icon: Cake,
@@ -27,6 +21,12 @@ const occasionOptions = [
     label: "Anniversary",
     icon: Sparkles,
     desc: "A celebration of enduring love. We will arrange a prime table with special commemorative touches."
+  },
+  {
+    id: "baby_shower",
+    label: "Baby Shower / Baby Event",
+    icon: Baby,
+    desc: "Celebrating a new arrival or family gathering. We ensure special high-comfort seating and tailored arrangements."
   },
   {
     id: "celebration",
