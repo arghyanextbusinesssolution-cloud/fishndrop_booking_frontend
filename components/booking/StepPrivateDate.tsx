@@ -146,8 +146,8 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
                 <span className="text-white/60 text-[11px]">(Complimentary welcome champagne)</span>
               </p>
               <p className="flex items-center gap-2">
-                <span className="text-white font-bold">$300 Deposit</span>
-                <span className="text-white/60 text-[11px]">(Secures date &amp; time; ${(calculatedCost - 300).toLocaleString()} balance due 72h prior)</span>
+                <span className="text-white font-bold">$200 Deposit</span>
+                <span className="text-white/60 text-[11px]">(Secures date &amp; time; ${(calculatedCost - 200).toLocaleString()} balance due 72h prior)</span>
               </p>
             </div>
           </div>

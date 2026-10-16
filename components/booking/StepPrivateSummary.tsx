@@ -42,11 +42,11 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
   const [isValidating, setIsValidating] = useState(false);
 
   const finalCost = appliedCoupon ? Math.max(0, baseCost - appliedCoupon.discountAmount) : baseCost;
-  const minDeposit = Math.min(finalCost, 300);
+  const minDeposit = Math.min(finalCost, 200);
   const [customDeposit, setCustomDeposit] = useState<number>(minDeposit);
 
   useEffect(() => {
-    setCustomDeposit(Math.min(finalCost, 300));
+    setCustomDeposit(Math.min(finalCost, 200));
   }, [finalCost]);
 
   const handleApplyCoupon = async () => {
@@ -214,7 +214,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
     if (bookingId) {
       try {
         fetch(
-          "https://services.leadconnectorhq.com/hooks/3HmJCw40C6xzJYaLg6cK/webhook-trigger/68dcac67-ddc2-4765-87d7-9034ebe33001",
+          "https://services.leadconnectorhq.com/hooks/3HmJCw40C6xzJYaLg6cK/webhook-trigger/bc6da1e0-2155-4d01-a223-318afd60c723",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -553,7 +553,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
               onClick={() => setShowPolicyModal(true)}
               className="text-[10px] sm:text-[11px] text-[#C8A96A] underline font-semibold flex items-center justify-center gap-1.5 w-full hover:text-[#0F4C3A]"
             >
-              View Booking &amp; Payment Policy ($300 Deposit / 48-Hour Refund)
+              View Booking &amp; Payment Policy ($200 Deposit / 48-Hour Refund)
             </button>
 
             <button

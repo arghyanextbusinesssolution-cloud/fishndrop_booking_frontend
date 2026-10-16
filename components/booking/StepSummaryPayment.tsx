@@ -292,7 +292,7 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
               <div className="p-3 bg-white/80 rounded-lg border border-purple-100 space-y-1.5 text-xs text-purple-900">
                 <p className="font-bold text-[11px] text-purple-950">📋 Instructions:</p>
                 <ol className="list-decimal pl-4 space-y-1 text-[11px] text-gray-700">
-                  <li>Send exact amount <strong className="text-purple-950">${finalPrice.toFixed(2)}</strong> via Zelle to email <span className="font-mono font-bold">tropicapayments@gmail.com</span></li>
+                  <li>Send deposit of <strong className="text-purple-950">${depositDue.toFixed(2)}</strong> (or full amount of ${finalPrice.toFixed(2)}) via Zelle to email <span className="font-mono font-bold">tropicapayments@gmail.com</span></li>
                   <li>Paste your generated <strong className="text-purple-950">Booking ID</strong> in your Zelle payment memo/notes.</li>
                   <li>Upload payment screenshot proof below.</li>
                   <li>Booking stays <span className="font-bold text-amber-600">Pending</span> until the backend team verifies your payment, Booking ID &amp; amount, and confirms your slot!</li>
