@@ -31,11 +31,11 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
   const { setAuth } = useAuthStore();
 
   const djCost = bookingData.needDj ? 300 : 0;
-  const extraHours = (bookingData.durationHours || 5) > 5 ? (bookingData.durationHours - 5) * 300 : 0;
+  const extraHours = (bookingData.durationHours || 5) > 5 ? (bookingData.durationHours - 5) * 125 : 0;
   const photographerCost = bookingData.needPhotographer
     ? 300 + Math.max(0, (bookingData.photographerHours || 2) - 2) * 150
     : 0;
-  const baseCost = 1500 + extraHours + djCost + photographerCost;
+  const baseCost = 500 + extraHours + djCost + photographerCost;
   const [submitting, setSubmitting] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
@@ -278,19 +278,33 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
         <div className="bg-[#f7f6f2] rounded-xl p-4 sm:p-6 shadow-lg space-y-4">
 
           {/* Deposit / Total Header */}
-          <div className="flex justify-between items-center gap-3">
-            <div>
-              <p className="font-label text-[9px] sm:text-[10px] tracking-[0.2em] uppercase text-[#1a1c1b]/60 font-bold leading-tight">Deposit Limit</p>
-              <p className="font-headline text-3xl sm:text-5xl text-[#C8A96A] font-bold tracking-tighter">
-                ${customDeposit.toFixed(2)}
-              </p>
-            </div>
-            <div className="text-right border-l border-black/10 pl-3">
-              <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-[#1a1c1b]/60">Total Cost</p>
-              <p className="font-semibold text-sm sm:text-base text-[#1a1c1b]">${finalCost.toFixed(2)}</p>
+          <div className="space-y-3 border-b border-black/10 pb-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="font-label text-[9px] sm:text-[10px] tracking-[0.2em] uppercase text-[#1a1c1b]/60 font-bold leading-tight">Total Venue Package</p>
+                <p className="font-headline text-2xl sm:text-4xl text-[#1a1c1b] font-bold tracking-tighter">${finalCost.toFixed(2)}</p>
+                <p className="text-[10px] text-[#1a1c1b]/50 font-light mt-0.5">$500 base (5 hrs) · $125/extra hr</p>
+              </div>
               {appliedCoupon && (
-                <p className="text-[10px] text-gray-500 line-through">Orig: ${baseCost.toFixed(2)}</p>
+                <div className="text-right">
+                  <p className="text-[9px] tracking-widest uppercase text-emerald-600 font-bold">Discount Applied</p>
+                  <p className="font-semibold text-xs sm:text-sm text-emerald-600">-${appliedCoupon.discountAmount.toFixed(2)}</p>
+                  <p className="text-[10px] text-gray-500 line-through">Orig: ${baseCost.toFixed(2)}</p>
+                </div>
               )}
+            </div>
+            {/* Deposit breakdown */}
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <div className="bg-[#C8A96A]/10 border border-[#C8A96A]/30 rounded-xl p-3">
+                <p className="text-[9px] uppercase tracking-widest text-[#C8A96A] font-bold">Due Today (Deposit)</p>
+                <p className="font-headline text-2xl text-[#C8A96A] font-bold">${customDeposit.toFixed(2)}</p>
+                <p className="text-[9px] text-[#1a1c1b]/50 mt-0.5">Secures your venue date &amp; time</p>
+              </div>
+              <div className="bg-black/5 border border-black/10 rounded-xl p-3">
+                <p className="text-[9px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">Remaining Balance</p>
+                <p className="font-headline text-2xl text-[#1a1c1b] font-bold">${Math.max(0, finalCost - customDeposit).toFixed(2)}</p>
+                <p className="text-[9px] text-[#1a1c1b]/40 mt-0.5">Due 72 hrs before event</p>
+              </div>
             </div>
           </div>
 

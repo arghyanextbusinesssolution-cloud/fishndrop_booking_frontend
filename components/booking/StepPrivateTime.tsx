@@ -80,7 +80,7 @@ export const StepPrivateTime = ({ onNext, date, durationHours, selectedTime }: S
         <div className="flex items-center gap-4">
           <span className="font-headline italic text-[#C8A96A] text-base">03.</span>
           <div className="h-[1px] w-8 bg-white/20"></div>
-          <span className="font-label uppercase tracking-widest text-[10px] text-white/50 font-bold">Step 03 of 06 &bull; Time Slot</span>
+          <span className="font-label uppercase tracking-widest text-[10px] text-white/50 font-bold">Step 03 of 07 &bull; Time Slot</span>
         </div>
         <h2 className="font-headline italic text-4xl md:text-5xl text-white leading-tight">
           When shall we <span className="text-gold-gradient">begin?</span>

@@ -81,7 +81,7 @@ export const StepOccasionSelection = ({ onNext, selectedOccasion }: StepOccasion
     <div className="space-y-12">
       <div className="text-center md:text-left space-y-4">
         <span className="font-label tracking-[0.2em] text-[#C8A96A] text-[10px] uppercase mb-2 block font-bold transition-all animate-in fade-in slide-in-from-left-4 duration-500">
-          Step 04 of 06 &bull; The Celebration Type
+          Step 04 of 07 &bull; The Celebration Type
         </span>
         <h1 className="font-headline italic text-5xl md:text-7xl mb-6 tracking-tight text-on-surface">
           04. <span className="text-gold-gradient">The Occasion</span>

@@ -44,15 +44,15 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
     }
   };
 
-  const calculatedCost = 1500 + (durationHours > 5 ? (durationHours - 5) * 300 : 0);
+  const calculatedCost = 500 + (durationHours > 5 ? (durationHours - 5) * 125 : 0);
 
   return (
     <div className="space-y-8 animate-fade-in">
       <header className="space-y-3">
         <div className="flex items-center gap-4">
-          <span className="font-headline italic text-[#C8A96A] text-base">02.</span>
+          <span className="font-headline italic text-[#C8A96A] text-base">01.</span>
           <div className="h-[1px] w-8 bg-white/20"></div>
-          <span className="font-label uppercase tracking-widest text-[10px] text-white/50 font-bold">Step 02 of 06 &bull; Calendar Date &amp; Package</span>
+          <span className="font-label uppercase tracking-widest text-[10px] text-white/50 font-bold">Step 01 of 07 &bull; Calendar Date &amp; Package</span>
         </div>
         <h2 className="font-headline italic text-4xl md:text-5xl text-white leading-tight">
           Reserve Our <span className="text-gold-gradient">Sanctuary</span>
@@ -120,8 +120,8 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
               className="w-full accent-primary"
             />
             <div className="flex justify-between text-xs text-white/40 font-mono">
-              <span>5 Hours ($1,500 Base)</span>
-              <span>12 Hours ($300/Extra Hr)</span>
+              <span>5 Hours ($500 Base)</span>
+              <span>12 Hours ($125/Extra Hr)</span>
             </div>
           </div>
 
@@ -138,7 +138,7 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
               <p className="flex items-center gap-2">
                 <span className="text-[#C8A96A] font-bold">✓ {durationHours} Hours Total</span>
                 <span className="text-white/60 text-[11px]">
-                  {durationHours > 5 ? `(5 hrs base + ${durationHours - 5} extra hrs @ $300/hr)` : "(5 hours base venue buyout)"}
+                  {durationHours > 5 ? `(5 hrs base + ${durationHours - 5} extra hrs @ $125/hr)` : "(5 hours base venue buyout)"}
                 </span>
               </p>
               <p className="flex items-center gap-2">

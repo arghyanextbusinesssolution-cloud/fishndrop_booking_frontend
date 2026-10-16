@@ -127,25 +127,18 @@ export const PrivateBookingWizard = () => {
   };
 
   const steps = [
-    { num: 1, title: "Guest Details" },
-    { num: 2, title: "Calendar Date" },
+    { num: 1, title: "Calendar Date" },
+    { num: 2, title: "Guest Details" },
     { num: 3, title: "Time Slot" },
     { num: 4, title: "Occasion" },
     { num: 5, title: "Preferences & DJ" },
     { num: 6, title: "Curate Menu" },
-    { num: 7, title: "Payment ($300 Deposit)" }
+    { num: 7, title: "Payment ($200 Deposit)" }
   ];
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return (
-          <StepGuestDetails
-            onNext={handleNext}
-            initialData={bookingData.guestDetails}
-          />
-        );
-      case 2:
         return (
           <StepPrivateDate
             onNext={handleNext}
@@ -154,6 +147,13 @@ export const PrivateBookingWizard = () => {
               guests: bookingData.guests,
               durationHours: bookingData.durationHours
             }}
+          />
+        );
+      case 2:
+        return (
+          <StepGuestDetails
+            onNext={handleNext}
+            initialData={bookingData.guestDetails}
           />
         );
       case 3:
