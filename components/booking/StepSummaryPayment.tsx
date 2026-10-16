@@ -35,7 +35,10 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
   const [isValidating, setIsValidating] = useState(false);
 
+  const DEPOSIT_AMOUNT = 200; // $200 deposit
   const finalPrice = appliedCoupon ? Math.max(0, totalPrice - appliedCoupon.discountAmount) : totalPrice;
+  const depositDue = Math.min(DEPOSIT_AMOUNT, finalPrice);
+  const remainingBalance = Math.max(0, finalPrice - depositDue);
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -204,18 +207,35 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
 
       {!clientSecret && !bookingId && !submitting && (
         <div className="space-y-4 bg-[#f7f6f2] rounded-xl p-4 sm:p-6 shadow-lg">
-          <div className="flex justify-between items-center gap-3 border-b border-black/10 pb-3">
-            <div>
-              <p className="font-label text-[9px] sm:text-[10px] tracking-[0.2em] uppercase text-[#1a1c1b]/60 font-bold leading-tight">Total Amount</p>
-              <p className="font-headline text-3xl sm:text-5xl text-[#C8A96A] font-bold tracking-tighter">${finalPrice.toFixed(2)}</p>
-            </div>
-            {appliedCoupon && (
-              <div className="text-right">
-                <p className="text-[9px] tracking-widest uppercase text-emerald-600 font-bold">Discount Applied</p>
-                <p className="font-semibold text-xs sm:text-sm text-emerald-600">-${appliedCoupon.discountAmount.toFixed(2)}</p>
-                <p className="text-[10px] text-gray-500 line-through">Orig: ${totalPrice.toFixed(2)}</p>
+          <div className="space-y-3 border-b border-black/10 pb-4">
+            {/* Total Package */}
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="font-label text-[9px] sm:text-[10px] tracking-[0.2em] uppercase text-[#1a1c1b]/60 font-bold leading-tight">Total Package Price</p>
+                <p className="font-headline text-2xl sm:text-4xl text-[#1a1c1b] font-bold tracking-tighter">${finalPrice.toFixed(2)}</p>
+                <p className="text-[10px] text-[#1a1c1b]/50 font-light mt-0.5">$500 base (5 hrs) · $125/extra hr</p>
               </div>
-            )}
+              {appliedCoupon && (
+                <div className="text-right">
+                  <p className="text-[9px] tracking-widest uppercase text-emerald-600 font-bold">Discount Applied</p>
+                  <p className="font-semibold text-xs sm:text-sm text-emerald-600">-${appliedCoupon.discountAmount.toFixed(2)}</p>
+                  <p className="text-[10px] text-gray-500 line-through">Orig: ${totalPrice.toFixed(2)}</p>
+                </div>
+              )}
+            </div>
+            {/* Deposit breakdown */}
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <div className="bg-[#C8A96A]/10 border border-[#C8A96A]/30 rounded-xl p-3">
+                <p className="text-[9px] uppercase tracking-widest text-[#C8A96A] font-bold">Due Today (Deposit)</p>
+                <p className="font-headline text-2xl text-[#C8A96A] font-bold">${depositDue.toFixed(2)}</p>
+                <p className="text-[9px] text-[#1a1c1b]/50 mt-0.5">Secures your reservation</p>
+              </div>
+              <div className="bg-black/5 border border-black/10 rounded-xl p-3">
+                <p className="text-[9px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">Remaining Balance</p>
+                <p className="font-headline text-2xl text-[#1a1c1b] font-bold">${remainingBalance.toFixed(2)}</p>
+                <p className="text-[9px] text-[#1a1c1b]/40 mt-0.5">Due 72 hrs before event</p>
+              </div>
+            </div>
           </div>
 
           {/* Payment Method Selector */}
@@ -349,7 +369,7 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
             onClick={() => setShowPolicyModal(true)}
             className="text-[11px] text-[#C8A96A] underline font-semibold flex items-center justify-center gap-1.5 w-full mb-3 hover:text-white"
           >
-            View Booking &amp; Payment Policy (${finalPrice.toFixed(2)} Hold)
+            View Booking &amp; Payment Policy ($200 Deposit)
           </button>
 
           <button
@@ -362,8 +382,8 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
             }`}
           >
             {paymentMethod === "zelle"
-              ? `Confirm & Pay with Zelle ($${finalPrice.toFixed(2)})`
-              : `Confirm & Reserve ($${finalPrice.toFixed(2)})`}
+              ? `Confirm & Pay $${depositDue.toFixed(2)} Deposit via Zelle`
+              : `Confirm & Pay $${depositDue.toFixed(2)} Deposit`}
           </button>
         </div>
       )}
@@ -372,7 +392,9 @@ export const StepSummaryPayment = ({ bookingData, onBack, goToStep }: StepSummar
         isOpen={showPolicyModal}
         onClose={() => setShowPolicyModal(false)}
         onAccept={handleReserve}
-        amount={finalPrice}
+        amount={depositDue}
+        totalPrice={finalPrice}
+        remainingBalance={remainingBalance}
       />
 
       {error && (

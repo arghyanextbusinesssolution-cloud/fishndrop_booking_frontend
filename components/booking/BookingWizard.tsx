@@ -12,6 +12,7 @@ import { ConfirmationModal } from "@/components/shared/ConfirmationModal";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 // Step Components
+import { StepDateSelection } from "./StepDateSelection";
 import { StepTimeSelection } from "./StepTimeSelection";
 import { StepGuestCount } from "./StepGuestCount";
 import { StepTableSelection } from "./StepTableSelection";
@@ -61,7 +62,7 @@ export const BookingWizard = () => {
 
   const STORAGE_KEY = "tropica_wizard_progress";
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(1);
   const [isRestoring, setIsRestoring] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [splitDialogOpen, setSplitDialogOpen] = useState(false);
@@ -97,7 +98,7 @@ export const BookingWizard = () => {
       try {
         const { step: savedStep, data: savedData } = JSON.parse(saved);
         const resolvedDate = initialDate || savedData?.date || defaultDate;
-        setStep(savedStep || 2);
+        setStep(savedStep || 1);
         setBookingData({
           ...savedData,
           date: resolvedDate,
@@ -188,12 +189,13 @@ export const BookingWizard = () => {
 
   const handleNext = (data: any) => {
     const updatedData = { ...bookingData, ...data };
-    const basePrice = updatedData.guests * 40;
+    // Flat pricing: $500 base (5 hrs), $125/extra hr, $200 deposit charged
+    const BASE_PRICE = 500;
     const oldCakePrice = updatedData.addons.includes("cake") ? 50 : 0;
     const customCakePrice = updatedData.addons.includes("custom_cake") && updatedData.customCakeDetails ? updatedData.customCakeDetails.retailPrice : 0;
-    const finalPrice = basePrice + oldCakePrice + customCakePrice;
+    const finalPrice = BASE_PRICE + oldCakePrice + customCakePrice;
 
-    if (step === 2 && updatedData.guests === 5 && !chairConsentOpen) {
+    if (step === 3 && updatedData.guests === 5 && !chairConsentOpen) {
       setBookingData({ ...updatedData, totalPrice: finalPrice });
       setChairConsentOpen(true);
       return;
@@ -201,13 +203,14 @@ export const BookingWizard = () => {
 
     setBookingData({ ...updatedData, totalPrice: finalPrice });
     let nextStep = step + 1;
-    if (nextStep === 5 && user && updatedData.guestDetails.phone) nextStep = 6;
+    // Step 6 = GuestDetails, skip if user already verified (has phone)
+    if (nextStep === 6 && user && updatedData.guestDetails.phone) nextStep = 7;
 
     const needsCakeStep = updatedData.addons.includes("custom_cake");
-    const maxSteps = needsCakeStep ? 9 : 8;
+    const maxSteps = needsCakeStep ? 10 : 9;
 
     if (step < maxSteps) {
-      if (step === 7 && !needsCakeStep) setStep(maxSteps);
+      if (step === 8 && !needsCakeStep) setStep(maxSteps);
       else setStep(nextStep);
       scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } else {
@@ -217,12 +220,13 @@ export const BookingWizard = () => {
 
   const handleBack = () => {
     let prevStep = step - 1;
-    if (prevStep === 5 && user && bookingData.guestDetails.phone) prevStep = 4;
+    // Step 6 = GuestDetails, skip if user already verified
+    if (prevStep === 6 && user && bookingData.guestDetails.phone) prevStep = 5;
 
     const needsCakeStep = bookingData.addons.includes("custom_cake");
-    if (step === (needsCakeStep ? 9 : 8)) prevStep = needsCakeStep ? 8 : 7;
+    if (step === (needsCakeStep ? 10 : 9)) prevStep = needsCakeStep ? 9 : 8;
 
-    if (step > 2) {
+    if (step > 1) {
       setStep(prevStep);
       scrollContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -234,10 +238,11 @@ export const BookingWizard = () => {
     router.push("/");
   };
 
-  const steps = ["Date", "Time", "Guests", "Table", "Details", "Occasion", "Add-ons", "Payment"];
+  const steps = ["Date", "Guests", "Time", "Table", "Details", "Occasion", "Add-ons", "Payment"];
 
   const renderStep = () => {
     switch (step) {
+      case 1: return <StepDateSelection onNext={handleNext} selectedDate={bookingData.date} />;
       case 2: return <StepGuestCount onNext={handleNext} selectedGuests={bookingData.guests} />;
       case 3: return <StepTimeSelection onNext={handleNext} selectedTime={bookingData.time} date={bookingData.date} guests={bookingData.guests} />;
       case 4: return <StepTableSelection onNext={handleNext} selectedTable={bookingData.table} guests={bookingData.guests} assignedNote={bookingData.assignedNote} />;
@@ -313,11 +318,11 @@ export const BookingWizard = () => {
           {/* Progress Stepper */}
           <div className="max-w-4xl w-full mb-4 sm:mb-8 px-2 shrink-0">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] font-bold">Step {step} of 8</span>
-              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] font-bold">{Math.round((step / 8) * 100)}%</span>
+              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] font-bold">Step {step} of 9</span>
+              <span className="font-label text-[10px] uppercase tracking-[0.2em] text-[#C8A96A] font-bold">{Math.round((step / 9) * 100)}%</span>
             </div>
             <div className="h-1 w-full bg-[#333534] rounded-full overflow-hidden">
-              <div className="h-full bg-[#C8A96A] transition-all duration-1000 ease-out" style={{ width: `${(step / 8) * 100}%` }}></div>
+              <div className="h-full bg-[#C8A96A] transition-all duration-1000 ease-out" style={{ width: `${(step / 9) * 100}%` }}></div>
             </div>
           </div>
 

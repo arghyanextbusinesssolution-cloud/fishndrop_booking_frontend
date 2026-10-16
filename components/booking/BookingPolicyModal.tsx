@@ -46,8 +46,8 @@ export const BookingPolicyModal = ({
 
   if (!isOpen || !mounted) return null;
 
-  const depositVal = amount !== undefined ? amount : 300;
-  const totalVal = totalPrice !== undefined ? totalPrice : (1500 + (durationHours > 5 ? (durationHours - 5) * 300 : 0));
+  const depositVal = amount !== undefined ? amount : 200;
+  const totalVal = totalPrice !== undefined ? totalPrice : (500 + (durationHours > 5 ? (durationHours - 5) * 125 : 0));
   const remainingVal = remainingBalance !== undefined ? remainingBalance : Math.max(0, totalVal - depositVal);
 
   const displayDeposit = `$${depositVal.toFixed(2)}`;
@@ -93,7 +93,7 @@ export const BookingPolicyModal = ({
                 Tropica Venue Buyout — <span className="text-[#C8A96A]">{displayTotal} Total</span>
               </p>
               <p className="text-xs text-white/70 mt-0.5">
-                Includes <strong className="text-white">{durationHours} hours venue buyout</strong> (5 hrs base @ $1,500{durationHours > 5 ? ` + ${durationHours - 5} extra hrs @ $300/hr` : ""}) &amp; <strong className="text-white">2 complimentary bottles of champagne</strong>.
+                Includes <strong className="text-white">{durationHours} hours venue experience</strong> ($500 base for 5 hrs{durationHours > 5 ? ` + ${durationHours - 5} extra hr${durationHours - 5 > 1 ? 's' : ''} @ $125/hr` : ""}) &amp; <strong className="text-white">2 complimentary bottles of champagne</strong>.
               </p>
               {(needDj || needPhotographer) && (
                 <div className="flex flex-wrap gap-2 pt-1 text-[11px] text-[#E8CB8A]">
