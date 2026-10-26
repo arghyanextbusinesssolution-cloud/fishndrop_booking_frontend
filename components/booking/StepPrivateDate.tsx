@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Calendar } from "@/components/booking/Calendar";
 import { Users, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,7 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
   const [guests, setGuests] = useState<number>(initialData.guests || 2);
   const [durationHours, setDurationHours] = useState<number>(initialData.durationHours || 5);
   const [maxCapacity, setMaxCapacity] = useState<number>(50);
+  const nextSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchCapacity = async () => {
@@ -33,6 +34,16 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
     };
     fetchCapacity();
   }, []);
+
+  const handleDateSelect = (selectedDate: Date) => {
+    setDate(selectedDate);
+    // Mobile only: scroll down smoothly to the next step / package options
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setTimeout(() => {
+        nextSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 120);
+    }
+  };
 
   const handleNext = () => {
     if (date) {
@@ -70,12 +81,12 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
           <div className="bg-[#1a1c1b] rounded-2xl p-6 border border-[#C8A96A]/10 shadow-[0_0_30px_rgba(0,0,0,0.3)]">
             <Calendar
               selectedDate={date || null}
-              onSelect={setDate}
+              onSelect={handleDateSelect}
             />
           </div>
         </div>
 
-        <div className="space-y-8">
+        <div ref={nextSectionRef} className="space-y-8 scroll-mt-24">
           {/* Guest Count */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">

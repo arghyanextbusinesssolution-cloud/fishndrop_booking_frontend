@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Calendar } from "./Calendar";
 import { ArrowRight } from "lucide-react";
 
@@ -26,9 +26,16 @@ const parseDateStr = (dateStr: string | null): Date | null => {
 
 export const StepDateSelection = ({ onNext, selectedDate }: StepDateSelectionProps) => {
   const [picked, setPicked] = useState<Date | null>(parseDateStr(selectedDate));
+  const ctaSectionRef = useRef<HTMLDivElement>(null);
 
   const handleSelect = (date: Date) => {
     setPicked(date);
+    // Mobile only: scroll down smoothly to the continue button
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setTimeout(() => {
+        ctaSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 120);
+    }
   };
 
   const handleContinue = () => {
@@ -61,28 +68,29 @@ export const StepDateSelection = ({ onNext, selectedDate }: StepDateSelectionPro
         <Calendar onSelect={handleSelect} selectedDate={picked} />
       </div>
 
-      {/* Selected date badge */}
-      {picked && (
-        <div className="flex justify-center md:justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="inline-flex items-center gap-3 px-5 py-3 rounded-full border border-[#C8A96A]/30 bg-[#C8A96A]/10">
-            <div className="w-2 h-2 rounded-full bg-[#C8A96A] animate-pulse" />
-            <span className="font-label text-[11px] uppercase tracking-widest text-[#C8A96A] font-bold">
-              {formattedPicked}
-            </span>
+      {/* Selected date badge & Confirm CTA (Target for mobile auto-scroll) */}
+      <div ref={ctaSectionRef} className="space-y-6 scroll-mt-20">
+        {picked && (
+          <div className="flex justify-center md:justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="inline-flex items-center gap-3 px-5 py-3 rounded-full border border-[#C8A96A]/30 bg-[#C8A96A]/10">
+              <div className="w-2 h-2 rounded-full bg-[#C8A96A] animate-pulse" />
+              <span className="font-label text-[11px] uppercase tracking-widest text-[#C8A96A] font-bold">
+                {formattedPicked}
+              </span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Confirm CTA */}
-      <div className="flex justify-center md:justify-start">
-        <button
-          onClick={handleContinue}
-          disabled={!picked}
-          className="group relative inline-flex items-center gap-4 bg-[#E5E7EB] text-[#111412] font-label text-[10px] tracking-[0.25em] uppercase py-5 px-12 rounded-lg shadow-2xl shadow-black/40 hover:bg-white hover:scale-[1.05] active:scale-95 transition-all duration-700 font-bold disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
-        >
-          Proceed to Guest Count
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-        </button>
+        <div className="flex justify-center md:justify-start">
+          <button
+            onClick={handleContinue}
+            disabled={!picked}
+            className="group relative inline-flex items-center gap-4 bg-[#E5E7EB] text-[#111412] font-label text-[10px] tracking-[0.25em] uppercase py-5 px-12 rounded-lg shadow-2xl shadow-black/40 hover:bg-white hover:scale-[1.05] active:scale-95 transition-all duration-700 font-bold disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >
+            Proceed to Guest Count
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+        </div>
       </div>
     </div>
   );

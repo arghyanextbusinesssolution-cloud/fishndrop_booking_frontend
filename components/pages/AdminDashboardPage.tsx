@@ -7,7 +7,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { Booking, TableStats } from "@/types";
 import api from "@/lib/axios";
 import { useAuthStore } from "@/store/authStore";
-import { cn } from "@/lib/utils";
+import { cn, formatTimeTo12Hour } from "@/lib/utils";
 import Link from "next/link";
 import { TrendingUp, TrendingDown, Zap, Calendar, Users, LayoutGrid, Download, DollarSign, ArrowUpRight } from "lucide-react";
 import { exportBookingsToCSV } from "@/lib/exportCsv";
@@ -328,7 +328,7 @@ export default function AdminDashboardPage() {
                         <td className="px-4 py-4 font-body text-xs text-secondary whitespace-nowrap font-mono">{b.customerPhone || "—"}</td>
                         <td className="px-4 py-4 font-body text-sm text-secondary whitespace-nowrap">{formatDate(b.bookingDate)}</td>
                         <td className="px-4 py-4 font-body text-xs text-secondary whitespace-nowrap">{formatDateTime(b.createdAt)}</td>
-                        <td className="px-4 py-4 font-body text-sm text-secondary">{b.bookingTime}</td>
+                        <td className="px-4 py-4 font-body text-sm text-secondary">{formatTimeTo12Hour(b.bookingTime)}</td>
                         <td className="px-4 py-4 font-body text-sm text-secondary">{b.partySize} pax</td>
                         <td className="px-4 py-4 font-body text-sm font-bold text-primary italic whitespace-nowrap">
                           {b.bookingType === "private_event" ? "Full Venue" : (b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—")}

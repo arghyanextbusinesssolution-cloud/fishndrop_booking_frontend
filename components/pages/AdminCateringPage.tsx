@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAdmin } from "@/hooks/useAdmin";
 import { Booking } from "@/types";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { cn } from "@/lib/utils";
+import { cn, formatTimeTo12Hour } from "@/lib/utils";
 import api from "@/lib/axios";
 import {
   UtensilsCrossed,
@@ -538,7 +538,7 @@ export default function AdminCateringPage() {
                       <span className="text-[10px] uppercase tracking-wider text-outline block font-bold">Event Date &amp; Time</span>
                       <span className="font-semibold text-on-surface text-sm">{formatDate(b.bookingDate)}</span>
                       <span className="block text-[11px] text-outline">
-                        {b.bookingTime} ({b.durationHours || 5} Hours Buyout)
+                        {formatTimeTo12Hour(b.bookingTime)} ({b.durationHours || 5} Hours Buyout)
                       </span>
                     </div>
 
@@ -1092,7 +1092,7 @@ export default function AdminCateringPage() {
                       {/* Date & Time */}
                       <td className="px-4 py-4 align-top space-y-0.5 whitespace-nowrap">
                         <div className="font-medium text-on-surface">{formatDate(b.bookingDate)}</div>
-                        <div className="text-[11px] text-secondary">{b.bookingTime} ({b.durationHours || 5}h)</div>
+                        <div className="text-[11px] text-secondary">{formatTimeTo12Hour(b.bookingTime)} ({b.durationHours || 5}h)</div>
                       </td>
 
                       {/* Party */}

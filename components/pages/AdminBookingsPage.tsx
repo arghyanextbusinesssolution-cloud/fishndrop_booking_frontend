@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAdmin } from "@/hooks/useAdmin";
 import { Booking } from "@/types";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { cn } from "@/lib/utils";
+import { cn, formatTimeTo12Hour } from "@/lib/utils";
 import api from "@/lib/axios";
 import {
   CalendarDays,
@@ -564,7 +564,7 @@ export default function AdminBookingsPage() {
                           <div>
                             <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Event Date</span>
                             <span className="text-on-surface font-semibold">{formatDate(b.bookingDate)}</span>
-                            <span className="text-[10px] text-secondary block">{b.bookingTime}</span>
+                            <span className="text-[10px] text-secondary block">{formatTimeTo12Hour(b.bookingTime)}</span>
                           </div>
                           <div>
                             <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Party / Tables</span>
@@ -746,7 +746,7 @@ export default function AdminBookingsPage() {
                             </td>
                             <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap">
                               <div className="flex flex-col">
-                                <span>{b.bookingTime}</span>
+                                <span className="font-medium text-on-surface">{formatTimeTo12Hour(b.bookingTime)}</span>
                                 {b.bookingType === "private_event" && (
                                   <span className="text-[9px] text-primary font-bold uppercase tracking-widest">
                                     {b.durationHours}h

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/axios";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { cn } from "@/lib/utils";
+import { cn, formatTimeTo12Hour } from "@/lib/utils";
 import toast from "react-hot-toast";
 import {
   DollarSign,
@@ -681,7 +681,7 @@ export default function AdminFinancialsPage() {
                       <td className="p-4 text-white/70">{item.eventType}</td>
                       <td className="p-4">
                         <div>{new Date(item.eventDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
-                        <div className="text-[11px] text-white/40">{item.bookingTime}</div>
+                        <div className="text-[11px] text-white/40">{formatTimeTo12Hour(item.bookingTime)}</div>
                       </td>
                       <td className="p-4 font-semibold text-white">${item.contractedAmount.toLocaleString()}</td>
                       <td className="p-4 text-emerald-400 font-semibold">${item.amountPaid.toLocaleString()}</td>
