@@ -214,6 +214,7 @@ export default function UserVenueBookingsPage() {
                       const isDepositPending = isZelle && booking.zelleVerificationStatus !== "verified" && !isDepositPaid;
 
                       const rowCatering = parseCateringDetails(booking);
+                      const hasRowPartnerCatering = Boolean(booking.cateringMenu && booking.cateringMenu !== "none" && booking.cateringMenu !== "no_catering");
                       const rowTables = booking.tables || [];
 
                       return (
@@ -326,9 +327,21 @@ export default function UserVenueBookingsPage() {
                             <div className="flex flex-wrap items-center gap-1.5">
                               <span className={cn(
                                 "px-2 py-0.5 rounded-full text-[9px] uppercase tracking-widest font-extrabold border",
-                                isZelle ? "bg-purple-500/10 text-purple-300 border-purple-500/30" : "bg-primary/10 text-primary border-primary/20"
+                                booking.paymentMethod === "cash"
+                                  ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+                                  : booking.paymentMethod === "zelle"
+                                  ? "bg-purple-500/10 text-purple-300 border-purple-500/30"
+                                  : booking.paymentMethod === "bank_transfer"
+                                  ? "bg-blue-500/10 text-blue-300 border-blue-500/30"
+                                  : "bg-primary/10 text-primary border-primary/20"
                               )}>
-                                {isZelle ? "⚡ Zelle" : "💳 Card"}
+                                {booking.paymentMethod === "cash"
+                                  ? "💵 Cash"
+                                  : booking.paymentMethod === "zelle"
+                                  ? "⚡ Zelle"
+                                  : booking.paymentMethod === "bank_transfer"
+                                  ? "🏦 Transfer"
+                                  : "💳 Card"}
                               </span>
 
                               {isFullyPaid ? (
@@ -402,7 +415,7 @@ export default function UserVenueBookingsPage() {
                             )}
 
                             {/* Quote Proposal Alert & Decision Card */}
-                            {booking.offerPrice ? (
+                            {hasRowPartnerCatering && booking.offerPrice ? (
                               <div className={cn(
                                 "p-3 rounded-xl border space-y-2 text-xs",
                                 booking.offerStatus === "accepted"
@@ -564,9 +577,9 @@ export default function UserVenueBookingsPage() {
                                 </div>
                                 <div className="px-3 py-2 space-y-1 text-[11px]">
                                   <div className="flex justify-between items-center text-[10px] text-stone-400 pb-1 border-b border-blue-500/10">
-                                    <span>Venue Total Inclusions:</span>
+                                    <span>Venue Inclusions:</span>
                                     <span className="text-[#C8A96A] font-semibold">
-                                      $1,000 Base
+                                      ${((booking.durationHours || 5) * 100).toLocaleString()} Base ({booking.durationHours || 5}h)
                                       {booking.needDj ? " + $300 DJ" : ""}
                                       {booking.needPhotographer ? ` + $${300 + Math.max(0, (booking.photographerHours || 2) - 2) * 150} Photo` : ""}
                                     </span>
@@ -581,6 +594,22 @@ export default function UserVenueBookingsPage() {
                                       {isFullyPaid ? "$0.00 (Settled)" : `$${remainingAmt.toFixed(2)} ${isBalancePending ? "(Pending)" : "(Due)"}`}
                                     </span>
                                   </div>
+                                  {booking.paymentDueDate && !isFullyPaid && remainingAmt > 0 && (
+                                    <div className="flex justify-between items-center pt-1 border-t border-blue-500/10 text-[10px]">
+                                      <span className="text-stone-400 flex items-center gap-1">
+                                        <Clock className="w-3 h-3 text-amber-400" />
+                                        <span>Payment Due:</span>
+                                      </span>
+                                      <span className="font-semibold text-amber-300">
+                                        {new Date(booking.paymentDueDate).toLocaleDateString("en-US", {
+                                          month: "short",
+                                          day: "numeric",
+                                          hour: "numeric",
+                                          minute: "2-digit"
+                                        })}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
@@ -619,12 +648,12 @@ export default function UserVenueBookingsPage() {
                                     </div>
                                   </div>
                                 </div>
-                              ) : (
+                              ) : hasRowPartnerCatering ? (
                                 <div className="rounded-lg border border-outline-variant/10 bg-surface-container-low/30 px-3 py-2 flex justify-between items-center text-[11px]">
                                   <span className="text-outline">🍽️ Food Quote:</span>
                                   <span className="text-amber-400 font-bold">Not sent yet</span>
                                 </div>
-                              )}
+                              ) : null}
 
                               {/* Total Paid Row */}
                               <div className="flex justify-between items-center px-1 pt-1 border-t border-outline-variant/10 text-[11px] font-bold">
@@ -690,18 +719,19 @@ export default function UserVenueBookingsPage() {
                               </span>
                             ) : (
                               <div className="flex flex-col items-end gap-2">
-                                {!isFullyPaid && (
+                                {!isFullyPaid && remainingAmt > 0 && (
                                   <Link
                                     href={`/user/payment?is_balance=true&bookingId=${booking._id}`}
                                     onClick={(e) => e.stopPropagation()}
                                     className={cn(
-                                      "inline-flex items-center justify-center px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all shadow-sm",
+                                      "inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all shadow-sm",
                                       isBalancePending
                                         ? "bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30"
-                                        : "bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30"
+                                        : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30"
                                     )}
                                   >
-                                    {isBalancePending ? "Installment" : "Pay Balance"}
+                                    <CreditCard className="w-3 h-3" />
+                                    <span>{isBalancePending ? "Installment" : `Pay Balance ($${remainingAmt.toFixed(0)})`}</span>
                                   </Link>
                                 )}
 
@@ -751,6 +781,7 @@ export default function UserVenueBookingsPage() {
                   const isDepositPending = isZelle && booking.zelleVerificationStatus !== "verified" && !isDepositPaid;
 
                   const cardCatering = parseCateringDetails(booking);
+                  const hasCardPartnerCatering = Boolean(booking.cateringMenu && booking.cateringMenu !== "none" && booking.cateringMenu !== "no_catering");
                   const cardTables = booking.tables || [];
 
                   return (
@@ -835,7 +866,7 @@ export default function UserVenueBookingsPage() {
                       </div>
 
                       {/* Quote Proposal Alert & Decision Card for Guest */}
-                      {booking.offerPrice ? (
+                      {hasCardPartnerCatering && booking.offerPrice ? (
                         <div className={cn(
                           "p-3.5 rounded-xl border space-y-2.5 text-xs",
                           booking.offerStatus === "accepted"
@@ -979,9 +1010,21 @@ export default function UserVenueBookingsPage() {
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className={cn(
                             "px-2 py-0.5 rounded-full text-[9px] uppercase tracking-widest font-extrabold border",
-                            isZelle ? "bg-purple-500/10 text-purple-300 border-purple-500/30" : "bg-primary/10 text-primary border-primary/20"
+                            isZelle
+                              ? "bg-purple-500/10 text-purple-300 border-purple-500/30"
+                              : booking.paymentMethod === "cash"
+                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                              : booking.paymentMethod === "bank_transfer"
+                              ? "bg-cyan-500/10 text-cyan-400 border-cyan-500/30"
+                              : "bg-primary/10 text-primary border-primary/20"
                           )}>
-                            {isZelle ? "⚡ Zelle" : "💳 Card"}
+                            {isZelle
+                              ? "⚡ Zelle"
+                              : booking.paymentMethod === "cash"
+                              ? "💵 Cash"
+                              : booking.paymentMethod === "bank_transfer"
+                              ? "🏦 Transfer"
+                              : "💳 Card"}
                           </span>
 
                           {isFullyPaid ? (
@@ -1043,6 +1086,10 @@ export default function UserVenueBookingsPage() {
                               <span>Venue Buyout Reservation</span>
                               <span className="font-mono text-on-surface">${booking.totalAmount?.toFixed(2)}</span>
                             </div>
+                            <div className="flex justify-between items-center text-[10px] text-stone-400">
+                              <span>Duration:</span>
+                              <span className="text-[#C8A96A] font-semibold">${((booking.durationHours || 5) * 100).toLocaleString()} ({booking.durationHours || 5}h @ $100/h)</span>
+                            </div>
                             <div className="flex justify-between items-center text-[11px]">
                               <span className="text-outline">Deposit Paid:</span>
                               <span className="text-emerald-400 font-semibold font-mono">${(booking.depositAmount || 300).toFixed(2)}</span>
@@ -1053,10 +1100,26 @@ export default function UserVenueBookingsPage() {
                                 {isFullyPaid ? "$0.00 (Settled)" : `$${remainingAmt.toFixed(2)} ${isBalancePending ? "(Pending Review)" : "(Due)"}`}
                               </span>
                             </div>
+                            {booking.paymentDueDate && !isFullyPaid && remainingAmt > 0 && (
+                              <div className="flex justify-between items-center pt-1 border-t border-outline-variant/10 text-[10px]">
+                                <span className="text-stone-400 flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-amber-400" />
+                                  <span>Payment Due:</span>
+                                </span>
+                                <span className="font-semibold text-amber-300">
+                                  {new Date(booking.paymentDueDate).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                    hour: "numeric",
+                                    minute: "2-digit"
+                                  })}
+                                </span>
+                              </div>
+                            )}
                           </div>
 
                           {/* Food Catering Section */}
-                          {booking.offerPrice && (
+                          {hasCardPartnerCatering && booking.offerPrice && (
                             <div className="bg-surface-container-low/50 p-2.5 rounded-lg border border-outline-variant/10 space-y-1">
                               <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
                                 <span className="text-primary">Food Catering Package</span>
@@ -1141,12 +1204,18 @@ export default function UserVenueBookingsPage() {
                       {/* Action buttons */}
                       {!isCancelled && (
                         <div className="pt-2 flex flex-wrap gap-2 justify-end">
-                          {!isFullyPaid && (
+                          {!isFullyPaid && remainingAmt > 0 && (
                             <Link
                               href={`/user/payment?is_balance=true&bookingId=${booking._id}`}
-                              className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-colors"
+                              className={cn(
+                                "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all shadow-sm",
+                                isBalancePending
+                                  ? "bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30"
+                                  : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30"
+                              )}
                             >
-                              {isBalancePending ? "Installment" : "Pay Balance"}
+                              <CreditCard className="w-3.5 h-3.5" />
+                              <span>{isBalancePending ? "Installment" : `Pay Balance ($${remainingAmt.toFixed(0)})`}</span>
                             </Link>
                           )}
                           <button

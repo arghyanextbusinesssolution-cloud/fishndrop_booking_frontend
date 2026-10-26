@@ -18,7 +18,9 @@ export function Sidebar({ closeMobile }: { closeMobile?: () => void }) {
     ? [
         { href: "/admin", label: "Dashboard" },
         ...(isOwnerOrAdmin ? [{ href: "/admin/financials", label: "Financials" }] : []),
-        { href: "/admin/bookings", label: "All Bookings" },
+        { href: "/admin/bookings", label: "Bookings" },
+        { href: "/admin/users", label: "Users" },
+        { href: "/admin/manual-booking", label: "Venue Booking" },
         { href: "/admin/catering", label: "Restaurants & Catering" },
         { href: "/admin/tables", label: "Tables" },
         { href: "/admin/coupons", label: "Coupons" }

@@ -497,9 +497,13 @@ export default function AdminCateringPage() {
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-[#C8A96A]/20 text-[#E8CB8A] border border-[#C8A96A]/40">
                             Quoted: ${b.offerPrice.toFixed(2)}
                           </span>
-                        ) : (
+                        ) : (b.cateringMenu && b.cateringMenu !== "none" && b.cateringMenu !== "no_catering") ? (
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-amber-500/10 text-amber-400 border border-amber-500/30">
                             Quote Pending
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest bg-stone-500/10 text-stone-400 border border-stone-500/30">
+                            Self-Managed (No Food Quote)
                           </span>
                         )}
                         {b.status === "cancelled" && (
@@ -721,17 +725,9 @@ export default function AdminCateringPage() {
                                 Inclusions in Venue Total:
                               </span>
                               <div className="flex justify-between items-center text-[11px] text-secondary">
-                                <span>• Base Venue Buyout (5 hrs):</span>
-                                <span className="font-mono text-on-surface font-semibold">$1,000.00</span>
+                                <span>• Base Venue Buyout ({b.durationHours || 5} hrs @ $100/h):</span>
+                                <span className="font-mono text-on-surface font-semibold">${((b.durationHours || 5) * 100).toFixed(2)}</span>
                               </div>
-                              {(b.durationHours || 5) > 5 && (
-                                <div className="flex justify-between items-center text-[11px] text-secondary">
-                                  <span>• Extra Duration ({((b.durationHours || 5) - 5)}h × $125):</span>
-                                  <span className="font-mono text-on-surface font-semibold">
-                                    +${(((b.durationHours || 5) - 5) * 125).toFixed(2)}
-                                  </span>
-                                </div>
-                              )}
                               <div className="flex justify-between items-center text-[11px]">
                                 <span className={b.needDj ? "text-primary font-semibold" : "text-secondary"}>
                                   • DJ Service Setup:
@@ -833,10 +829,15 @@ export default function AdminCateringPage() {
                               </div>
                             </div>
                           </div>
-                        ) : (
+                        ) : (b.cateringMenu && b.cateringMenu !== "none" && b.cateringMenu !== "no_catering") ? (
                           <div className="rounded-xl border border-outline-variant/15 bg-surface-container-low/30 px-4 py-3 flex items-center justify-between text-xs">
                             <span className="text-secondary flex items-center gap-1.5">🍽️ Restaurant Food Catering:</span>
                             <span className="text-amber-400 font-bold">Quote Not Yet Sent</span>
+                          </div>
+                        ) : (
+                          <div className="rounded-xl border border-outline-variant/15 bg-surface-container-low/30 px-4 py-3 flex items-center justify-between text-xs">
+                            <span className="text-secondary flex items-center gap-1.5">🍽️ Restaurant Food Catering:</span>
+                            <span className="text-stone-400 font-bold">Self-Managed / None</span>
                           </div>
                         )}
 
@@ -870,30 +871,33 @@ export default function AdminCateringPage() {
                       )}
                     </div>
 
-                    {/* Quick Quote / Proposal Actions */}
+                    {/* Quick Quote / Proposal Actions + Receipts */}
                     <div className="space-y-2.5">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={(e) => handleOpenInlineQuote(b, e)}
-                          className={cn(
-                            "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm",
-                            isInlineOpen
-                              ? "bg-primary text-black"
-                              : "bg-[#C8A96A] hover:bg-[#d8b97a] text-black"
-                          )}
-                        >
-                          <DollarSign className="w-3.5 h-3.5" />
-                          <span>{b.offerPrice ? "Update Quote" : "Put Quote Details"}</span>
-                        </button>
+                      {/* Quote buttons - only show if partner catering */}
+                      {b.cateringMenu && b.cateringMenu !== "none" && b.cateringMenu !== "no_catering" && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => handleOpenInlineQuote(b, e)}
+                            className={cn(
+                              "flex-1 py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm",
+                              isInlineOpen
+                                ? "bg-primary text-black"
+                                : "bg-[#C8A96A] hover:bg-[#d8b97a] text-black"
+                            )}
+                          >
+                            <DollarSign className="w-3.5 h-3.5" />
+                            <span>{b.offerPrice ? "Update Quote" : "Put Quote Details"}</span>
+                          </button>
 
-                        <button
-                          onClick={() => setQuoteBooking(b)}
-                          className="py-2.5 px-3 rounded-xl text-xs font-bold uppercase tracking-wider border border-outline-variant/20 hover:border-outline-variant/40 text-secondary hover:text-on-surface transition-colors"
-                          title="Open Full Quote Modal"
-                        >
-                          Modal
-                        </button>
-                      </div>
+                          <button
+                            onClick={() => setQuoteBooking(b)}
+                            className="py-2.5 px-3 rounded-xl text-xs font-bold uppercase tracking-wider border border-outline-variant/20 hover:border-outline-variant/40 text-secondary hover:text-on-surface transition-colors"
+                            title="Open Full Quote Modal"
+                          >
+                            Modal
+                          </button>
+                        </div>
+                      )}
 
                       {/* Receipts & Verifications */}
                       <div className="flex items-center gap-2 flex-wrap">

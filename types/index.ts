@@ -7,6 +7,33 @@ export interface User {
   isPhoneVerified?: boolean;
 }
 
+export interface AdminUser {
+  _id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  role: "user" | "admin" | "owner" | "staff";
+  isPhoneVerified?: boolean;
+  totalBookings?: number;
+  venueBookings?: number;
+  lastBookingDate?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface UsersResponse {
+  success: boolean;
+  users: AdminUser[];
+  total: number;
+  page: number;
+  totalPages: number;
+  counts: {
+    totalUsers: number;
+    verifiedUsers: number;
+    adminUsers: number;
+  };
+}
+
 export interface AuthResponse {
   success: boolean;
   token: string;
@@ -69,12 +96,12 @@ export interface Booking {
   foodZelleProofUrl?: string;
   foodPaidAt?: string;
   quoteHistory?: QuoteHistoryItem[];
-  paymentMethod?: "card" | "zelle";
+  paymentMethod?: "card" | "zelle" | "cash" | "bank_transfer" | "other";
   paymentBreakdown?: Array<{
     _id?: string;
     amount: number;
-    paymentMethod: "card" | "zelle";
-    paymentType: "deposit" | "balance_partial" | "balance_full" | "food_catering";
+    paymentMethod: "card" | "zelle" | "cash" | "bank_transfer" | "other";
+    paymentType: "deposit" | "balance_partial" | "balance_full" | "food_catering" | "manual";
     status: "verified" | "pending";
     transactionId?: string;
     proofUrl?: string;
@@ -89,6 +116,12 @@ export interface Booking {
   zelleTransactionId?: string;
   zelleNotes?: string;
   zelleUploadedAt?: string;
+  isManualBooking?: boolean;
+  manualCreatedBy?: string;
+  paymentDueDate?: string;
+  contractedAmount?: number;
+  collectedAmount?: number;
+  outstandingBalance?: number;
   createdAt: string;
 }
 

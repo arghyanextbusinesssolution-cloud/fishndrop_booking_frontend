@@ -18,6 +18,7 @@ import {
   Ticket,
   UtensilsCrossed,
   DollarSign,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -99,6 +100,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       ? [{ icon: DollarSign, label: "Financials", href: "/admin/financials" }]
       : []),
     { icon: CalendarDays, label: "Bookings", href: "/admin/bookings" },
+    { icon: Users, label: "Users", href: "/admin/users" },
     { icon: UtensilsCrossed, label: "Restaurants & Catering", href: "/admin/catering" },
     { icon: TableProperties, label: "Tables", href: "/admin/tables" },
     { icon: CreditCard, label: "Payments", href: "/admin/payments" },

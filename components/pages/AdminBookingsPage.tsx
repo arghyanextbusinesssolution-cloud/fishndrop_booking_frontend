@@ -31,7 +31,8 @@ import {
   ArrowRight,
   Send,
   Loader2,
-  Camera
+  Camera,
+  Plus
 } from "lucide-react";
 import { CalendarDropdown } from "@/components/shared/CalendarDropdown";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -100,6 +101,20 @@ function PaymentBadge({ status, remainingStatus, paymentMethod, zelleVerificatio
           ⚡ Zelle ({zelleVerificationStatus === "verified" ? "Verified" : zelleVerificationStatus === "mismatched" ? "Mismatch" : "Pending GHL"})
         </span>
       </div>
+    );
+  }
+  if (paymentMethod === "cash") {
+    return (
+      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-emerald-50 text-emerald-700 border-emerald-200 whitespace-nowrap inline-flex items-center justify-center shrink-0">
+        💵 Cash
+      </span>
+    );
+  }
+  if (paymentMethod === "bank_transfer") {
+    return (
+      <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-cyan-50 text-cyan-700 border-cyan-200 whitespace-nowrap inline-flex items-center justify-center shrink-0">
+        🏦 Transfer
+      </span>
     );
   }
   if (status === "paid" || (status === "deposit_paid" && remainingStatus === "paid")) {
@@ -213,7 +228,7 @@ const FILTER_TABS = [
   { key: "cancelled", label: "Cancelled", countKey: "cancelled" },
 ] as const;
 
-type PendingAction = { bookingId: string; action: "cancel" | "delete" } | null;
+type PendingAction = { bookingId: string; action: "cancel" | "delete" | "mark_paid" } | null;
 
 export default function AdminBookingsPage() {
   const { getAllBookings, adminCancelBooking, deleteBooking } = useAdmin();
@@ -304,9 +319,21 @@ export default function AdminBookingsPage() {
     if (action === "cancel") {
       await adminCancelBooking(bookingId);
       toast.success("Booking cancelled");
-    } else {
+    } else if (action === "delete") {
       await deleteBooking(bookingId);
       toast.success("Booking deleted successfully");
+    } else if (action === "mark_paid") {
+      try {
+        const { data } = await api.patch(`/admin/bookings/${bookingId}/mark-paid`, {
+          paymentMethod: "cash",
+          notes: "Admin verified as fully paid"
+        });
+        if (data.success) {
+          toast.success("Booking verified & marked as fully paid!");
+        }
+      } catch (err: any) {
+        toast.error(err.response?.data?.message || "Failed to mark booking as fully paid");
+      }
     }
     await load();
   };
@@ -317,15 +344,29 @@ export default function AdminBookingsPage() {
     <div className="p-6 md:p-10 space-y-8 min-h-screen">
       <ConfirmDialog
         open={!!pendingAction}
-        title={pendingAction?.action === "delete" ? "Delete Booking" : "Cancel Booking"}
+        title={
+          pendingAction?.action === "delete"
+            ? "Delete Booking"
+            : pendingAction?.action === "mark_paid"
+            ? "Mark Booking Fully Paid"
+            : "Cancel Booking"
+        }
         message={
           pendingAction?.action === "delete"
             ? "This will permanently remove the booking and release all associated table locks. This cannot be undone."
+            : pendingAction?.action === "mark_paid"
+            ? "This will verify and record the remaining balance as collected and mark the reservation as fully settled."
             : "The guest will be notified and this reservation will be marked as cancelled."
         }
-        confirmLabel={pendingAction?.action === "delete" ? "Delete" : "Cancel Booking"}
+        confirmLabel={
+          pendingAction?.action === "delete"
+            ? "Delete"
+            : pendingAction?.action === "mark_paid"
+            ? "Verify & Mark Paid"
+            : "Cancel Booking"
+        }
         cancelLabel="Keep it"
-        variant="danger"
+        variant={pendingAction?.action === "mark_paid" ? "success" : "danger"}
         onConfirm={handleConfirm}
         onCancel={() => setPendingAction(null)}
       />
@@ -344,6 +385,13 @@ export default function AdminBookingsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            href="/admin/manual-booking"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-600 text-white text-[10px] uppercase tracking-widest font-bold hover:bg-emerald-500 transition-all shadow-md border border-emerald-500/30"
+          >
+            <Plus className="w-4 h-4" strokeWidth={2.5} />
+            <span>Book Venue (Admin)</span>
+          </Link>
           <button
             onClick={handleExportCSV}
             disabled={isExporting}
@@ -554,6 +602,11 @@ export default function AdminBookingsPage() {
                                 zelleVerificationStatus={b.zelleVerificationStatus}
                               />
                             </div>
+                            {b.paymentDueDate && (b.remainingAmount ?? 0) > 0 && (
+                              <span className="text-[9px] text-amber-700 font-mono block mt-1">
+                                Due: {new Date(b.paymentDueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                              </span>
+                            )}
                           </div>
                           {b.bookingType === "private_event" && (
                             <div className="col-span-2 pt-2 border-t border-outline-variant/10 space-y-2">
@@ -568,6 +621,7 @@ export default function AdminBookingsPage() {
                         </div>
 
                         <div className="flex items-center justify-end gap-2 pt-2 flex-wrap">
+                          {b.cateringMenu && b.cateringMenu !== "none" && b.cateringMenu !== "no_catering" && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -578,6 +632,19 @@ export default function AdminBookingsPage() {
                             <DollarSign className="w-3.5 h-3.5" />
                             Offer Quote
                           </button>
+                          )}
+                          {b.status === "confirmed" && (b.paymentStatus !== "paid" || b.remainingPaymentStatus === "unpaid" || (b.remainingAmount ?? 0) > 0) && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPendingAction({ bookingId: b._id, action: "mark_paid" });
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-emerald-500/40 bg-emerald-50 text-emerald-800 text-[9px] uppercase tracking-widest font-bold hover:bg-emerald-100 transition-colors"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                              Mark Paid
+                            </button>
+                          )}
                           {b.zelleProofUrl && (
                             <button
                               onClick={(e) => {
@@ -732,6 +799,11 @@ export default function AdminBookingsPage() {
                                     {(b.remainingAmount ?? 0) > 0 && <span className="text-[9px] text-blue-600 uppercase tracking-widest font-bold whitespace-nowrap">${b.remainingAmount} Bal.</span>}
                                   </div>
                                 )}
+                                {b.paymentDueDate && (b.remainingAmount ?? 0) > 0 && (
+                                  <span className="text-[8px] text-amber-700 font-mono block pt-0.5">
+                                    Due: {new Date(b.paymentDueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                                  </span>
+                                )}
                               </div>
                             </td>
                             <td className="px-3 py-2.5">
@@ -745,7 +817,22 @@ export default function AdminBookingsPage() {
                             <td className="px-3 py-2.5"><StatusBadge status={b.status} /></td>
                             <td className="px-3 py-2.5 whitespace-nowrap">
                               <div className="flex items-center gap-1.5 flex-nowrap">
-                                {/* Offer Quote action */}
+                                {/* Mark as Fully Paid */}
+                                {b.status === "confirmed" && (b.paymentStatus !== "paid" || b.remainingPaymentStatus === "unpaid" || (b.remainingAmount ?? 0) > 0) && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setPendingAction({ bookingId: b._id, action: "mark_paid" });
+                                    }}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg border border-emerald-500/40 bg-emerald-50 text-emerald-800 text-[9px] font-bold hover:bg-emerald-100 transition-colors"
+                                    title="Mark as Fully Paid"
+                                  >
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                    <span className="hidden lg:inline">Mark Paid</span>
+                                  </button>
+                                )}
+                                {/* Offer Quote action - only show if partner catering */}
+                                {b.cateringMenu && b.cateringMenu !== "none" && b.cateringMenu !== "no_catering" && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -757,6 +844,7 @@ export default function AdminBookingsPage() {
                                   <DollarSign className="w-3 h-3" />
                                   <span className="hidden lg:inline">Quote</span>
                                 </button>
+                                )}
                                 {/* Deposit Proof - icon only */}
                                 {b.zelleProofUrl && (
                                   <button

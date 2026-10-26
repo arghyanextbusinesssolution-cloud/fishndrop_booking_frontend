@@ -37,6 +37,23 @@ export default function RootLayout({
       className={`${newsreader.variable} ${manrope.variable} h-full antialiased theme-astral`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Google tag (gtag.js) */}
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=AW-18512933087"
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-18512933087');
+            `,
+          }}
+        />
+      </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col">
         <Suspense fallback={null}>
           <PageLoader />
@@ -44,21 +61,6 @@ export default function RootLayout({
         <AuthInitializer />
         {children}
         <Toaster position="top-right" />
-
-        {/* Google Ads Tag (gtag.js) */}
-        <Script
-          id="google-ads-gtag"
-          strategy="afterInteractive"
-          src="https://www.googletagmanager.com/gtag/js?id=AW-18512933087"
-        />
-        <Script id="google-ads-config" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'AW-18512933087');
-          `}
-        </Script>
 
         <Script id="fb-pixel" strategy="afterInteractive">
           {`

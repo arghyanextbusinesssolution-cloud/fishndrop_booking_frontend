@@ -44,8 +44,8 @@ type PaymentBooking = {
   paymentBreakdown?: Array<{
     _id?: string;
     amount: number;
-    paymentMethod: "card" | "zelle";
-    paymentType: "deposit" | "balance_partial" | "balance_full" | "food_catering";
+    paymentMethod: "card" | "zelle" | "cash" | "bank_transfer" | "other";
+    paymentType: "deposit" | "balance_partial" | "balance_full" | "food_catering" | "manual";
     status: "verified" | "pending";
     transactionId?: string;
     proofUrl?: string;

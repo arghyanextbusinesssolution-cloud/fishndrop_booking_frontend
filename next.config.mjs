@@ -5,6 +5,14 @@ const nextConfig = {
   images: {
     domains: ["www.fishndrop.com"],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/user/venue_bookings/:path*",
+        destination: "/user/venue-bookings/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

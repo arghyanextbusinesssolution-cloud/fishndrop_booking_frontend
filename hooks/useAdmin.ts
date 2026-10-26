@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import api from "@/lib/axios";
-import { BookingResponse, Table, TableStats, Booking } from "@/types";
+import { BookingResponse, Table, TableStats, Booking, UsersResponse, AdminUser } from "@/types";
 
 interface StatsResponse {
   success: boolean;
@@ -284,6 +284,58 @@ export function useAdmin() {
     }
   }, []);
 
+  const getAllUsers = useCallback(async (page = 1, search = "", role = "all", verified = "all", limit = 20) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = {
+        page,
+        limit,
+        search: search.trim() || undefined,
+        role: role === "all" ? undefined : role,
+        verified: verified === "all" ? undefined : verified
+      };
+      const { data } = await api.get<UsersResponse>("/admin/users", { params });
+      return data;
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Failed to load users";
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const deleteUser = useCallback(async (userId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.delete(`/admin/users/${userId}`);
+      return data;
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Failed to delete user";
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const deleteBulkUsers = useCallback(async (userIds: string[]) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.post("/admin/users/bulk-delete", { userIds });
+      return data;
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Failed to delete selected users";
+      setError(msg);
+      throw new Error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     getStats,
     getAllBookings,
@@ -302,6 +354,9 @@ export function useAdmin() {
     updateCoupon,
     deleteCoupon,
     getCouponStats,
+    getAllUsers,
+    deleteUser,
+    deleteBulkUsers,
     loading,
     error
   };

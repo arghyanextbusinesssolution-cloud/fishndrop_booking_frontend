@@ -129,8 +129,9 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
         : phoneToSync;
       setValue("phone", computedFull);
     }
-    if (user?.name || initialData?.name) {
-      setValue("name", initialData?.name || user?.name || "");
+    const initialName = initialData?.name || user?.name || "";
+    if (initialName && initialName !== "Guest User") {
+      setValue("name", initialName);
     }
     if (user?.email || initialData?.email) {
       setValue("email", initialData?.email || user?.email || "");
@@ -185,8 +186,10 @@ export const StepGuestDetails = ({ onNext, initialData }: StepGuestDetailsProps)
       });
       if (data.token && data.user) {
         useAuthStore.getState().setAuth(data.user, data.token);
-        if (data.user.name && !getValues("name")) setValue("name", data.user.name);
-        if (data.user.email && !getValues("email")) setValue("email", data.user.email);
+        if (data.user.name && data.user.name !== "Guest User") {
+          setValue("name", data.user.name);
+        }
+        if (data.user.email) setValue("email", data.user.email);
       }
       setIsPhoneVerified(true);
       toast.success("Phone verified! Please enter your name and email to proceed.");

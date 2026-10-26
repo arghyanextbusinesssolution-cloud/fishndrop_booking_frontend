@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { AlertTriangle, Trash2, XCircle } from "lucide-react";
+import { AlertTriangle, Trash2, XCircle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ConfirmDialogProps {
@@ -10,7 +10,7 @@ interface ConfirmDialogProps {
     message: string;
     confirmLabel?: string;
     cancelLabel?: string;
-    variant?: "danger" | "warning";
+    variant?: "danger" | "warning" | "success";
     onConfirm: () => void;
     onCancel: () => void;
 }
@@ -35,12 +35,15 @@ export function ConfirmDialog({
 
     if (!open) return null;
 
-    const Icon = variant === "danger" ? Trash2 : AlertTriangle;
-    const iconBg = variant === "danger" ? "bg-red-500/10" : "bg-amber-500/10";
-    const iconColor = variant === "danger" ? "text-red-400" : "text-amber-400";
+    const Icon = variant === "danger" ? Trash2 : variant === "success" ? CheckCircle2 : AlertTriangle;
+    const iconBg = variant === "danger" ? "bg-red-500/10" : variant === "success" ? "bg-emerald-500/10" : "bg-amber-500/10";
+    const iconColor = variant === "danger" ? "text-red-400" : variant === "success" ? "text-emerald-400" : "text-amber-400";
     const confirmBg = variant === "danger"
         ? "bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-900/30"
+        : variant === "success"
+        ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30"
         : "bg-amber-600 hover:bg-amber-500 text-white shadow-lg shadow-amber-900/30";
+    const barBg = variant === "danger" ? "bg-red-500" : variant === "success" ? "bg-emerald-500" : "bg-amber-500";
 
     return (
         <div
@@ -56,7 +59,7 @@ export function ConfirmDialog({
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Top accent bar */}
-                <div className={cn("h-1 w-full", variant === "danger" ? "bg-red-500" : "bg-amber-500")} />
+                <div className={cn("h-1 w-full", barBg)} />
 
                 <div className="p-8 space-y-6">
                     {/* Icon + Title */}
