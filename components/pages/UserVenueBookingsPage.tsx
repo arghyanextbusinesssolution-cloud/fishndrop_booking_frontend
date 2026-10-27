@@ -4,7 +4,7 @@ import { Fragment, useCallback, useEffect, useState } from "react";
 import { useBookings } from "@/hooks/useBookings";
 import { Booking } from "@/types";
 import { CalendarDays, Loader2, Star, Eye, Music, UtensilsCrossed, CheckCircle2, AlertCircle, XCircle, Clock, Copy, Check, TableProperties, ChefHat, Sparkles, CreditCard } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatBookingDate, formatVenueDateTime } from "@/lib/utils";
 import Link from "next/link";
 import toast from "react-hot-toast";
 
@@ -229,7 +229,7 @@ export default function UserVenueBookingsPage() {
                           {/* Date & Time */}
                           <td className="px-5 py-5 align-top space-y-1">
                             <p className="font-headline text-lg italic text-on-surface leading-snug">
-                              {new Date(booking.bookingDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                              {formatBookingDate(booking.bookingDate, { month: "short", day: "numeric", year: "numeric" })}
                             </p>
                             <p className="text-xs text-outline">{booking.bookingTime} ({booking.durationHours || 5}h)</p>
                             <p className="text-[10px] text-outline/50 font-mono pt-1">Short ID: #{booking._id.slice(-6).toUpperCase()}</p>
@@ -601,7 +601,7 @@ export default function UserVenueBookingsPage() {
                                         <span>Payment Due:</span>
                                       </span>
                                       <span className="font-semibold text-amber-300">
-                                        {new Date(booking.paymentDueDate).toLocaleDateString("en-US", {
+                                        {formatVenueDateTime(booking.paymentDueDate, {
                                           month: "short",
                                           day: "numeric",
                                           hour: "numeric",
@@ -789,7 +789,7 @@ export default function UserVenueBookingsPage() {
                       <div className="flex justify-between items-start border-b border-outline-variant/10 pb-4">
                         <div className="space-y-1">
                           <p className="font-headline text-xl italic text-on-surface">
-                            {new Date(booking.bookingDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            {formatBookingDate(booking.bookingDate, { month: "short", day: "numeric", year: "numeric" })}
                           </p>
                           <p className="text-xs text-outline">{booking.bookingTime} ({booking.durationHours || 5} Hours)</p>
                           <div className="flex items-center gap-1 pt-0.5">
@@ -1107,7 +1107,7 @@ export default function UserVenueBookingsPage() {
                                   <span>Payment Due:</span>
                                 </span>
                                 <span className="font-semibold text-amber-300">
-                                  {new Date(booking.paymentDueDate).toLocaleDateString("en-US", {
+                                  {formatVenueDateTime(booking.paymentDueDate, {
                                     month: "short",
                                     day: "numeric",
                                     hour: "numeric",

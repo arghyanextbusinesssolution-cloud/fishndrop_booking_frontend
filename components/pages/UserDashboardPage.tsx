@@ -5,6 +5,7 @@ import { CalendarDays, ChevronRight, UserCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/axios";
+import { formatBookingDate } from "@/lib/utils";
 
 const OCCASION_IMAGES = {
   birthday: "https://images.unsplash.com/photo-1484659619207-9165d119dafe?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHJlc3R1cmFudHxlbnwwfHwwfHx8MA%3D%3D",
@@ -35,13 +36,14 @@ export default function UserDashboardPage() {
     fetchBookings();
   }, []);
 
-  // Logic to determine "Upcoming" vs "Archive"
-  const now = new Date();
+  // Logic to determine "Upcoming" vs "Archive" in Brooklyn venue time
+  const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" });
   const sortedBookings = [...bookings].sort((a, b) => new Date(a.bookingDate).getTime() - new Date(b.bookingDate).getTime());
 
-  const upcomingBooking = sortedBookings.find(b =>
-    new Date(b.bookingDate) >= new Date(now.setHours(0, 0, 0, 0)) && b.status === "confirmed"
-  );
+  const upcomingBooking = sortedBookings.find(b => {
+    const bDateStr = typeof b.bookingDate === "string" ? b.bookingDate.slice(0, 10) : new Date(b.bookingDate).toISOString().slice(0, 10);
+    return bDateStr >= todayStr && b.status === "confirmed";
+  });
 
   const pastBookings = bookings.filter(b => b._id !== upcomingBooking?._id).slice(0, 3);
 
@@ -75,7 +77,7 @@ export default function UserDashboardPage() {
               <p className="text-[8px] uppercase tracking-widest text-outline font-bold">Next Visit</p>
               <p className="font-headline text-2xl italic text-on-surface">
                 {upcomingBooking
-                  ? new Date(upcomingBooking.bookingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                  ? formatBookingDate(upcomingBooking.bookingDate, { month: 'short', day: 'numeric' })
                   : "None Scheduled"}
               </p>
             </div>
@@ -133,7 +135,7 @@ export default function UserDashboardPage() {
           {upcomingBooking ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
               {[
-                { label: "Arrival Date", value: new Date(upcomingBooking.bookingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) },
+                { label: "Arrival Date", value: formatBookingDate(upcomingBooking.bookingDate, { month: 'short', day: 'numeric', year: 'numeric' }) },
                 { label: "The Moment", value: upcomingBooking.bookingTime },
                 { label: "The Ensemble", value: `${upcomingBooking.partySize.toString().padStart(2, '0')} Persons` },
                 { label: "The Sanctuary", value: upcomingBooking.tables?.[0]?.tableNumber ? `Table ${upcomingBooking.tables[0].tableNumber}` : "Salon" }
@@ -206,10 +208,10 @@ export default function UserDashboardPage() {
                 <div className="space-y-2">
                   <p className="text-[9px] uppercase tracking-widest font-bold text-primary opacity-60 uppercase">{journey.occasion}</p>
                   <h4 className="font-headline text-3xl italic text-on-surface leading-tight transition-colors group-hover:text-primary">
-                    Journey of {new Date(journey.bookingDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                    Journey of {formatBookingDate(journey.bookingDate, { month: 'short', year: 'numeric' })}
                   </h4>
                   <p className="text-[10px] uppercase tracking-widest text-outline font-bold">
-                    {new Date(journey.bookingDate).toLocaleDateString()} • Table {journey.tables?.[0]?.tableNumber || "Salon"}
+                    {formatBookingDate(journey.bookingDate, { month: 'numeric', day: 'numeric', year: 'numeric' })} • Table {journey.tables?.[0]?.tableNumber || "Salon"}
                   </p>
                 </div>
               </div>

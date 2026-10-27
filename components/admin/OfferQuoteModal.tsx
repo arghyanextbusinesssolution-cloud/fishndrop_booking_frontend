@@ -5,7 +5,7 @@ import { Booking } from "@/types";
 import api from "@/lib/axios";
 import toast from "react-hot-toast";
 import { parseCateringDetails } from "@/lib/cateringRestaurants";
-import { formatTimeTo12Hour } from "@/lib/utils";
+import { formatTimeTo12Hour, formatBookingDate } from "@/lib/utils";
 import {
   X,
   DollarSign,
@@ -130,7 +130,7 @@ export function OfferQuoteModal({ isOpen, booking, onClose, onSuccess }: OfferQu
             <span className="text-[10px] uppercase tracking-wider text-outline block font-bold">Event Date</span>
             <div className="flex items-center gap-1.5 mt-0.5 text-on-surface font-medium">
               <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
-              <span>{new Date(booking.bookingDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+              <span>{formatBookingDate(booking.bookingDate, { month: "short", day: "numeric", year: "numeric" })}</span>
             </div>
             <span className="text-[11px] text-secondary flex items-center gap-1 mt-0.5">
               <Clock className="w-3 h-3" /> {formatTimeTo12Hour(booking.bookingTime)} ({booking.durationHours || 5}h)

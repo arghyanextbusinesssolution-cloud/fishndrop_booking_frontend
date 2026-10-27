@@ -1,4 +1,5 @@
 import { Booking } from "@/types";
+import { formatBookingDate, formatVenueDateTime } from "./utils";
 
 function escapeCsvCell(val: any): string {
   if (val === null || val === undefined) return '""';
@@ -48,16 +49,8 @@ export function exportBookingsToCSV(bookings: Booking[], filenamePrefix = "booki
       ? "Full Venue"
       : (b.tables?.map((t) => `T-${t.tableNumber}`).join("; ") || "—");
 
-    const eventDate = b.bookingDate ? new Date(b.bookingDate).toLocaleDateString("en-US") : "";
-    const triedDate = b.createdAt
-      ? new Date(b.createdAt).toLocaleString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit"
-        })
-      : "";
+    const eventDate = b.bookingDate ? formatBookingDate(b.bookingDate, { year: "numeric", month: "2-digit", day: "2-digit" }) : "";
+    const triedDate = b.createdAt ? formatVenueDateTime(b.createdAt) : "";
 
     return [
       escapeCsvCell(b._id),

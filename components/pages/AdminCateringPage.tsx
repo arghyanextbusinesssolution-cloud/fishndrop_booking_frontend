@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAdmin } from "@/hooks/useAdmin";
 import { Booking } from "@/types";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { cn, formatTimeTo12Hour } from "@/lib/utils";
+import { cn, formatTimeTo12Hour, formatBookingDate, formatVenueDateTime } from "@/lib/utils";
 import api from "@/lib/axios";
 import {
   UtensilsCrossed,
@@ -49,7 +49,7 @@ import { EditBookingMenuModal } from "@/components/booking/EditBookingMenuModal"
 import { QuoteHistoryTimeline } from "@/components/booking/QuoteHistoryTimeline";
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return formatBookingDate(dateStr, {
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -58,13 +58,7 @@ function formatDate(dateStr: string) {
 }
 
 function formatDateTime(dateStr?: string) {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit"
-  });
+  return formatVenueDateTime(dateStr);
 }
 
 export default function AdminCateringPage() {

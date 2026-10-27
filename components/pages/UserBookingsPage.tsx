@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useBookings } from "@/hooks/useBookings";
 import { Booking } from "@/types";
 import { CalendarDays, Loader2, Info, Eye, XCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatBookingDate } from "@/lib/utils";
 import Link from "next/link";
 import toast from "react-hot-toast";
 
@@ -177,7 +177,7 @@ export default function UserBookingsPage() {
                     <div className="space-y-1">
                       <p className="text-[9px] uppercase tracking-widest font-bold text-primary opacity-60 uppercase">{booking.occasion}</p>
                       <h4 className="font-headline text-3xl italic text-on-surface leading-tight transition-colors group-hover:text-primary">
-                        {new Date(booking.bookingDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                        {formatBookingDate(booking.bookingDate, { month: 'long', day: 'numeric', year: 'numeric' })}
                       </h4>
                     </div>
                     <div className="text-right">

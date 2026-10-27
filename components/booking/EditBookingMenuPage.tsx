@@ -33,7 +33,7 @@ import {
   TableProperties
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { cn } from "@/lib/utils";
+import { cn, formatBookingDate } from "@/lib/utils";
 
 export default function EditBookingMenuPage() {
   const router = useRouter();
@@ -216,7 +216,7 @@ export default function EditBookingMenuPage() {
             <span>Date &amp; Time</span>
           </div>
           <p className="font-headline text-lg italic text-white">
-            {new Date(booking.bookingDate).toLocaleDateString("en-US", {
+            {formatBookingDate(booking.bookingDate, {
               month: "short",
               day: "numeric",
               year: "numeric"

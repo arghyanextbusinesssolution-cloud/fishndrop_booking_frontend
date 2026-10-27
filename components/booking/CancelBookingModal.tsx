@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Booking } from "@/types";
 import { AlertTriangle, ShieldAlert, X, Loader2, Info } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatBookingDate } from "@/lib/utils";
 
 interface CancelBookingModalProps {
   isOpen: boolean;
@@ -105,7 +105,7 @@ export const CancelBookingModal = ({
           <div className="flex justify-between items-center text-outline border-t border-outline-variant/10 pt-2">
             <span>Event Date:</span>
             <span className="text-on-surface font-semibold">
-              {new Date(booking.bookingDate).toLocaleDateString("en-US", {
+              {formatBookingDate(booking.bookingDate, {
                 month: "short",
                 day: "numeric",
                 year: "numeric",

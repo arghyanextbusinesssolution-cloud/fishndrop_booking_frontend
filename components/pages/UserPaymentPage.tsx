@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import { useBookings } from "@/hooks/useBookings";
 import Link from "next/link";
 import api from "@/lib/axios";
+import { formatBookingDate } from "@/lib/utils";
 
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import {
@@ -372,7 +373,7 @@ export default function UserPaymentPage() {
                   <div>
                     <p className="text-xs text-[var(--text-secondary)]">Date</p>
                     <p className="text-sm font-semibold text-[var(--text-primary)]">
-                      {format(new Date(booking.bookingDate), "PPP")}
+                      {formatBookingDate(booking.bookingDate, { month: "long", day: "numeric", year: "numeric" })}
                     </p>
                   </div>
                 </div>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/axios";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { cn, formatTimeTo12Hour } from "@/lib/utils";
+import { cn, formatTimeTo12Hour, formatBookingDate, formatVenueDateTime } from "@/lib/utils";
 import toast from "react-hot-toast";
 import {
   DollarSign,
@@ -680,14 +680,14 @@ export default function AdminFinancialsPage() {
                       </td>
                       <td className="p-4 text-white/70">{item.eventType}</td>
                       <td className="p-4">
-                        <div>{new Date(item.eventDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
+                        <div>{formatBookingDate(item.eventDate, { month: "short", day: "numeric", year: "numeric" })}</div>
                         <div className="text-[11px] text-white/40">{formatTimeTo12Hour(item.bookingTime)}</div>
                       </td>
                       <td className="p-4 font-semibold text-white">${item.contractedAmount.toLocaleString()}</td>
                       <td className="p-4 text-emerald-400 font-semibold">${item.amountPaid.toLocaleString()}</td>
                       <td className="p-4 text-amber-400 font-semibold">${item.balanceDue.toLocaleString()}</td>
                       <td className="p-4 text-white/60">
-                        {new Date(item.paymentDueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        {formatVenueDateTime(item.paymentDueDate, { month: "short", day: "numeric" })}
                       </td>
                       <td className="p-4">
                         <span
@@ -760,7 +760,7 @@ export default function AdminFinancialsPage() {
                       <td className="p-4 font-mono font-bold text-[#E8CB8A]">#{item.bookingId}</td>
                       <td className="p-4 font-semibold text-white">{item.customer}</td>
                       <td className="p-4">
-                        {new Date(item.eventDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        {formatBookingDate(item.eventDate, { month: "short", day: "numeric", year: "numeric" })}
                       </td>
                       <td className="p-4 font-bold text-white">${item.totalRevenue.toLocaleString()}</td>
                       <td className="p-4 text-rose-400 font-semibold">${item.totalCosts.toLocaleString()}</td>
@@ -836,7 +836,7 @@ export default function AdminFinancialsPage() {
                       <td className="p-4 uppercase text-[10px] font-bold text-[#E8CB8A]">{v.vendorType}</td>
                       <td className="p-4 font-mono font-bold text-white/70">#{v.bookingId}</td>
                       <td className="p-4">
-                        {new Date(v.eventDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        {formatBookingDate(v.eventDate, { month: "short", day: "numeric" })}
                       </td>
                       <td className="p-4 font-bold text-white">${v.amountOwed.toLocaleString()}</td>
                       <td className="p-4 text-emerald-400 font-semibold">${v.amountPaid.toLocaleString()}</td>
@@ -921,7 +921,7 @@ export default function AdminFinancialsPage() {
                       <td className="p-4 font-mono font-bold text-[#E8CB8A]">#{r.bookingId}</td>
                       <td className="p-4 font-semibold text-white">{r.customer}</td>
                       <td className="p-4">
-                        {new Date(r.eventDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        {formatBookingDate(r.eventDate, { month: "short", day: "numeric", year: "numeric" })}
                       </td>
                       <td className="p-4 text-white">${r.originalContractValue.toLocaleString()}</td>
                       <td className="p-4 text-emerald-400 font-semibold">${r.amountPaid.toLocaleString()}</td>
@@ -955,7 +955,7 @@ export default function AdminFinancialsPage() {
                   {selectedProfitDetail.customer}
                 </h3>
                 <p className="text-white/50 text-xs">
-                  Event Date: {new Date(selectedProfitDetail.eventDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                  Event Date: {formatBookingDate(selectedProfitDetail.eventDate, { month: "long", day: "numeric", year: "numeric" })}
                 </p>
               </div>
               <button

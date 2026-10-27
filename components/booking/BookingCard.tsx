@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { Booking } from "@/types";
 import { useBookings } from "@/hooks/useBookings";
 import { Button } from "@/components/ui/button";
+import { formatBookingDate } from "@/lib/utils";
 
 export function BookingCard({ booking, onUpdated }: { booking: Booking; onUpdated: () => void }) {
   const router = useRouter();
@@ -17,7 +18,7 @@ export function BookingCard({ booking, onUpdated }: { booking: Booking; onUpdate
           bookingId: booking._id,
           totalAmount: String(booking.totalAmount),
           partySize: String(booking.partySize),
-          bookingDate: typeof booking.bookingDate === "string" ? booking.bookingDate.split("T")[0] : format(new Date(booking.bookingDate), "yyyy-MM-dd"),
+          bookingDate: typeof booking.bookingDate === "string" ? booking.bookingDate.split("T")[0] : formatBookingDate(booking.bookingDate, { year: "numeric", month: "2-digit", day: "2-digit" }),
           bookingTime: booking.bookingTime,
           customerName: booking.customerName,
           occasion: booking.occasion,
@@ -37,7 +38,7 @@ export function BookingCard({ booking, onUpdated }: { booking: Booking; onUpdate
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
       <div className="flex items-start justify-between">
-        <h3 className="font-semibold">{format(new Date(booking.bookingDate), "PPP")}</h3>
+        <h3 className="font-semibold">{formatBookingDate(booking.bookingDate, { month: "long", day: "numeric", year: "numeric" })}</h3>
         <div className="flex flex-col items-end gap-1">
           <span className={`rounded-full px-3 py-1 text-xs ${booking.status === "confirmed" ? "bg-green-500/20 text-[var(--success)]" : "bg-red-500/20 text-[var(--error)]"}`}>{booking.status}</span>
           <span className={`rounded-full px-3 py-1 text-xs ${unpaid ? "bg-amber-500/20 text-amber-800" : "bg-slate-500/15 text-[var(--text-secondary)]"}`}>

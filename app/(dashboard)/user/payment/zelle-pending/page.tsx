@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -6,6 +6,7 @@ import api from "@/lib/axios";
 import { Booking } from "@/types";
 import { Loader2, CheckCircle2, AlertTriangle, Copy, Upload, ArrowRight, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
+import { formatBookingDate } from "@/lib/utils";
 
 function ZellePendingContent() {
   const searchParams = useSearchParams();
@@ -134,7 +135,7 @@ function ZellePendingContent() {
               </div>
               <div className="flex justify-between py-1 border-b border-emerald-200/60">
                 <span className="font-semibold text-emerald-800">Date & Time:</span>
-                <span>{new Date(booking.bookingDate).toLocaleDateString()} at {booking.bookingTime}</span>
+                <span>{formatBookingDate(booking.bookingDate, { month: "short", day: "numeric", year: "numeric" })} at {booking.bookingTime}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-emerald-200/60">
                 <span className="font-semibold text-emerald-800">This Payment:</span>

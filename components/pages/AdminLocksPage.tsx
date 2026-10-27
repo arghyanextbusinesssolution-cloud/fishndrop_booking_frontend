@@ -4,11 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useAdmin, SlotLockItem } from "@/hooks/useAdmin";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { cn } from "@/lib/utils";
+import { cn, formatBookingDate } from "@/lib/utils";
 import { Lock, Unlock, Calendar, Clock, FileText, Plus, Trash2 } from "lucide-react";
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return formatBookingDate(dateStr, {
     weekday: "short",
     month: "short",
     day: "numeric",

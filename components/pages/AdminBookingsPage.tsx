@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAdmin } from "@/hooks/useAdmin";
 import { Booking } from "@/types";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { cn, formatTimeTo12Hour } from "@/lib/utils";
+import { cn, formatTimeTo12Hour, formatBookingDate, formatVenueDateTime } from "@/lib/utils";
 import api from "@/lib/axios";
 import {
   CalendarDays,
@@ -41,22 +41,11 @@ import { CATERING_LABEL_MAP, parseCateringDetails } from "@/lib/cateringRestaura
 import { OfferQuoteModal } from "@/components/admin/OfferQuoteModal";
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
+  return formatBookingDate(dateStr);
 }
 
 function formatDateTime(dateStr?: string) {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit"
-  });
+  return formatVenueDateTime(dateStr);
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -604,7 +593,7 @@ export default function AdminBookingsPage() {
                             </div>
                             {b.paymentDueDate && (b.remainingAmount ?? 0) > 0 && (
                               <span className="text-[9px] text-amber-700 font-mono block mt-1">
-                                Due: {new Date(b.paymentDueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                                Due: {formatVenueDateTime(b.paymentDueDate, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                               </span>
                             )}
                           </div>
@@ -801,7 +790,7 @@ export default function AdminBookingsPage() {
                                 )}
                                 {b.paymentDueDate && (b.remainingAmount ?? 0) > 0 && (
                                   <span className="text-[8px] text-amber-700 font-mono block pt-0.5">
-                                    Due: {new Date(b.paymentDueDate).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                                    Due: {formatVenueDateTime(b.paymentDueDate, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
                                   </span>
                                 )}
                               </div>

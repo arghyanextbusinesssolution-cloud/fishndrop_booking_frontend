@@ -8,6 +8,7 @@ import { Calendar, Clock, Users, Utensils, Info, ArrowRight, CalendarDays, Loade
 import Link from "next/link";
 import api from "@/lib/axios";
 import { Booking } from "@/types";
+import { formatBookingDate } from "@/lib/utils";
 
 function ConfirmedContent() {
   const searchParams = useSearchParams();
@@ -38,8 +39,7 @@ function ConfirmedContent() {
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return "TBD";
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    return formatBookingDate(dateStr, { weekday: 'long', month: 'long', day: 'numeric' });
   };
 
   const getTableName = () => {

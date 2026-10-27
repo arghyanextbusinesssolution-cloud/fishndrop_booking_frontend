@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import { CheckCircle2, CalendarDays, Clock, Users, Sparkles, ShieldCheck, CreditCard } from "lucide-react";
 import { useBookings } from "@/hooks/useBookings";
 import { Booking } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, formatBookingDate } from "@/lib/utils";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 const GOLD = "#E5C77A";
@@ -124,7 +124,7 @@ export default function UserPaymentConfirmedPage() {
               </div>
               <div>
                 <p className="text-xs text-[var(--text-secondary)]">Date</p>
-                <p className="text-sm font-semibold text-[var(--text-primary)]">{format(new Date(booking.bookingDate), "PPP")}</p>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{formatBookingDate(booking.bookingDate, { month: "long", day: "numeric", year: "numeric" })}</p>
               </div>
             </div>
             <div className="flex items-start gap-3">

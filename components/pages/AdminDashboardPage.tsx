@@ -7,7 +7,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { Booking, TableStats } from "@/types";
 import api from "@/lib/axios";
 import { useAuthStore } from "@/store/authStore";
-import { cn, formatTimeTo12Hour } from "@/lib/utils";
+import { cn, formatTimeTo12Hour, formatBookingDate, formatVenueDateTime } from "@/lib/utils";
 import Link from "next/link";
 import { TrendingUp, TrendingDown, Zap, Calendar, Users, LayoutGrid, Download, DollarSign, ArrowUpRight } from "lucide-react";
 import { exportBookingsToCSV } from "@/lib/exportCsv";
@@ -15,22 +15,11 @@ import { exportBookingsToCSV } from "@/lib/exportCsv";
 const HERO_IMG = "https://images.unsplash.com/photo-1414235077428-338988692286?auto=format&fit=crop&q=80&w=1600";
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
+  return formatBookingDate(dateStr);
 }
 
 function formatDateTime(dateStr?: string) {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit"
-  });
+  return formatVenueDateTime(dateStr);
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -243,7 +232,7 @@ export default function AdminDashboardPage() {
         <div className="flex justify-between items-baseline">
           <h2 className="font-headline text-3xl italic text-on-surface">Daily Insights</h2>
           <p className="font-label text-[9px] uppercase tracking-[0.2em] text-outline font-bold">
-            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            {new Date().toLocaleDateString("en-US", { timeZone: "America/New_York", weekday: "long", month: "long", day: "numeric" })}
           </p>
         </div>
 

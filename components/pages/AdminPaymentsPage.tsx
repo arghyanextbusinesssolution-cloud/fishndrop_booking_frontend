@@ -4,15 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { useAdmin, PaymentSummary } from "@/hooks/useAdmin";
 import { Booking } from "@/types";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
-import { cn } from "@/lib/utils";
+import { cn, formatBookingDate } from "@/lib/utils";
 import { CreditCard, TrendingUp, Clock, CheckCircle, AlertCircle } from "lucide-react";
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
+  return formatBookingDate(dateStr);
 }
 
 function PaymentBadge({ status }: { status?: string }) {
