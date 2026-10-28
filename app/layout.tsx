@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { Suspense } from "react";
 import { AuthInitializer } from "@/components/shared/AuthInitializer";
+import { AttributionInitializer } from "@/components/shared/AttributionInitializer";
 import PageLoader from "@/components/shared/PageLoader";
 import Script from "next/script";
 
@@ -57,6 +58,7 @@ export default function RootLayout({
       <body suppressHydrationWarning className="min-h-full flex flex-col">
         <Suspense fallback={null}>
           <PageLoader />
+          <AttributionInitializer />
         </Suspense>
         <AuthInitializer />
         {children}

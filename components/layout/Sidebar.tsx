@@ -23,7 +23,8 @@ export function Sidebar({ closeMobile }: { closeMobile?: () => void }) {
         { href: "/admin/manual-booking", label: "Venue Booking" },
         { href: "/admin/catering", label: "Restaurants & Catering" },
         { href: "/admin/tables", label: "Tables" },
-        { href: "/admin/coupons", label: "Coupons" }
+        { href: "/admin/coupons", label: "Coupons" },
+        { href: "/admin/blog", label: "Blog & Stories" }
       ]
     : [{ href: "/user", label: "Dashboard" }, { href: "/user/book", label: "Book a Table" }, { href: "/user/bookings", label: "My Bookings" }, { href: "/user/venue-bookings", label: "Venue Bookings" }];
 

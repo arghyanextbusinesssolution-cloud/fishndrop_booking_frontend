@@ -1,17 +1,20 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { useState, useEffect } from "react";
 import { NavSpinnerLink } from "@/components/shared/NavSpinnerLink";
+import { Menu, X } from "lucide-react";
 
 export const NavBar = () => {
   const pathname = usePathname();
   const { isAuthenticated, user } = useAuthStore();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -26,8 +29,19 @@ export const NavBar = () => {
     return () => window.removeEventListener("scroll", handleScroll, true);
   }, []);
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   const isHomePage = pathname === "/";
   const useTransparentNav = isHomePage && !isScrolled;
+
+  const navLinks = [
+    { href: "/about", label: "About" },
+    { href: "/gallery", label: "Gallery" },
+    { href: "/blog", label: "Blog" }
+  ];
 
   return (
     <header
@@ -52,6 +66,30 @@ export const NavBar = () => {
           </div>
         </NavSpinnerLink>
 
+        {/* Desktop Navigation Links */}
+        <nav className="hidden lg:flex items-center gap-8">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "font-label text-xs uppercase tracking-[0.25em] font-semibold transition-all duration-300 py-1 relative",
+                  isActive
+                    ? "text-[#E5C77A] drop-shadow-[0_0_12px_rgba(200,169,106,0.5)]"
+                    : "text-[#E5E7EB]/80 hover:text-[#E5C77A]"
+                )}
+              >
+                {link.label}
+                {isActive && (
+                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#C8A96A] to-transparent rounded-full" />
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
         {/* Right Navigation & Actions */}
         <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
           {/* Book a Private Space Button */}
@@ -66,24 +104,10 @@ export const NavBar = () => {
           <NavSpinnerLink
             href="https://api.leadconnectorhq.com/widget/booking/hh2gGpKwljrlKAb3FzN1"
             external
-            className="hidden md:inline-flex items-center text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-[#E5E7EB]/80 hover:text-white border border-white/15 hover:border-[#C8A96A]/50 px-4 md:px-5 py-2.5 rounded-full hover:bg-white/5 transition-all duration-300 font-bold backdrop-blur-sm"
+            className="hidden xl:inline-flex items-center text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-[#E5E7EB]/80 hover:text-white border border-white/15 hover:border-[#C8A96A]/50 px-4 md:px-5 py-2.5 rounded-full hover:bg-white/5 transition-all duration-300 font-bold backdrop-blur-sm"
           >
             Book Tour
           </NavSpinnerLink>
-
-          {/* Notification Icon */}
-          <button
-            type="button"
-            aria-label="Notifications"
-            className="hidden sm:flex w-9 h-9 rounded-full items-center justify-center border border-white/10 text-[#C8A96A]/70 hover:text-[#C8A96A] hover:border-[#C8A96A]/40 hover:bg-[#C8A96A]/10 transition-all duration-300"
-          >
-            <span
-              className="material-symbols-outlined text-[18px]"
-              style={{ fontVariationSettings: "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24" }}
-            >
-              notifications
-            </span>
-          </button>
 
           {/* Primary CTA (Sign In / Dashboard) */}
           {mounted && (
@@ -103,9 +127,63 @@ export const NavBar = () => {
               </NavSpinnerLink>
             )
           )}
+
+          {/* Mobile Menu Toggle Button */}
+          <button
+            type="button"
+            aria-label="Toggle navigation menu"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden flex items-center justify-center w-10 h-10 rounded-full border border-[#C8A96A]/30 text-[#C8A96A] hover:bg-[#C8A96A]/15 transition-all"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Drawer Menu */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-[#071912]/98 border-b border-[#C8A96A]/30 backdrop-blur-2xl px-6 py-6 animate-fade-in-up">
+          <div className="flex flex-col gap-4">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    "font-label text-sm uppercase tracking-[0.2em] py-2 transition-colors",
+                    isActive
+                      ? "text-[#E5C77A] font-bold"
+                      : "text-white/80 hover:text-[#E5C77A]"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+
+            <div className="pt-3 border-t border-[#C8A96A]/20 flex flex-col gap-3">
+              <Link
+                href="/book-venue"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-center text-xs uppercase tracking-[0.2em] text-[#E5C77A] border border-[#C8A96A]/40 py-3 rounded-full hover:bg-[#C8A96A]/10 font-bold"
+              >
+                Book Private Space
+              </Link>
+              <a
+                href="https://api.leadconnectorhq.com/widget/booking/hh2gGpKwljrlKAb3FzN1"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-center text-xs uppercase tracking-[0.2em] text-[#E5E7EB]/70 border border-white/10 py-3 rounded-full hover:bg-white/5 font-bold"
+              >
+                Book Tour
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
-

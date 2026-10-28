@@ -10,6 +10,7 @@ import api from "@/lib/axios";
 import { Loader2, Ticket, Check, X, Music, UtensilsCrossed, AlertCircle, Sparkles, ChefHat } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
+import { getAttributionPayload, trackMetaConversion } from "@/lib/tracking";
 
 import { BookingPolicyModal } from "./BookingPolicyModal";
 
@@ -134,6 +135,8 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
         formattedNotes = formattedNotes ? `${formattedNotes} | [Decor: ${bookingData.decorationStyle}]` : `[Decor: ${bookingData.decorationStyle}]`;
       }
 
+      const attribution = getAttributionPayload();
+
       const payload = {
         customerName: bookingData.guestDetails.name,
         customerEmail: bookingData.guestDetails.email,
@@ -153,12 +156,18 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
         customDepositAmount: customDeposit,
         couponCode: appliedCoupon?.code || undefined,
         paymentMethod,
-        zelleProofUrl: zelleProofUrl || undefined
+        zelleProofUrl: zelleProofUrl || undefined,
+        ...attribution
       };
 
       const res = await api.post("/bookings/reserve-private", payload);
 
       if (res.data.success) {
+        trackMetaConversion("Lead", {
+          content_name: "Private Sanctuary Booking",
+          currency: "USD",
+          value: customDeposit
+        });
         if (res.data.token && res.data.user) {
           setAuth(res.data.user, res.data.token);
         }

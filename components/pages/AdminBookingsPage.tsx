@@ -32,7 +32,8 @@ import {
   Send,
   Loader2,
   Camera,
-  Plus
+  Plus,
+  CalendarClock
 } from "lucide-react";
 import { CalendarDropdown } from "@/components/shared/CalendarDropdown";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -240,6 +241,14 @@ export default function AdminBookingsPage() {
   const [selectedProofModal, setSelectedProofModal] = useState<{ url: string; booking: Booking; proofType?: "deposit" | "balance" } | null>(null);
   const [quoteModalBooking, setQuoteModalBooking] = useState<Booking | null>(null);
 
+  // Reschedule & Guest Media Modals State
+  const [rescheduleBookingTarget, setRescheduleBookingTarget] = useState<Booking | null>(null);
+  const [newRescheduleDate, setNewRescheduleDate] = useState("");
+  const [newRescheduleTime, setNewRescheduleTime] = useState("");
+  const [rescheduleReason, setRescheduleReason] = useState("");
+  const [rescheduling, setRescheduling] = useState(false);
+  const [mediaModalBooking, setMediaModalBooking] = useState<Booking | null>(null);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -261,6 +270,40 @@ export default function AdminBookingsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  const openRescheduleModal = (booking: Booking) => {
+    setRescheduleBookingTarget(booking);
+    const dateFormatted = booking.bookingDate
+      ? booking.bookingDate.split("T")[0]
+      : "";
+    setNewRescheduleDate(dateFormatted);
+    setNewRescheduleTime(booking.bookingTime || "19:00");
+    setRescheduleReason("");
+  };
+
+  const handleConfirmReschedule = async () => {
+    if (!rescheduleBookingTarget || !newRescheduleDate || !newRescheduleTime) {
+      toast.error("Please specify both a new date and time");
+      return;
+    }
+    try {
+      setRescheduling(true);
+      const { data } = await api.patch(`/admin/bookings/${rescheduleBookingTarget._id}/reschedule`, {
+        bookingDate: newRescheduleDate,
+        bookingTime: newRescheduleTime,
+        reason: rescheduleReason || "Admin rescheduled"
+      });
+      if (data.success) {
+        toast.success("Booking rescheduled successfully & updated on GHL!");
+        setRescheduleBookingTarget(null);
+        await load();
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to reschedule booking");
+    } finally {
+      setRescheduling(false);
+    }
+  };
 
   const handleVerifyZelle = async (bookingId: string, action: "verify" | "reject", proofType?: "deposit" | "balance") => {
     try {
@@ -670,6 +713,30 @@ export default function AdminBookingsPage() {
                               Verify Zelle
                             </button>
                           )}
+                          {/* Reschedule */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openRescheduleModal(b);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-primary/40 text-primary text-[9px] uppercase tracking-widest font-bold hover:bg-primary/10 transition-colors"
+                          >
+                            <CalendarClock className="w-3.5 h-3.5" />
+                            Reschedule
+                          </button>
+                          {/* Guest Media */}
+                          {b.guestMedia && b.guestMedia.length > 0 && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMediaModalBooking(b);
+                              }}
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-purple-300 bg-purple-50 text-purple-800 text-[9px] uppercase tracking-widest font-bold hover:bg-purple-100 transition-colors"
+                            >
+                              <Camera className="w-3.5 h-3.5" />
+                              Memories ({b.guestMedia.length})
+                            </button>
+                          )}
                           {b.status === "confirmed" && (
                             <button
                               onClick={(e) => {
@@ -876,6 +943,32 @@ export default function AdminBookingsPage() {
                                     <span className="hidden lg:inline">Verify</span>
                                   </button>
                                 )}
+                                {/* Reschedule */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openRescheduleModal(b);
+                                  }}
+                                  className="flex items-center gap-1 px-2 py-1 rounded-lg border border-primary/40 bg-primary/5 text-primary text-[9px] font-bold hover:bg-primary/15 transition-colors"
+                                  title="Reschedule Booking"
+                                >
+                                  <CalendarClock className="w-3 h-3" />
+                                  <span className="hidden lg:inline">Reschedule</span>
+                                </button>
+                                {/* Guest Media */}
+                                {b.guestMedia && b.guestMedia.length > 0 && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setMediaModalBooking(b);
+                                    }}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg border border-purple-300 bg-purple-50 text-purple-800 text-[9px] font-bold hover:bg-purple-100 transition-colors"
+                                    title="View Uploaded Media"
+                                  >
+                                    <Camera className="w-3 h-3" />
+                                    <span className="hidden lg:inline">Media ({b.guestMedia.length})</span>
+                                  </button>
+                                )}
                                 {/* Cancel */}
                                 {b.status === "confirmed" && (
                                   <button
@@ -973,6 +1066,158 @@ export default function AdminBookingsPage() {
                 className="px-5 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 shadow-md flex items-center gap-1.5"
               >
                 <CheckCircle2 className="w-4 h-4" /> Approve Zelle ({selectedProofModal.proofType === "balance" ? "Balance" : "Deposit"})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reschedule Booking Modal */}
+      {rescheduleBookingTarget && (
+        <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-surface border border-outline-variant/30 rounded-2xl max-w-md w-full p-6 space-y-4 relative shadow-2xl">
+            <button
+              onClick={() => setRescheduleBookingTarget(null)}
+              className="absolute top-4 right-4 p-1.5 text-secondary hover:text-on-surface rounded-full hover:bg-surface-container transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase tracking-widest font-extrabold text-primary block">
+                🔄 Reschedule Booking &amp; Notify GHL
+              </span>
+              <h3 className="text-lg font-bold text-on-surface">
+                {rescheduleBookingTarget.customerName}
+              </h3>
+              <p className="text-xs text-secondary font-mono">
+                Current: {formatDate(rescheduleBookingTarget.bookingDate)} at {formatTimeTo12Hour(rescheduleBookingTarget.bookingTime)}
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <div>
+                <label className="text-[10px] uppercase font-bold text-outline block mb-1">New Event Date</label>
+                <input
+                  type="date"
+                  value={newRescheduleDate}
+                  onChange={(e) => setNewRescheduleDate(e.target.value)}
+                  className="w-full bg-surface-container border border-outline-variant/30 rounded-xl px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] uppercase font-bold text-outline block mb-1">New Event Start Time</label>
+                <select
+                  value={newRescheduleTime}
+                  onChange={(e) => setNewRescheduleTime(e.target.value)}
+                  className="w-full bg-surface-container border border-outline-variant/30 rounded-xl px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary"
+                >
+                  {["10:00", "12:00", "14:00", "16:00", "18:00", "19:00", "20:00", "22:00"].map((t) => (
+                    <option key={t} value={t}>
+                      {formatTimeTo12Hour(t)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] uppercase font-bold text-outline block mb-1">Reschedule Reason (Sent to GHL)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Guest requested change of date via SMS"
+                  value={rescheduleReason}
+                  onChange={(e) => setRescheduleReason(e.target.value)}
+                  className="w-full bg-surface-container border border-outline-variant/30 rounded-xl px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-secondary space-y-1">
+                <p className="font-bold text-primary">✨ Automatic GHL Synchronization:</p>
+                <p className="text-[11px]">
+                  Fires &lsquo;booking_rescheduled&rsquo; to GHL with updated event end time to prevent early or wrong automated thank-you messages.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3">
+              <button
+                onClick={() => setRescheduleBookingTarget(null)}
+                className="px-4 py-2 border border-outline-variant/30 rounded-xl text-xs font-bold text-secondary hover:text-on-surface"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmReschedule}
+                disabled={rescheduling}
+                className="px-5 py-2 bg-primary text-on-primary rounded-xl text-xs font-bold uppercase tracking-wider hover:brightness-110 shadow-md flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {rescheduling ? <Loader2 className="w-4 h-4 animate-spin" /> : <CalendarClock className="w-4 h-4" />}
+                Confirm Reschedule
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Guest Uploaded Media Modal */}
+      {mediaModalBooking && (
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-surface border border-outline-variant/30 rounded-2xl max-w-3xl w-full p-6 space-y-4 relative shadow-2xl max-h-[90vh] flex flex-col">
+            <button
+              onClick={() => setMediaModalBooking(null)}
+              className="absolute top-4 right-4 p-1.5 text-secondary hover:text-on-surface rounded-full hover:bg-surface-container transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[10px] uppercase tracking-widest font-extrabold text-primary">
+                  📸 Guest Celebration Memories
+                </span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${mediaModalBooking.marketingConsent ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-700"}`}>
+                  Marketing: {mediaModalBooking.marketingConsent ? "Approved" : "Not Provided"}
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-on-surface">
+                {mediaModalBooking.customerName}
+              </h3>
+              <p className="text-xs text-secondary font-mono">
+                Event: {formatDate(mediaModalBooking.bookingDate)} — {mediaModalBooking.guestMedia?.length || 0} items uploaded
+              </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {mediaModalBooking.guestMedia?.map((item, idx) => (
+                  <div key={idx} className="relative group rounded-xl overflow-hidden bg-black aspect-square border border-outline-variant/20">
+                    {item.mediaType === "video" ? (
+                      <video src={item.url} controls className="w-full h-full object-cover" />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.url} alt={`Guest media ${idx}`} className="w-full h-full object-cover" />
+                    )}
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute bottom-2 right-2 p-1.5 rounded-full bg-black/70 hover:bg-primary text-white text-[10px] flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Download className="w-3 h-3" />
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-outline-variant/20 flex justify-between items-center text-xs text-secondary">
+              <span>{mediaModalBooking.customerEmail} | {mediaModalBooking.customerPhone}</span>
+              <button
+                onClick={() => setMediaModalBooking(null)}
+                className="px-4 py-2 border border-outline-variant/30 rounded-xl font-bold hover:bg-surface-container"
+              >
+                Close
               </button>
             </div>
           </div>

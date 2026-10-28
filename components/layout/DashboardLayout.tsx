@@ -19,6 +19,8 @@ import {
   UtensilsCrossed,
   DollarSign,
   Users,
+  BookOpen,
+  Camera,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -106,6 +108,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { icon: CreditCard, label: "Payments", href: "/admin/payments" },
     { icon: Lock, label: "Slot Locks", href: "/admin/locks" },
     { icon: Ticket, label: "Coupons", href: "/admin/coupons" },
+    { icon: BookOpen, label: "Blog", href: "/admin/blog" },
+    { icon: Camera, label: "Gallery & Photos", href: "/admin/gallery" },
     { icon: Wrench, label: "Settings", href: "/admin/settings" },
   ];
 
@@ -128,12 +132,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen relative" style={{ backgroundColor: '#0F3D2E' }}>
       {/* Mobile Top Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 border-b border-[#C8A96A]/10 z-40 flex items-center justify-between px-6 backdrop-blur-md" style={{ backgroundColor: '#0a2e21' }}>
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 border-b border-[#C8A96A]/15 z-40 flex items-center justify-between px-4 sm:px-6 backdrop-blur-md" style={{ backgroundColor: '#0a2e21' }}>
         <Link
           href="/"
-          className="flex items-center"
+          className="flex items-center focus:outline-none"
         >
-          <div className="relative w-56 h-20 -ml-4">
+          <div className="relative h-11 w-36 sm:h-12 sm:w-40">
             <Image
               src="/tropica-logo.png"
               alt="Tropica"

@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useBookings } from "@/hooks/useBookings";
 import { Booking } from "@/types";
 import { CalendarDays, Loader2, Star, Eye, Music, UtensilsCrossed, CheckCircle2, AlertCircle, XCircle, Clock, Copy, Check, TableProperties, ChefHat, Sparkles, CreditCard } from "lucide-react";
@@ -63,6 +64,9 @@ export default function UserVenueBookingsPage() {
     }
   };
 
+  const searchParams = useSearchParams();
+  const queryBookingId = searchParams.get("id") || searchParams.get("bookingId");
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -70,7 +74,10 @@ export default function UserVenueBookingsPage() {
       setBookings(data.bookings);
       setTotalPages(data.totalPages);
       if (data.bookings?.length > 0) {
-        setSelectedBookingId((prev) => prev || data.bookings[0]._id);
+        const targetId = queryBookingId && data.bookings.some((b) => b._id === queryBookingId)
+          ? queryBookingId
+          : data.bookings[0]._id;
+        setSelectedBookingId((prev) => (queryBookingId ? targetId : (prev || targetId)));
       }
     } catch {
       setBookings([]);
@@ -78,7 +85,7 @@ export default function UserVenueBookingsPage() {
     } finally {
       setLoading(false);
     }
-  }, [getMyBookings, page, status]);
+  }, [getMyBookings, page, status, queryBookingId]);
 
   useEffect(() => {
     void load();

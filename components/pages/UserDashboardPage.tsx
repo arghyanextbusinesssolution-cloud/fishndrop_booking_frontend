@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays, ChevronRight, UserCircle, Loader2 } from "lucide-react";
+import { CalendarDays, ChevronRight, UserCircle, Loader2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/axios";
-import { formatBookingDate } from "@/lib/utils";
+import { formatBookingDate, formatTimeTo12Hour } from "@/lib/utils";
 
 const OCCASION_IMAGES = {
   birthday: "https://images.unsplash.com/photo-1484659619207-9165d119dafe?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHJlc3R1cmFudHxlbnwwfHwwfHx8MA%3D%3D",
@@ -83,8 +83,8 @@ export default function UserDashboardPage() {
             </div>
 
             <div className="pt-2">
-              <Link href="/book-table" className="text-[9px] uppercase tracking-[0.3em] font-bold text-primary border border-primary/20 px-6 py-3 rounded-full hover:bg-primary hover:text-white transition-all">
-                Book a journey
+              <Link href={upcomingBooking ? "/user/venue-bookings" : "/book-venue"} className="text-[9px] uppercase tracking-[0.3em] font-bold text-primary border border-primary/20 px-6 py-3 rounded-full hover:bg-primary hover:text-white transition-all">
+                {upcomingBooking ? "View Details" : "Book a journey"}
               </Link>
             </div>
           </div>
@@ -95,15 +95,14 @@ export default function UserDashboardPage() {
           <div className="bg-surface-container-lowest p-3 rounded-xl ambient-shadow">
             <div className="aspect-[4/5] overflow-hidden rounded-lg relative">
               <img
-                src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=600"
-                // src={upcomingBooking ? (OCCASION_IMAGES[upcomingBooking.occasion as keyof typeof OCCASION_IMAGES] || OCCASION_IMAGES.other) : OCCASION_IMAGES.other} 
-                alt="Dining interior"
-                className="w-full h-full object-cover grayscale opacity-80 transition-all duration-1000 group-hover:opacity-100 group-hover:grayscale-0 group-hover:scale-105"
+                src="/venue_ambience.jpg"
+                alt="Tropica Sanctuary"
+                className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-on-surface/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               <div className="absolute bottom-6 left-6">
-                <p className="text-[8px] uppercase tracking-[0.2em] font-bold text-white/60 mb-1">Current Ambience</p>
-                <p className="font-headline text-2xl italic text-white leading-none">The Salon Vert</p>
+                <p className="text-[8px] uppercase tracking-[0.2em] font-bold text-[#E5C77A] mb-1">Current Ambience</p>
+                <p className="font-headline text-2xl italic text-white leading-none">Tropica Sanctuary</p>
               </div>
             </div>
           </div>
@@ -133,16 +132,15 @@ export default function UserDashboardPage() {
           </div>
 
           {upcomingBooking ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-12">
               {[
-                { label: "Arrival Date", value: formatBookingDate(upcomingBooking.bookingDate, { month: 'short', day: 'numeric', year: 'numeric' }) },
-                { label: "The Moment", value: upcomingBooking.bookingTime },
-                { label: "The Ensemble", value: `${upcomingBooking.partySize.toString().padStart(2, '0')} Persons` },
-                { label: "The Sanctuary", value: upcomingBooking.tables?.[0]?.tableNumber ? `Table ${upcomingBooking.tables[0].tableNumber}` : "Salon" }
+                { label: "Arrival Date", value: formatBookingDate(upcomingBooking.bookingDate, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) },
+                { label: "The Moment", value: formatTimeTo12Hour(upcomingBooking.bookingTime) || upcomingBooking.bookingTime },
+                { label: "The Ensemble", value: `${upcomingBooking.partySize.toString().padStart(2, '0')} Guests` },
               ].map(item => (
                 <div key={item.label} className="space-y-4">
                   <p className="text-[9px] uppercase tracking-widest font-bold text-outline">{item.label}</p>
-                  <p className="font-headline text-3xl italic text-on-surface leading-tight">{item.value}</p>
+                  <p className="font-headline text-2xl md:text-3xl italic text-on-surface leading-tight">{item.value}</p>
                 </div>
               ))}
             </div>
@@ -170,8 +168,9 @@ export default function UserDashboardPage() {
                 {upcomingBooking ? upcomingBooking.customerName : user?.name}
               </span>
             </div>
-            <Link href="/user/bookings" className="bg-gold-gradient px-12 py-4 rounded-lg text-on-primary font-label tracking-[0.2em] uppercase text-[10px] font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all">
-              Manage Details
+            <Link href="/user/venue-bookings" className="bg-gold-gradient px-8 md:px-12 py-3.5 md:py-4 rounded-lg text-on-primary font-label tracking-[0.2em] uppercase text-[10px] font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all flex items-center gap-2">
+              <span>View Details</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
@@ -211,7 +210,7 @@ export default function UserDashboardPage() {
                     Journey of {formatBookingDate(journey.bookingDate, { month: 'short', year: 'numeric' })}
                   </h4>
                   <p className="text-[10px] uppercase tracking-widest text-outline font-bold">
-                    {formatBookingDate(journey.bookingDate, { month: 'numeric', day: 'numeric', year: 'numeric' })} • Table {journey.tables?.[0]?.tableNumber || "Salon"}
+                    {formatBookingDate(journey.bookingDate, { month: 'numeric', day: 'numeric', year: 'numeric' })} • {journey.bookingType === "private_event" ? "Full Venue Buyout" : (journey.tables?.[0]?.tableNumber ? `Table ${journey.tables[0].tableNumber}` : "Sanctuary")}
                   </p>
                 </div>
               </div>

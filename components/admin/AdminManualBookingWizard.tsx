@@ -156,6 +156,20 @@ export function AdminManualBookingWizard() {
     return `${endH < 10 ? "0" : ""}${endH}:${m < 10 ? "0" : ""}${m}`;
   };
 
+  // Convert 24h format "14:00" to 12h format "2:00 PM"
+  const formatTime12h = (timeStr: string) => {
+    if (!timeStr) return "";
+    const parts = timeStr.split(":");
+    if (parts.length < 2) return timeStr;
+    let h = parseInt(parts[0], 10);
+    const m = parts[1];
+    if (isNaN(h)) return timeStr;
+    const period = h >= 12 ? "PM" : "AM";
+    h = h % 12;
+    if (h === 0) h = 12;
+    return `${h}:${m} ${period}`;
+  };
+
   // Customer phone live lookup (at least 10 digits)
   useEffect(() => {
     const clean = customerPhone.replace(/\D/g, "");
@@ -731,7 +745,7 @@ export function AdminManualBookingWizard() {
                   />
                   {customTimeSlot && (
                     <span className="text-xs text-emerald-700 font-medium">
-                      Window: <strong>{customTimeSlot}</strong> to <strong>{getEndTime(customTimeSlot, durationHours)}</strong> ({durationHours} hours)
+                      Window: <strong>{formatTime12h(customTimeSlot)}</strong> to <strong>{formatTime12h(getEndTime(customTimeSlot, durationHours))}</strong> ({durationHours} hours)
                     </span>
                   )}
                 </div>
@@ -755,14 +769,14 @@ export function AdminManualBookingWizard() {
                         className={cn(
                           "p-3 rounded-xl border flex flex-col items-center justify-center transition-all relative text-left",
                           isSelected
-                            ? "bg-emerald-600 text-white border-emerald-600 font-bold shadow-md scale-[1.02]"
+                            ? "bg-emerald-600 text-white border-emerald-500 font-bold shadow-md scale-[1.02]"
                             : slotItem.isAvailable
-                            ? "bg-surface hover:bg-emerald-50 hover:border-emerald-300 border-outline-variant/40 text-on-surface"
-                            : "bg-surface-container/30 border-red-200 text-red-900/80 hover:border-red-400"
+                            ? "bg-surface hover:bg-emerald-800/40 hover:border-emerald-400 border-outline-variant/40 text-on-surface"
+                            : "bg-surface-container/30 border-red-500/30 text-red-300 hover:border-red-400 hover:bg-red-950/20"
                         )}
                       >
-                        <span className="text-sm font-bold">{slotItem.slot}</span>
-                        <span className="text-[10px] opacity-80">to {endTime}</span>
+                        <span className="text-sm font-bold whitespace-nowrap">{formatTime12h(slotItem.slot)}</span>
+                        <span className="text-[10px] opacity-80 whitespace-nowrap">to {formatTime12h(endTime)}</span>
                         <span
                           className={cn(
                             "text-[8px] uppercase tracking-wider font-bold mt-1 px-1.5 py-0.5 rounded",
@@ -788,14 +802,14 @@ export function AdminManualBookingWizard() {
 
             {/* Selected slot feedback badge */}
             {activeSlot && (
-              <div className="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="p-3 bg-emerald-950/40 border border-emerald-500/30 rounded-xl text-xs text-on-surface flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>
-                    Selected Event Window: <strong className="font-bold">{activeSlot} - {getEndTime(activeSlot, durationHours)}</strong> ({durationHours} Hours) on {bookingDate}
+                    Selected Event Window: <strong className="font-bold text-emerald-300">{formatTime12h(activeSlot)} - {formatTime12h(getEndTime(activeSlot, durationHours))}</strong> ({durationHours} Hours) on {bookingDate}
                   </span>
                 </div>
-                <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full text-center">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-300 bg-emerald-900/50 border border-emerald-500/30 px-2.5 py-1 rounded-full text-center">
                   Full Venue Buyout
                 </span>
               </div>
@@ -1303,7 +1317,7 @@ export function AdminManualBookingWizard() {
                 <p>
                   <strong>Time Window:</strong>{" "}
                   <span className="font-bold text-emerald-700">
-                    {activeSlot} - {getEndTime(activeSlot, durationHours)} ({durationHours} Hours)
+                    {formatTime12h(activeSlot)} - {formatTime12h(getEndTime(activeSlot, durationHours))} ({durationHours} Hours)
                   </span>
                 </p>
                 <p>
@@ -1427,7 +1441,7 @@ export function AdminManualBookingWizard() {
               Venue Booking Placed Successfully!
             </h2>
             <p className="text-xs text-secondary leading-relaxed">
-              The exclusive venue buyout on <strong>{bookingDate}</strong> from <strong>{createdBooking.bookingTime}</strong> to <strong>{getEndTime(createdBooking.bookingTime, createdBooking.durationHours || durationHours)}</strong> has been confirmed and locked in the database.
+              The exclusive venue buyout on <strong>{bookingDate}</strong> from <strong>{formatTime12h(createdBooking.bookingTime)}</strong> to <strong>{formatTime12h(getEndTime(createdBooking.bookingTime, createdBooking.durationHours || durationHours))}</strong> has been confirmed and locked in the database.
               {accountCreatedFlag
                 ? " The customer account has been registered with phone number without OTP."
                 : " The booking is linked to the existing member account."}
@@ -1446,7 +1460,7 @@ export function AdminManualBookingWizard() {
             </div>
             <div className="flex justify-between items-center border-b border-outline-variant/15 pb-2">
               <span className="text-secondary">Event Date & Time:</span>
-              <span className="font-semibold">{bookingDate} &bull; {createdBooking.bookingTime} - {getEndTime(createdBooking.bookingTime, createdBooking.durationHours || durationHours)}</span>
+              <span className="font-semibold">{bookingDate} &bull; {formatTime12h(createdBooking.bookingTime)} - {formatTime12h(getEndTime(createdBooking.bookingTime, createdBooking.durationHours || durationHours))}</span>
             </div>
             <div className="flex justify-between items-center border-b border-outline-variant/15 pb-2">
               <span className="text-secondary">Total Contract Price:</span>

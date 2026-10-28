@@ -5,6 +5,7 @@ export interface User {
   phone?: string;
   role: "user" | "admin" | "owner" | "staff";
   isPhoneVerified?: boolean;
+  createdAt?: string;
 }
 
 export interface AdminUser {
@@ -122,6 +123,24 @@ export interface Booking {
   contractedAmount?: number;
   collectedAmount?: number;
   outstandingBalance?: number;
+  eventEndTime?: string;
+  rescheduledAt?: string;
+  rescheduleCount?: number;
+  previousBookingDate?: string;
+  previousBookingTime?: string;
+  marketingConsent?: boolean;
+  marketingConsentAt?: string;
+  guestMedia?: Array<{
+    url: string;
+    publicId?: string;
+    mediaType: "photo" | "video";
+    originalName?: string;
+    sizeBytes?: number;
+    uploadedAt: string;
+  }>;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
   createdAt: string;
 }
 
