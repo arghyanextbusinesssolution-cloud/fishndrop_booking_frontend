@@ -46,6 +46,7 @@ export const Footer = () => {
             <h3 className="font-label text-xs uppercase tracking-[0.2em] font-bold text-[#C8A96A]/60">Quick Links</h3>
             <div className="flex flex-col gap-3">
               <Link href="/about" className="text-sm hover:text-white transition-colors">About Us</Link>
+              <Link href="/our-dining" className="text-sm hover:text-white transition-colors">Our Dining</Link>
               <Link href="/gallery" className="text-sm hover:text-white transition-colors">Gallery</Link>
               <Link href="/blog" className="text-sm hover:text-white transition-colors">Blog & Stories</Link>
               <Link href="/book-venue" className="text-sm hover:text-white transition-colors">Private Space</Link>

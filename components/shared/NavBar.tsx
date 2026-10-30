@@ -39,6 +39,7 @@ export const NavBar = () => {
 
   const navLinks = [
     { href: "/about", label: "About" },
+    { href: "/our-dining", label: "Our Dining" },
     { href: "/gallery", label: "Gallery" },
     { href: "/blog", label: "Blog" }
   ];
