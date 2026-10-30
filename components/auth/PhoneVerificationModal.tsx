@@ -14,21 +14,33 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import toast from "react-hot-toast";
 
-const COUNTRY_CODES = [
-  { code: "+1", label: "US (+1)" },
-  { code: "+1", label: "CA (+1)" },
-  { code: "+44", label: "UK (+44)" },
-  { code: "+91", label: "IN (+91)" },
-  { code: "+61", label: "AU (+61)" },
-  { code: "+52", label: "MX (+52)" },
-  { code: "+49", label: "DE (+49)" },
-  { code: "+33", label: "FR (+33)" },
-  { code: "+971", label: "UAE (+971)" }
+interface CountryOption {
+  id: string;
+  code: string;
+  flag: string;
+  label: string;
+  name: string;
+}
+
+const COUNTRY_OPTIONS: CountryOption[] = [
+  { id: "US", code: "+1", flag: "🇺🇸", label: "US (+1)", name: "United States" },
+  { id: "CA", code: "+1", flag: "🇨🇦", label: "CA (+1)", name: "Canada" },
+  { id: "UK", code: "+44", flag: "🇬🇧", label: "UK (+44)", name: "United Kingdom" },
+  { id: "IN", code: "+91", flag: "🇮🇳", label: "IN (+91)", name: "India" },
+  { id: "AU", code: "+61", flag: "🇦🇺", label: "AU (+61)", name: "Australia" },
+  { id: "MX", code: "+52", flag: "🇲🇽", label: "MX (+52)", name: "Mexico" },
+  { id: "DE", code: "+49", flag: "🇩🇪", label: "DE (+49)", name: "Germany" },
+  { id: "FR", code: "+33", flag: "🇫🇷", label: "FR (+33)", name: "France" },
+  { id: "AE", code: "+971", flag: "🇦🇪", label: "UAE (+971)", name: "United Arab Emirates" }
 ];
 
-const formatUSPhoneNumber = (value: string): string => {
+/**
+ * Standard North American (US & Canada) phone formatting: (XXX) XXX-XXXX
+ */
+const formatNorthAmericanNumber = (value: string): string => {
   if (!value) return "";
   const cleaned = value.replace(/\D/g, "");
+  // If user typed 11 digits starting with 1, strip the leading 1 for clean 10-digit display
   const match = cleaned.length === 11 && cleaned.startsWith("1") ? cleaned.slice(1) : cleaned.slice(0, 10);
   const len = match.length;
   if (len === 0) return "";
@@ -52,29 +64,41 @@ export function PhoneVerificationModal({
 }: PhoneVerificationModalProps) {
   const { sendOTP, verifyOTP, loading } = useAuth();
 
-  const [countryCode, setCountryCode] = useState("+1");
+  const [selectedCountryId, setSelectedCountryId] = useState<string>("US");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [resendCooldown, setResendCooldown] = useState(0);
   const [errMessage, setErrMessage] = useState<string | null>(null);
 
+  const selectedCountry =
+    COUNTRY_OPTIONS.find((c) => c.id === selectedCountryId) || COUNTRY_OPTIONS[0];
+
   useEffect(() => {
-    if (initialPhone) {
+    if (!isOpen) {
+      setStep("phone");
+      setOtpCode("");
+      setErrMessage(null);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (initialPhone && isOpen) {
       const clean = initialPhone.replace(/[^\d+]/g, "");
       if (clean.startsWith("+")) {
-        const found = COUNTRY_CODES.find((c) => clean.startsWith(c.code));
+        const found = COUNTRY_OPTIONS.find((c) => clean.startsWith(c.code));
         if (found) {
-          setCountryCode(found.code);
-          setPhoneNumber(formatUSPhoneNumber(clean.slice(found.code.length)));
+          setSelectedCountryId(found.id);
+          const rawNum = clean.slice(found.code.length);
+          setPhoneNumber(found.code === "+1" ? formatNorthAmericanNumber(rawNum) : rawNum);
         } else {
-          setPhoneNumber(formatUSPhoneNumber(clean));
+          setPhoneNumber(formatNorthAmericanNumber(clean));
         }
       } else {
-        setPhoneNumber(formatUSPhoneNumber(clean));
+        setPhoneNumber(formatNorthAmericanNumber(clean));
       }
     }
-  }, [initialPhone]);
+  }, [initialPhone, isOpen]);
 
   useEffect(() => {
     let timer: any;
@@ -88,16 +112,62 @@ export function PhoneVerificationModal({
 
   if (!isOpen) return null;
 
-  const getFullPhone = () => {
-    const raw = phoneNumber.replace(/\D/g, "");
-    return `${countryCode}${raw}`;
+  /**
+   * Returns clean E.164 phone number for backend dispatch (e.g. +15551234567)
+   */
+  const getFullPhone = (): string => {
+    const digits = phoneNumber.replace(/\D/g, "");
+    if (selectedCountry.code === "+1") {
+      const clean10 = digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
+      return `+1${clean10}`;
+    }
+    const codeDigits = selectedCountry.code.replace(/\D/g, "");
+    if (digits.startsWith(codeDigits)) {
+      return `+${digits}`;
+    }
+    return `${selectedCountry.code}${digits}`;
+  };
+
+  /**
+   * Formats the phone for display in the proper US / Canada way: +1 (555) 000-0000
+   */
+  const getDisplayFormattedPhone = (): string => {
+    const digits = phoneNumber.replace(/\D/g, "");
+    if (selectedCountry.code === "+1") {
+      const clean10 = digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits;
+      if (clean10.length === 10) {
+        return `+1 (${clean10.slice(0, 3)}) ${clean10.slice(3, 6)}-${clean10.slice(6)}`;
+      }
+      return `+1 ${phoneNumber}`;
+    }
+    return `${selectedCountry.code} ${phoneNumber}`;
+  };
+
+  const handlePhoneChange = (val: string) => {
+    if (selectedCountry.code === "+1") {
+      setPhoneNumber(formatNorthAmericanNumber(val));
+    } else {
+      setPhoneNumber(val.replace(/[^\d\s()-]/g, ""));
+    }
+    if (errMessage) setErrMessage(null);
   };
 
   const handleSendOTP = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setErrMessage(null);
-    const raw = phoneNumber.replace(/\D/g, "");
-    if (!raw || raw.length < 7) {
+
+    const digits = phoneNumber.replace(/\D/g, "");
+    const clean10 =
+      selectedCountry.code === "+1" && digits.length === 11 && digits.startsWith("1")
+        ? digits.slice(1)
+        : digits;
+
+    if (selectedCountry.code === "+1" && clean10.length !== 10) {
+      setErrMessage("Please enter a valid 10-digit phone number: (XXX) XXX-XXXX");
+      return;
+    }
+
+    if (digits.length < 7) {
       setErrMessage("Please enter a valid phone number (at least 7 digits)");
       return;
     }
@@ -105,7 +175,8 @@ export function PhoneVerificationModal({
     const fullPhone = getFullPhone();
     try {
       await sendOTP(fullPhone);
-      toast.success(`Verification SMS code sent to ${fullPhone}`);
+      const displayPhone = getDisplayFormattedPhone();
+      toast.success(`Verification code sent to ${selectedCountry.flag} ${displayPhone}`);
       setStep("otp");
       setResendCooldown(60);
     } catch (err: any) {
@@ -126,7 +197,7 @@ export function PhoneVerificationModal({
     const fullPhone = getFullPhone();
     try {
       const data = await verifyOTP(fullPhone, cleanCode);
-      toast.success("Phone number verified successfully!");
+      toast.success("Phone verified successfully!");
       if (onSuccess) {
         onSuccess(data.user, data.token);
       }
@@ -146,6 +217,7 @@ export function PhoneVerificationModal({
         {/* Close Button */}
         <button
           onClick={onClose}
+          aria-label="Close modal"
           className="absolute top-4 right-4 p-1 text-white/50 hover:text-white rounded-full hover:bg-white/10 transition-colors"
         >
           <X className="w-5 h-5" />
@@ -163,11 +235,22 @@ export function PhoneVerificationModal({
         <h3 className="font-headline text-2xl font-bold text-center text-white mb-1">
           {step === "phone" ? "Verify Phone Number" : "Enter Verification Code"}
         </h3>
-        <p className="text-xs text-center text-white/70 mb-6 max-w-xs mx-auto">
-          {step === "phone"
-            ? "Enter your mobile phone number to receive a 4-digit verification code via SMS."
-            : `We sent a 4-digit code to ${getFullPhone()}. Enter it below to verify.`}
-        </p>
+
+        {step === "phone" ? (
+          <p className="text-xs text-center text-white/70 mb-5 max-w-xs mx-auto">
+            Enter your mobile phone number to receive a 4-digit verification code via SMS.
+          </p>
+        ) : (
+          <div className="text-center mb-5">
+            <p className="text-xs text-white/70 mb-2">
+              We sent a 4-digit verification code to
+            </p>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#C8A96A]/15 border border-[#C8A96A]/40 text-[#E8CB8A] font-mono text-sm font-bold shadow-inner">
+              <span>{selectedCountry.flag}</span>
+              <span>{getDisplayFormattedPhone()}</span>
+            </div>
+          </div>
+        )}
 
         {errMessage && (
           <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-start gap-2.5 text-xs text-rose-300">
@@ -179,31 +262,61 @@ export function PhoneVerificationModal({
         {step === "phone" ? (
           <form onSubmit={handleSendOTP} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#C8A96A] mb-1.5">
-                Mobile Phone Number
-              </label>
-              <div className="flex items-center rounded-xl bg-black/60 border border-white/20 focus-within:border-[#C8A96A] p-1.5">
-                <select
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  className="bg-transparent text-sm font-bold text-[#E8CB8A] px-2 py-2 outline-none cursor-pointer"
-                >
-                  {COUNTRY_CODES.map((c, i) => (
-                    <option key={i} value={c.code} className="bg-[#0c1612] text-white">
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="h-5 w-px bg-white/20 mx-1" />
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-[#C8A96A]">
+                  Mobile Phone Number
+                </label>
+                {selectedCountry.code === "+1" && (
+                  <span className="text-[10px] text-white/50 font-mono">
+                    US &amp; Canada Format
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center rounded-xl bg-black/60 border border-white/20 focus-within:border-[#C8A96A] p-1.5 transition-all">
+                {/* Country Dropdown */}
+                <div className="relative flex items-center shrink-0">
+                  <select
+                    value={selectedCountryId}
+                    onChange={(e) => {
+                      setSelectedCountryId(e.target.value);
+                      const opt = COUNTRY_OPTIONS.find((c) => c.id === e.target.value);
+                      if (opt?.code === "+1") {
+                        setPhoneNumber(formatNorthAmericanNumber(phoneNumber));
+                      }
+                    }}
+                    className="bg-transparent text-sm font-bold text-[#E8CB8A] pl-2 pr-3 py-2 outline-none cursor-pointer appearance-none"
+                  >
+                    {COUNTRY_OPTIONS.map((c) => (
+                      <option key={c.id} value={c.id} className="bg-[#0c1612] text-white">
+                        {c.flag} {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="h-5 w-px bg-white/20 mx-1 shrink-0" />
+
+                {/* Phone Input with (XXX) XXX-XXXX auto-format */}
                 <input
                   type="tel"
                   autoFocus
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(formatUSPhoneNumber(e.target.value))}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
                   placeholder="(555) 000-0000"
                   className="flex-1 bg-transparent px-2 py-2 font-mono text-base font-bold text-white placeholder:text-white/30 outline-none"
                 />
               </div>
+
+              {/* Real-time Canada & US formatted preview */}
+              {phoneNumber && selectedCountry.code === "+1" && (
+                <div className="mt-2 flex items-center justify-between text-[11px] px-1 text-white/60">
+                  <span>Formatted:</span>
+                  <span className="font-mono text-[#E8CB8A] font-semibold">
+                    {selectedCountry.flag} {getDisplayFormattedPhone()}
+                  </span>
+                </div>
+              )}
             </div>
 
             <button
