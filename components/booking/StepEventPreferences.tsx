@@ -570,11 +570,11 @@ export const StepEventPreferences = ({
         )}
       </section>
 
-      {/* ── Photographer Add-On ── */}
+      {/* ── Photography / Videography Add-On ── */}
       <section className="space-y-5">
         <div className="flex items-center gap-3">
           <Camera className="w-5 h-5 text-[#C8A96A]" />
-          <h2 className="font-headline italic text-2xl text-[#E5E7EB]">Event Photographer</h2>
+          <h2 className="font-headline italic text-2xl text-[#E5E7EB]">Photography / Videography</h2>
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#C8A96A]/70 bg-[#C8A96A]/10 px-2 py-0.5 rounded-full border border-[#C8A96A]/20">Add-On</span>
         </div>
 
@@ -599,10 +599,10 @@ export const StepEventPreferences = ({
               </div>
               <div>
                 <p className={cn("font-headline italic text-xl leading-tight", needPhotographer ? "text-[#C8A96A]" : "text-white/70")}>
-                  Professional Photographer
+                  Professional Photography / Videography
                 </p>
                 <p className="text-[11px] text-white/40 mt-0.5 font-light italic">
-                  High-res event photos delivered within 48 hrs
+                  High-res event photos &amp; highlight video reels delivered within 48 hrs
                 </p>
               </div>
             </div>

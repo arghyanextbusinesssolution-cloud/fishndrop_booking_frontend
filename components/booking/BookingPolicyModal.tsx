@@ -98,7 +98,7 @@ export const BookingPolicyModal = ({
               {(needDj || needPhotographer) && (
                 <div className="flex flex-wrap gap-2 pt-1 text-[11px] text-[#E8CB8A]">
                   {needDj && <span>• Includes DJ Service (+ $300)</span>}
-                  {needPhotographer && <span>• Includes Photographer (+ $300+)</span>}
+                  {needPhotographer && <span>• Includes Photography / Videography (+ $300+)</span>}
                 </div>
               )}
             </div>

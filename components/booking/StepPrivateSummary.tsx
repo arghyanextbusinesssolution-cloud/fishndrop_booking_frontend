@@ -7,7 +7,22 @@ import { getStripe } from "@/lib/stripe";
 import { StripePaymentForm } from "./StripePaymentForm";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/axios";
-import { Loader2, Ticket, Check, X, Music, UtensilsCrossed, AlertCircle, Sparkles, ChefHat } from "lucide-react";
+import {
+  Loader2,
+  Ticket,
+  Check,
+  X,
+  Music,
+  UtensilsCrossed,
+  AlertCircle,
+  Sparkles,
+  ChefHat,
+  Clock,
+  Copy,
+  Phone,
+  AlertTriangle,
+  RefreshCw
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import { getAttributionPayload, trackMetaConversion } from "@/lib/tracking";
@@ -79,6 +94,39 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
   const [copiedZelle, setCopiedZelle] = useState(false);
+  const [copiedBookingId, setCopiedBookingId] = useState(false);
+  const [zelleSecondsLeft, setZelleSecondsLeft] = useState<number>(15 * 60);
+  const [isZelleExpired, setIsZelleExpired] = useState(false);
+  const [isCreatingZelleDraft, setIsCreatingZelleDraft] = useState(false);
+
+  // 15-minute reverse countdown clock for Zelle slot hold
+  useEffect(() => {
+    if (paymentMethod !== "zelle" || !bookingId || isZelleExpired) return;
+
+    const timer = setInterval(() => {
+      setZelleSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsZelleExpired(true);
+          // Automatically release the slot lock in backend
+          api.post("/bookings/cancel-unpaid", { bookingId }).catch((err) => {
+            console.warn("Auto-cancel unpaid slot error:", err);
+          });
+          toast.error("15-minute slot hold has expired. The venue slot was released.");
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [paymentMethod, bookingId, isZelleExpired]);
+
+  const formatTimer = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -103,64 +151,152 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
     setTimeout(() => setCopiedZelle(false), 2000);
   };
 
-  const handleReserve = async () => {
+  const handleCopyBookingId = () => {
+    if (!bookingId) return;
+    navigator.clipboard.writeText(bookingId);
+    setCopiedBookingId(true);
+    toast.success("Full Booking ID copied! Paste this in your Zelle memo.");
+    setTimeout(() => setCopiedBookingId(false), 2000);
+  };
+
+  const buildPayload = (method: "card" | "zelle", zelleUrl?: string) => {
+    let formattedNotes = bookingData.notes || "";
+    if (bookingData.selectedDishes && bookingData.selectedDishes.length > 0) {
+      const dishStrs = bookingData.selectedDishes.map((dish: string) => {
+        const qty = bookingData.dishQuantities?.[dish];
+        return qty && qty > 1 ? `${dish} (x${qty} platters)` : `${dish} (x1 platter)`;
+      });
+      const dishStr = `[Dishes: ${dishStrs.join(", ")}]`;
+      formattedNotes = formattedNotes ? `${formattedNotes} | ${dishStr}` : dishStr;
+    }
+    if (bookingData.cateringNotes) {
+      formattedNotes = formattedNotes ? `${formattedNotes} | [Dietary: ${bookingData.cateringNotes}]` : `[Dietary: ${bookingData.cateringNotes}]`;
+    }
+    if (bookingData.needDecoration && bookingData.decorationStyle) {
+      formattedNotes = formattedNotes ? `${formattedNotes} | [Decor: ${bookingData.decorationStyle}]` : `[Decor: ${bookingData.decorationStyle}]`;
+    }
+
+    const attribution = getAttributionPayload();
+    const cleanPhone = (bookingData.guestDetails?.phone || "").replace(/\D/g, "");
+
+    return {
+      customerName: bookingData.guestDetails?.name || "Guest User",
+      customerEmail: bookingData.guestDetails?.email || (cleanPhone ? `guest_${cleanPhone}@fishndrop.com` : "guest@fishndrop.com"),
+      customerPhone: bookingData.guestDetails?.phone || "",
+      password: bookingData.guestDetails?.password || undefined,
+      bookingDate: bookingData.date,
+      bookingTime: bookingData.time || "19:00",
+      partySize: bookingData.guests,
+      durationHours: bookingData.durationHours || 1,
+      occasion: bookingData.occasion || "other",
+      notes: formattedNotes.slice(0, 500),
+      needDj: bookingData.needDj ?? false,
+      needPhotographer: bookingData.needPhotographer ?? false,
+      photographerHours: bookingData.needPhotographer ? (bookingData.photographerHours || 2) : 0,
+      cateringMenu: bookingData.cateringMenu || "jamaican_jerk_house",
+      dishQuantities: bookingData.dishQuantities || {},
+      customDepositAmount: customDeposit,
+      couponCode: appliedCoupon?.code || undefined,
+      paymentMethod: method,
+      zelleProofUrl: zelleUrl || undefined,
+      ...attribution
+    };
+  };
+
+  const createZelleDraft = async () => {
+    setIsCreatingZelleDraft(true);
+    setError(null);
+    setIsZelleExpired(false);
+    setZelleSecondsLeft(15 * 60);
+
+    try {
+      const payload = buildPayload("zelle");
+      const res = await api.post("/bookings/reserve-private", payload);
+      if (res.data.success) {
+        if (res.data.token && res.data.user) {
+          setAuth(res.data.user, res.data.token);
+        }
+        setBookingId(res.data.booking._id);
+        setZelleSecondsLeft(15 * 60);
+        setIsZelleExpired(false);
+        toast.success("Venue slot held for 15 minutes! Copy your Booking ID below.");
+      } else {
+        setError(res.data.message || "Failed to hold slot. The time slot may no longer be available.");
+      }
+    } catch (err: any) {
+      console.error("Zelle draft reservation failed:", err);
+      let errorMsg = "Failed to reserve slot for Zelle. The slot may be already taken.";
+      if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      }
+      setError(errorMsg);
+    } finally {
+      setIsCreatingZelleDraft(false);
+    }
+  };
+
+  const handleSelectZelle = async () => {
+    setPaymentMethod("zelle");
+    if (!bookingId && !isCreatingZelleDraft) {
+      await createZelleDraft();
+    }
+  };
+
+  const handleSelectCard = async () => {
+    if (bookingId && paymentMethod === "zelle") {
+      try {
+        await api.post("/bookings/cancel-unpaid", { bookingId });
+      } catch (e) {
+        console.warn("Cancel unpaid draft error:", e);
+      }
+      setBookingId(null);
+      setIsZelleExpired(false);
+      setZelleSecondsLeft(15 * 60);
+    }
+    setPaymentMethod("card");
+  };
+
+  const handleSubmitZelle = async () => {
+    if (!bookingId) {
+      await createZelleDraft();
+      return;
+    }
+    if (isZelleExpired) {
+      toast.error("Your 15-minute slot hold has expired. Please re-hold the slot.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      if (screenshotPreview) {
+        try {
+          await api.post("/payments/upload-zelle-proof", {
+            bookingId,
+            imageBase64: screenshotPreview
+          });
+        } catch (proofErr) {
+          console.warn("Direct Zelle proof upload error:", proofErr);
+        }
+      }
+      trackMetaConversion("Lead", {
+        content_name: "Private Sanctuary Booking - Zelle",
+        currency: "USD",
+        value: customDeposit
+      });
+      toast.success("Private venue Zelle booking submitted! Redirecting to verification status...");
+      router.push(`/user/payment/zelle-pending?bookingId=${bookingId}`);
+    } catch (err: any) {
+      console.error("Zelle submit failed:", err);
+      toast.error("Failed to complete Zelle booking.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleReserveCard = async () => {
     setSubmitting(true);
     setError(null);
     try {
-      let zelleProofUrl = "";
-      if (paymentMethod === "zelle" && screenshotPreview) {
-        try {
-          const { data: uploadRes } = await api.post("/upload-cake-photo", { imageBase64: screenshotPreview });
-          if (uploadRes.success && uploadRes.url) {
-            zelleProofUrl = uploadRes.url;
-          }
-        } catch (upErr) {
-          console.warn("Proof upload failed during reserve, will proceed with standard Zelle flow:", upErr);
-        }
-      }
-
-      let formattedNotes = bookingData.notes || "";
-      if (bookingData.selectedDishes && bookingData.selectedDishes.length > 0) {
-        const dishStrs = bookingData.selectedDishes.map((dish: string) => {
-          const qty = bookingData.dishQuantities?.[dish];
-          return qty && qty > 1 ? `${dish} (x${qty} platters)` : `${dish} (x1 platter)`;
-        });
-        const dishStr = `[Dishes: ${dishStrs.join(", ")}]`;
-        formattedNotes = formattedNotes ? `${formattedNotes} | ${dishStr}` : dishStr;
-      }
-      if (bookingData.cateringNotes) {
-        formattedNotes = formattedNotes ? `${formattedNotes} | [Dietary: ${bookingData.cateringNotes}]` : `[Dietary: ${bookingData.cateringNotes}]`;
-      }
-      if (bookingData.needDecoration && bookingData.decorationStyle) {
-        formattedNotes = formattedNotes ? `${formattedNotes} | [Decor: ${bookingData.decorationStyle}]` : `[Decor: ${bookingData.decorationStyle}]`;
-      }
-
-      const attribution = getAttributionPayload();
-
-      const cleanPhone = (bookingData.guestDetails?.phone || "").replace(/\D/g, "");
-      const payload = {
-        customerName: bookingData.guestDetails?.name || "Guest User",
-        customerEmail: bookingData.guestDetails?.email || (cleanPhone ? `guest_${cleanPhone}@fishndrop.com` : "guest@fishndrop.com"),
-        customerPhone: bookingData.guestDetails?.phone || "",
-        password: bookingData.guestDetails?.password || undefined,
-        bookingDate: bookingData.date,
-        bookingTime: bookingData.time || "19:00",
-        partySize: bookingData.guests,
-        durationHours: bookingData.durationHours || 1,
-        occasion: bookingData.occasion || "other",
-        notes: formattedNotes.slice(0, 500),
-        needDj: bookingData.needDj ?? false,
-        needPhotographer: bookingData.needPhotographer ?? false,
-        photographerHours: bookingData.needPhotographer ? (bookingData.photographerHours || 2) : 0,
-        cateringMenu: bookingData.cateringMenu || "jamaican_jerk_house",
-        dishQuantities: bookingData.dishQuantities || {},
-        customDepositAmount: customDeposit,
-        couponCode: appliedCoupon?.code || undefined,
-        paymentMethod,
-        zelleProofUrl: zelleProofUrl || undefined,
-        ...attribution
-      };
-
+      const payload = buildPayload("card");
       const res = await api.post("/bookings/reserve-private", payload);
 
       if (res.data.success) {
@@ -173,22 +309,6 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
           setAuth(res.data.user, res.data.token);
         }
         setBookingId(res.data.booking._id);
-
-        if (paymentMethod === "zelle") {
-          if (screenshotPreview && !zelleProofUrl) {
-            try {
-              await api.post("/payments/upload-zelle-proof", {
-                bookingId: res.data.booking._id,
-                imageBase64: screenshotPreview
-              });
-            } catch (proofErr) {
-              console.warn("Direct Zelle proof upload error:", proofErr);
-            }
-          }
-          toast.success("Private venue Zelle booking submitted! Redirecting to verification status...");
-          router.push(`/user/payment/zelle-pending?bookingId=${res.data.booking._id}`);
-          return;
-        }
 
         const { data: piData } = await api.post(
           "/payments/create-payment-intent",
@@ -284,7 +404,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
 
   return (
     <div className="max-w-md mx-auto space-y-3 pt-1 sm:pt-3 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {!clientSecret && !bookingId && !submitting && (
+      {!clientSecret && (
         <div className="bg-[#f7f6f2] rounded-xl p-4 sm:p-6 shadow-lg space-y-4">
 
           {/* Deposit / Total Header */}
@@ -339,7 +459,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => setPaymentMethod("card")}
+                onClick={handleSelectCard}
                 className={`py-3 px-3 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-1 ${
                   paymentMethod === "card"
                     ? "bg-[#0F4C3A] text-white border-[#0F4C3A] shadow-md"
@@ -352,7 +472,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
 
               <button
                 type="button"
-                onClick={() => setPaymentMethod("zelle")}
+                onClick={handleSelectZelle}
                 className={`py-3 px-3 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-1 ${
                   paymentMethod === "zelle"
                     ? "bg-[#6B1D2F] text-white border-[#6B1D2F] shadow-md"
@@ -365,57 +485,159 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
             </div>
           </div>
 
-          {/* Zelle Instructions & Screenshot Upload */}
+          {/* Zelle Instructions, Full Booking ID, Reverse Timer & Screenshot Upload */}
           {paymentMethod === "zelle" && (
-            <div className="p-4 rounded-xl bg-purple-50 border border-purple-200 space-y-3 animate-in fade-in duration-300">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] uppercase tracking-widest text-purple-700 font-bold">Zelle Recipient Email</p>
-                  <p className="text-sm font-extrabold text-purple-950 font-mono">tropicapayments@gmail.com</p>
+            <div className="p-4 rounded-xl bg-purple-50 border border-purple-200 space-y-3.5 animate-in fade-in duration-300">
+              
+              {/* Draft creation loading spinner */}
+              {isCreatingZelleDraft && (
+                <div className="p-3 bg-purple-100/80 rounded-lg border border-purple-200 flex items-center justify-center gap-2 text-xs font-bold text-purple-900 animate-pulse">
+                  <Loader2 className="w-4 h-4 animate-spin text-purple-700" />
+                  <span>Holding your venue slot &amp; generating your Booking ID...</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleCopyZelle}
-                  className="px-3 py-1 bg-purple-600 text-white rounded-lg text-[10px] uppercase tracking-wider font-bold hover:bg-purple-700 transition"
-                >
-                  {copiedZelle ? "Copied!" : "Copy Email"}
-                </button>
-              </div>
+              )}
 
-              <div className="p-3 bg-white/80 rounded-lg border border-purple-100 space-y-1.5 text-xs text-purple-900">
-                <p className="font-bold text-[11px] text-purple-950">📋 Private Event Zelle Instructions:</p>
-                <ol className="list-decimal pl-4 space-y-1 text-[11px] text-gray-700">
-                  <li>Send deposit of <strong className="text-purple-950">${customDeposit.toFixed(2)}</strong> via Zelle to email <span className="font-mono font-bold">tropicapayments@gmail.com</span></li>
-                  <li>Paste your generated <strong className="text-purple-950">Booking ID</strong> in your Zelle payment memo/notes.</li>
-                  <li>Upload payment screenshot proof below.</li>
-                  <li>Booking stays <span className="font-bold text-amber-600">Pending</span> until the backend team verifies your Zelle payment, Booking ID &amp; deposit amount, and confirms your venue slot!</li>
-                </ol>
-              </div>
+              {/* Expired state alert */}
+              {isZelleExpired ? (
+                <div className="p-4 rounded-xl bg-red-50 border border-red-300 space-y-2.5 text-center">
+                  <AlertTriangle className="w-8 h-8 text-red-600 mx-auto" />
+                  <h4 className="text-sm font-bold text-red-950">15-Minute Slot Hold Expired</h4>
+                  <p className="text-xs text-red-700 leading-relaxed">
+                    Your 15-minute temporary slot reservation has ended and the slot has been released for other guests.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={createZelleDraft}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors inline-flex items-center gap-1.5 shadow"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Re-Hold Slot (15 Minutes)</span>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* 15-Minute Reverse Countdown Clock Badge */}
+                  {bookingId && (
+                    <div className="flex items-center justify-between p-2.5 rounded-lg bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 text-white shadow-sm border border-purple-800">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-amber-300 animate-pulse shrink-0" />
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider font-bold text-purple-200">Temporary Slot Hold</p>
+                          <p className="text-[9px] text-purple-300 font-light">Completes auto-release when timer ends</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono text-base font-black text-amber-300 bg-black/50 px-2.5 py-0.5 rounded border border-amber-300/30 inline-block tracking-widest">
+                          {formatTimer(zelleSecondsLeft)}
+                        </div>
+                        <span className="block text-[8px] text-purple-200 uppercase font-sans mt-0.5">remaining</span>
+                      </div>
+                    </div>
+                  )}
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] uppercase tracking-widest text-purple-900 font-bold block">
-                  📷 Upload Zelle Screenshot Proof
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="block w-full text-xs text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer"
-                />
-                {screenshotPreview && (
-                  <div className="mt-2 relative rounded-lg overflow-hidden border border-purple-300 max-h-40">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={screenshotPreview} alt="Zelle Proof" className="object-cover w-full h-full" />
+                  {/* Zelle Recipient Email Box */}
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-purple-200 shadow-sm">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-purple-700 font-bold">Zelle Recipient Email</p>
+                      <p className="text-xs sm:text-sm font-extrabold text-purple-950 font-mono select-all">tropicapayments@gmail.com</p>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => { setScreenshotFile(null); setScreenshotPreview(null); }}
-                      className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full text-xs"
+                      onClick={handleCopyZelle}
+                      className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-[10px] uppercase tracking-wider font-bold hover:bg-purple-700 transition shadow"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      {copiedZelle ? "Copied!" : "Copy Email"}
                     </button>
                   </div>
-                )}
-              </div>
+
+                  {/* Full Booking ID Box (Required for Zelle Memo) */}
+                  {bookingId && (
+                    <div className="p-3 bg-gradient-to-r from-purple-950 to-indigo-950 text-white rounded-lg border border-purple-400/30 space-y-2 shadow-sm">
+                      <div className="flex justify-between items-center">
+                        <p className="text-[10px] uppercase tracking-widest text-purple-200 font-bold">
+                          Full Booking ID (Paste in Zelle Memo)
+                        </p>
+                        <span className="text-[9px] bg-amber-400 text-purple-950 px-1.5 py-0.5 rounded font-extrabold uppercase">
+                          Required
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 bg-black/40 p-2.5 rounded-lg border border-white/10">
+                        <span className="font-mono text-xs sm:text-sm font-bold text-amber-300 break-all select-all">
+                          {bookingId}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleCopyBookingId}
+                          className="px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-purple-950 font-bold rounded-lg text-[10px] uppercase tracking-wider transition flex items-center gap-1 shrink-0 shadow"
+                        >
+                          {copiedBookingId ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                          <span>{copiedBookingId ? "Copied!" : "Copy Full ID"}</span>
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-purple-200/90 leading-tight">
+                        * Paste this full Booking ID into your Zelle payment memo/note so our team can immediately verify your deposit.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Instructions */}
+                  <div className="p-3 bg-white/90 rounded-lg border border-purple-100 space-y-1.5 text-xs text-purple-900">
+                    <p className="font-bold text-[11px] text-purple-950">📋 Private Event Zelle Instructions:</p>
+                    <ol className="list-decimal pl-4 space-y-1 text-[11px] text-gray-700">
+                      <li>Send deposit of <strong className="text-purple-950">${customDeposit.toFixed(2)}</strong> via Zelle to email <span className="font-mono font-bold select-all">tropicapayments@gmail.com</span></li>
+                      <li>Paste your copied <strong>Full Booking ID</strong> in your Zelle payment memo/notes.</li>
+                      <li>Upload your payment screenshot proof below.</li>
+                      <li>Your venue slot is reserved for <strong>15 minutes</strong> while verification proceeds.</li>
+                    </ol>
+                  </div>
+
+                  {/* Screenshot Proof Uploader */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase tracking-widest text-purple-900 font-bold block">
+                      📷 Upload Zelle Screenshot Proof
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="block w-full text-xs text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer"
+                    />
+                    {screenshotPreview && (
+                      <div className="mt-2 relative rounded-lg overflow-hidden border border-purple-300 max-h-40">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={screenshotPreview} alt="Zelle Proof" className="object-cover w-full h-full" />
+                        <button
+                          type="button"
+                          onClick={() => { setScreenshotFile(null); setScreenshotPreview(null); }}
+                          className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded-full text-xs hover:bg-red-700 transition"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Customer Support Notice with Andrew's Tropica Phone Call */}
+                  <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200/80 text-xs text-amber-950 space-y-2">
+                    <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                      <Phone className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <span>Need Help or Cannot Upload Proof?</span>
+                    </div>
+                    <p className="text-[11px] text-amber-800 leading-relaxed">
+                      If you are not able to upload your booking proof, please contact customer support directly:
+                    </p>
+                    <div>
+                      <a
+                        href="tel:8669907422"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 text-white font-bold text-xs hover:bg-amber-700 transition-colors shadow-sm"
+                      >
+                        <Phone className="w-3.5 h-3.5" />
+                        <span>Call Andrew&apos;s Tropica at (866) 990-7422</span>
+                      </a>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
@@ -493,18 +715,18 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
               </div>
             )}
 
-            {/* Photographer Add-On Row */}
+            {/* Photography / Videography Add-On Row */}
             <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-white border border-[#1a1c1b]/10">
               <span className="text-base flex-shrink-0">📷</span>
               <div className="flex-1">
-                <p className="text-[9px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">Event Photographer</p>
+                <p className="text-[9px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold">Photography / Videography</p>
                 <p className={cn(
                   "text-xs sm:text-sm font-bold mt-0.5",
                   bookingData.needPhotographer ? "text-[#0F4C3A]" : "text-[#1a1c1b]/60"
                 )}>
                   {bookingData.needPhotographer
                     ? `✓ ${bookingData.photographerHours || 2} hrs (+$${photographerCost} USD)`
-                    : "No Photographer"}
+                    : "No Media Add-on"}
                 </p>
                 {bookingData.needPhotographer && (bookingData.photographerHours || 2) > 2 && (
                   <p className="text-[10px] text-[#1a1c1b]/40 mt-0.5">
@@ -583,19 +805,60 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
               View Booking &amp; Payment Policy ($200 Deposit / 48-Hour Refund)
             </button>
 
-            <button
-              onClick={() => setShowPolicyModal(true)}
-              disabled={submitting || finalCost < 0}
-              className={`w-full text-white py-3 sm:py-3.5 rounded-xl text-xs uppercase tracking-widest font-black transition shadow-lg ${
-                paymentMethod === "zelle"
-                  ? "bg-gradient-to-r from-purple-800 to-indigo-900 hover:from-purple-900 hover:to-indigo-950"
-                  : "bg-[#0F4C3A] hover:bg-[#1a5b48]"
-              }`}
-            >
-              {paymentMethod === "zelle"
-                ? `Confirm & Pay Zelle Deposit ($${customDeposit.toFixed(2)})`
-                : `Confirm & Pay ${customDeposit.toFixed(2)} Deposit`}
-            </button>
+            {paymentMethod === "zelle" ? (
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={handleSubmitZelle}
+                  disabled={submitting || isZelleExpired || !bookingId}
+                  className="w-full text-white py-3 sm:py-3.5 rounded-xl text-xs uppercase tracking-widest font-black transition shadow-lg bg-gradient-to-r from-purple-800 to-indigo-900 hover:from-purple-900 hover:to-indigo-950 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Submitting Zelle Verification...</span>
+                    </>
+                  ) : (
+                    <span>Confirm &amp; Submit Zelle Reservation (${customDeposit.toFixed(2)})</span>
+                  )}
+                </button>
+
+                {bookingId && !isZelleExpired && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await api.post("/bookings/cancel-unpaid", { bookingId });
+                        toast.success("Held slot released.");
+                      } catch (err) {
+                        console.warn("Release slot error:", err);
+                      }
+                      setBookingId(null);
+                      setPaymentMethod("card");
+                    }}
+                    className="w-full text-center py-1 text-[11px] text-gray-500 hover:text-red-600 transition font-medium"
+                  >
+                    Cancel Hold &amp; Switch to Card
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowPolicyModal(true)}
+                disabled={submitting || finalCost < 0}
+                className="w-full text-white py-3 sm:py-3.5 rounded-xl text-xs uppercase tracking-widest font-black transition shadow-lg bg-[#0F4C3A] hover:bg-[#1a5b48] disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Preparing Payment...</span>
+                  </>
+                ) : (
+                  <span>Confirm &amp; Pay ${customDeposit.toFixed(2)} Deposit</span>
+                )}
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -603,7 +866,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
       <BookingPolicyModal
         isOpen={showPolicyModal}
         onClose={() => setShowPolicyModal(false)}
-        onAccept={handleReserve}
+        onAccept={handleReserveCard}
         amount={customDeposit}
         totalPrice={finalCost}
         remainingBalance={Math.max(0, finalCost - customDeposit)}

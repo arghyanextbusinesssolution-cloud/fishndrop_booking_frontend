@@ -249,10 +249,10 @@ export function StepAddonCardsHub({
             </span>
           </div>
           <h2 className="font-headline italic text-4xl text-white">
-            Professional Event Photography
+            Professional Photography / Videography
           </h2>
           <p className="text-white/60 font-body text-base">
-            Capture every candid smile, champagne toast, and special moment with our on-site photographer.
+            Capture every candid smile, highlight reel, champagne toast, and special moment with our on-site media team.
           </p>
         </header>
 
@@ -261,7 +261,7 @@ export function StepAddonCardsHub({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-white/10 gap-4">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#C8A96A] font-label">
-                High-Resolution Digital Gallery
+                High-Resolution Digital Gallery &amp; Video Reels
               </span>
               <h3 className="font-headline text-2xl text-white">
                 {photographerHours} Hours Coverage
@@ -280,7 +280,7 @@ export function StepAddonCardsHub({
           {/* Select Hours */}
           <div className="space-y-3">
             <label className="font-label text-xs uppercase tracking-widest text-white/80 font-bold block">
-              Select Photography Hours:
+              Select Photography / Videography Hours:
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[2, 3, 4, 5].map((hrs) => {
@@ -311,20 +311,20 @@ export function StepAddonCardsHub({
           {/* Inclusions */}
           <div className="space-y-2 pt-2 border-t border-white/10">
             <h4 className="text-xs font-bold uppercase tracking-widest text-white/70 font-label">
-              Included with Photographer:
+              Included with Photography / Videography:
             </h4>
             <div className="grid sm:grid-cols-2 gap-2 text-xs text-white/80">
               <div className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-[#C8A96A]" /> Full digital album delivered in 48h
+                <Check className="w-3.5 h-3.5 text-[#C8A96A]" /> Full digital photo album delivered in 48h
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-[#C8A96A]" /> Color correction &amp; retouching
+                <Check className="w-3.5 h-3.5 text-[#C8A96A]" /> Edited highlight video reels &amp; color correction
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-[#C8A96A]" /> High-resolution download rights
+                <Check className="w-3.5 h-3.5 text-[#C8A96A]" /> High-resolution digital download rights
               </div>
               <div className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-[#C8A96A]" /> Candid, group &amp; decor shots
+                <Check className="w-3.5 h-3.5 text-[#C8A96A]" /> Candid, group, decor &amp; video footage
               </div>
             </div>
           </div>
@@ -341,7 +341,7 @@ export function StepAddonCardsHub({
               }}
               className="w-full sm:w-1/3 py-3.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 font-label uppercase tracking-widest text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Trash2 className="w-4 h-4" /> Remove Photography
+              <Trash2 className="w-4 h-4" /> Remove Media Add-on
             </button>
           ) : null}
 
@@ -353,7 +353,7 @@ export function StepAddonCardsHub({
             }}
             className="flex-1 py-4 rounded-xl bg-[#C8A96A] text-[#0d1612] hover:bg-[#d8b97a] font-label uppercase tracking-widest text-xs font-bold transition-all shadow-[0_0_20px_rgba(200,169,106,0.3)] hover:shadow-[0_0_30px_rgba(200,169,106,0.5)] flex items-center justify-center gap-2 cursor-pointer"
           >
-            <Check className="w-4 h-4" /> Confirm Photography ({photographerHours} hrs &bull; ${currentCost})
+            <Check className="w-4 h-4" /> Confirm Photography / Videography ({photographerHours} hrs &bull; ${currentCost})
           </button>
         </div>
       </div>
@@ -772,7 +772,7 @@ export function StepAddonCardsHub({
           </div>
         </div>
 
-        {/* CARD 2: Photography */}
+        {/* CARD 2: Photography / Videography */}
         <div
           className={cn(
             "rounded-2xl p-3.5 sm:p-4 border transition-all duration-300",
@@ -788,7 +788,7 @@ export function StepAddonCardsHub({
 
             <div className="flex-1 min-w-0">
               <h3 className="font-headline text-sm sm:text-base text-white leading-snug">
-                Photography
+                Photography / Videography
               </h3>
               <span
                 className={cn(
