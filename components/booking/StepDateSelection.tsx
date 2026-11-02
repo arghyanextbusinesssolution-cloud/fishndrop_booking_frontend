@@ -63,8 +63,7 @@ export const StepDateSelection = ({ onNext, selectedDate }: StepDateSelectionPro
       </div>
 
       {/* Calendar */}
-      <div className="glass-card-high rounded-3xl p-6 md:p-10 relative overflow-hidden max-w-xl mx-auto md:mx-0">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gold-gradient" />
+      <div className="max-w-xl mx-auto md:mx-0">
         <Calendar onSelect={handleSelect} selectedDate={picked} />
       </div>
 

@@ -137,11 +137,12 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
 
       const attribution = getAttributionPayload();
 
+      const cleanPhone = (bookingData.guestDetails?.phone || "").replace(/\D/g, "");
       const payload = {
-        customerName: bookingData.guestDetails.name,
-        customerEmail: bookingData.guestDetails.email,
-        customerPhone: bookingData.guestDetails.phone,
-        password: bookingData.guestDetails.password || undefined,
+        customerName: bookingData.guestDetails?.name || "Guest User",
+        customerEmail: bookingData.guestDetails?.email || (cleanPhone ? `guest_${cleanPhone}@fishndrop.com` : "guest@fishndrop.com"),
+        customerPhone: bookingData.guestDetails?.phone || "",
+        password: bookingData.guestDetails?.password || undefined,
         bookingDate: bookingData.date,
         bookingTime: bookingData.time || "19:00",
         partySize: bookingData.guests,

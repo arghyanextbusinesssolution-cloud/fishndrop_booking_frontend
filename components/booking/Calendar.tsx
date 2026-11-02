@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -5,9 +7,10 @@ import { cn } from "@/lib/utils";
 interface CalendarProps {
   onSelect: (date: Date) => void;
   selectedDate: Date | null;
+  showAvailabilityBadges?: boolean;
 }
 
-export const Calendar = ({ onSelect, selectedDate }: CalendarProps) => {
+export const Calendar = ({ onSelect, selectedDate, showAvailabilityBadges = true }: CalendarProps) => {
   const [mounted, setMounted] = useState(false);
   const [today, setToday] = useState<Date>(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -21,8 +24,8 @@ export const Calendar = ({ onSelect, selectedDate }: CalendarProps) => {
 
   if (!mounted) {
     return (
-      <div className="w-full flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 rounded-full border-4 border-primary/10 border-t-primary animate-spin" />
+      <div className="w-full flex items-center justify-center min-h-[380px] bg-white rounded-2xl sm:rounded-3xl">
+        <div className="w-8 h-8 rounded-full border-4 border-gray-200 border-t-[#C8A96A] animate-spin" />
       </div>
     );
   }
@@ -53,42 +56,71 @@ export const Calendar = ({ onSelect, selectedDate }: CalendarProps) => {
   // Prevent navigating to past months
   const canGoPrev = !(year === today.getFullYear() && month <= today.getMonth());
 
+  // Determine status for each date: NO SOLD OUT!
+  // Only specific dates in a row have "1 LEFT" (e.g. Days 5, 6, 7 and Day 17)
+  const isOneLeftDate = (cellDate: Date, dayNum: number): boolean => {
+    if (cellDate < today) return false;
+    if (!showAvailabilityBadges) return false;
+    return dayNum === 5 || dayNum === 6 || dayNum === 7 || dayNum === 17;
+  };
+
   return (
-    <div className="w-full">
-      {/* Month Navigation */}
-      <div className="flex justify-between items-center mb-4 md:mb-8 px-2">
+    <div className="w-full bg-white text-gray-900 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 md:p-8 shadow-xl border border-gray-100/80 select-none">
+      {/* Top Header */}
+      <div className="text-center mb-4 sm:mb-6">
+        <h2 className="font-headline italic text-2xl sm:text-3xl md:text-4xl text-gray-900 tracking-tight">
+          Pick a Date
+        </h2>
+        <p className="text-gray-500 font-sans text-[11px] sm:text-xs md:text-sm mt-0.5 sm:mt-1">
+          Check availability instantly
+        </p>
+      </div>
+
+      {/* Month Navigation Row */}
+      <div className="flex items-center justify-center gap-4 sm:gap-6 mb-4 sm:mb-6">
         <button
+          type="button"
           onClick={() => canGoPrev && setCurrentMonth(new Date(year, month - 1))}
           disabled={!canGoPrev}
+          aria-label="Previous Month"
           className={cn(
-            "text-[#E3C281] transition-all",
-            canGoPrev ? "hover:scale-125 opacity-100" : "opacity-20 cursor-not-allowed"
+            "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all",
+            canGoPrev
+              ? "text-gray-600 hover:bg-gray-100 active:scale-95 cursor-pointer"
+              : "text-gray-300 cursor-not-allowed opacity-30"
           )}
         >
-          <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
-        <h2 className="font-headline text-lg md:text-3xl font-bold text-[#E3C281] tracking-[0.1em] uppercase">
-          {monthName} {year}
-        </h2>
+
+        <h3 className="font-headline text-lg sm:text-xl md:text-2xl font-bold text-gray-900 tracking-tight min-w-[150px] sm:min-w-[180px] text-center">
+          {monthName} <span className="font-sans font-semibold text-gray-700">{year}</span>
+        </h3>
+
         <button
+          type="button"
           onClick={() => setCurrentMonth(new Date(year, month + 1))}
-          className="text-[#E3C281] hover:scale-125 transition-all"
+          aria-label="Next Month"
+          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 active:scale-95 transition-all cursor-pointer"
         >
-          <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
 
-      {/* Day Headers */}
-      <div className="grid grid-cols-7 mb-2">
-        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-          <div key={day} className="text-center text-[8px] md:text-[10px] uppercase tracking-widest font-bold text-white/30 py-2 md:py-4">
-            {day.substring(0, 3)}
+      {/* Day Name Headers (S M T W T F S) */}
+      <div className="grid grid-cols-7 mb-2 sm:mb-3">
+        {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
+          <div
+            key={idx}
+            className="text-center font-sans font-bold text-[11px] sm:text-xs md:text-sm text-gray-700 py-0.5"
+          >
+            {day}
           </div>
         ))}
       </div>
 
-      {/* Days Grid */}
-      <div className="grid grid-cols-7 gap-1 md:gap-2">
+      {/* Calendar Grid */}
+      <div className="grid grid-cols-7 gap-y-1.5 sm:gap-y-3 gap-x-0.5 sm:gap-x-1.5">
         {days.map((d, i) => {
           const cellDate = new Date(year, month, d.day);
           cellDate.setHours(0, 0, 0, 0);
@@ -106,45 +138,71 @@ export const Calendar = ({ onSelect, selectedDate }: CalendarProps) => {
             month === today.getMonth() &&
             year === today.getFullYear();
 
-          const isPast = d.current && cellDate < today;
-          const isDisabled = !d.current || isPast;
+          const isTrailing = !d.current;
+          const isPast = isTrailing || cellDate < today;
+          const isOneLeft = !isPast && isOneLeftDate(cellDate, d.day);
+          const isDisabled = isPast;
 
           return (
             <div
               key={i}
               className={cn(
-                "w-full aspect-square flex items-center justify-center relative transition-all duration-300",
-                isDisabled ? "cursor-not-allowed" : "cursor-pointer",
-                isSelected ? "z-50" : "z-0"
+                "min-h-[46px] sm:min-h-[54px] md:min-h-[60px] flex flex-col items-center justify-start relative transition-all duration-200",
+                isDisabled ? "cursor-not-allowed" : "cursor-pointer group"
               )}
               onClick={() => !isDisabled && onSelect(new Date(year, month, d.day))}
             >
+              {/* Date Number Container */}
               <div
                 className={cn(
-                  "w-full rounded-xl flex flex-col items-center justify-center transition-all duration-500",
+                  "w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center relative transition-all duration-200",
                   isSelected
-                    ? "py-1.5 md:py-2 bg-[#E3C281] text-[#0F3D2E] shadow-[0_0_25px_rgba(227,194,129,0.5)] scale-110 z-10"
-                    : isDisabled
-                      ? "h-full text-white/10"
-                      : "h-full text-white/80 hover:bg-[#E3C281]/20 hover:text-white"
+                    ? "bg-[#0F3D2E] text-[#E3C281] shadow-md scale-105"
+                    : isToday && !isSelected
+                      ? "text-[#B45309] font-extrabold"
+                      : isPast
+                        ? "text-gray-300"
+                        : "text-gray-900 group-hover:bg-gray-100"
                 )}
               >
-                <span className={cn(
-                  "text-base md:text-lg font-headline italic font-bold leading-none",
-                  isSelected ? "text-[#0F3D2E]" : ""
-                )}>
+                <span
+                  className={cn(
+                    "text-sm sm:text-base md:text-lg font-headline font-bold leading-none",
+                    isToday && !isSelected && "text-[#B45309]"
+                  )}
+                >
                   {d.day}
                 </span>
-                {isSelected && (
-                  <span className="text-[7px] uppercase tracking-widest font-bold opacity-80 mt-1"></span>
-                )}
+
+                {/* Today indicator dot */}
                 {isToday && !isSelected && (
-                  <div className="absolute bottom-1.5 md:bottom-2 w-1 h-1 rounded-full bg-[#E3C281]" />
+                  <span className="absolute bottom-1 w-1 h-1 rounded-full bg-[#B45309]" />
+                )}
+              </div>
+
+              {/* Status Label (Only 1 LEFT for select dates, NO SOLD OUT) */}
+              <div className="h-3 sm:h-3.5 flex items-center justify-center mt-0.5">
+                {isOneLeft && !isSelected && (
+                  <span className="text-[8px] sm:text-[9px] font-extrabold text-[#C05621] uppercase tracking-wider font-sans whitespace-nowrap">
+                    1 LEFT
+                  </span>
                 )}
               </div>
             </div>
           );
         })}
+      </div>
+
+      {/* Legend at bottom: NO SOLD OUT */}
+      <div className="mt-5 sm:mt-7 pt-3.5 sm:pt-4 border-t border-gray-100 flex items-center justify-center gap-6 sm:gap-8 text-[11px] sm:text-xs font-sans text-gray-600">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-gray-400" />
+          <span className="font-medium text-gray-700">Available</span>
+        </div>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <span className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#C05621]" />
+          <span className="font-medium text-gray-700">1 Left</span>
+        </div>
       </div>
     </div>
   );

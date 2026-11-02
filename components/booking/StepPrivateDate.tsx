@@ -63,7 +63,7 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
         <div className="flex items-center gap-4">
           <span className="font-headline italic text-[#C8A96A] text-base">01.</span>
           <div className="h-[1px] w-8 bg-white/20"></div>
-          <span className="font-label uppercase tracking-widest text-[10px] text-white/50 font-bold">Step 01 of 07 &bull; Calendar Date &amp; Package</span>
+          <span className="font-label uppercase tracking-widest text-[10px] text-white/50 font-bold">Step 01 of 06 &bull; Calendar Date &amp; Package</span>
         </div>
         <h2 className="font-headline italic text-4xl md:text-5xl text-white leading-tight">
           Reserve Our <span className="text-gold-gradient">Sanctuary</span>
@@ -73,29 +73,26 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
         </p>
       </header>
 
-      <div className="grid md:grid-cols-2 gap-12">
-        <div className="space-y-4">
-          <label className="font-label text-xs uppercase tracking-widest text-white/60 mb-2 block">
-            Select Date
-          </label>
-          <div className="bg-[#1a1c1b] rounded-2xl p-6 border border-[#C8A96A]/10 shadow-[0_0_30px_rgba(0,0,0,0.3)]">
-            <Calendar
-              selectedDate={date || null}
-              onSelect={handleDateSelect}
-            />
-          </div>
+      <div className="grid lg:grid-cols-12 gap-8 items-start">
+        {/* Big Spacious Calendar Column */}
+        <div className="lg:col-span-7 xl:col-span-8 space-y-4">
+          <Calendar
+            selectedDate={date || null}
+            onSelect={handleDateSelect}
+            showAvailabilityBadges={true}
+          />
         </div>
 
-        <div ref={nextSectionRef} className="space-y-8 scroll-mt-24">
+        {/* Guest Count, Duration & Package Column */}
+        <div ref={nextSectionRef} className="lg:col-span-5 xl:col-span-4 space-y-6 lg:sticky lg:top-24 scroll-mt-24">
           {/* Guest Count */}
-          <div className="space-y-4">
+          <div className="glass-card rounded-2xl p-5 border-white/10 bg-white/[0.03] space-y-3">
             <div className="flex items-center justify-between">
-              <label className="font-label text-xs uppercase tracking-widest text-white/60 flex items-center gap-2">
-                <Users className="w-4 h-4 text-primary" />
+              <label className="font-label text-xs uppercase tracking-widest text-white/80 flex items-center gap-2 font-bold">
+                <Users className="w-4 h-4 text-[#C8A96A]" />
                 Guest Count
               </label>
               <div className="flex flex-col items-end">
-                <span className="font-label text-[9px] text-white/40 uppercase tracking-widest mb-1">Venue Capacity: {maxCapacity}</span>
                 <input
                   type="number"
                   min="1"
@@ -106,21 +103,24 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
                     if (isNaN(val)) setGuests(0);
                     else setGuests(Math.min(val, maxCapacity));
                   }}
-                  className="w-24 bg-white/5 border border-white/10 rounded-lg p-2 font-headline text-2xl text-white text-center outline-none focus:border-primary/50 transition-colors"
+                  className="w-24 bg-white/10 border border-white/20 rounded-xl p-2 font-headline text-2xl text-white text-center outline-none focus:border-[#C8A96A] focus:ring-1 focus:ring-[#C8A96A] transition-colors"
                 />
               </div>
             </div>
-            <p className="text-[10px] text-white/40 italic font-body text-right">Maximum occupancy based on current floor plan.</p>
+            <div className="flex justify-between items-center text-[11px] text-white/50 font-label">
+              <span>Venue Capacity: {maxCapacity} guests</span>
+              <span className="italic">Private buyout</span>
+            </div>
           </div>
 
           {/* Duration */}
-          <div className="space-y-4">
+          <div className="glass-card rounded-2xl p-5 border-white/10 bg-white/[0.03] space-y-3">
             <div className="flex items-center justify-between">
-              <label className="font-label text-xs uppercase tracking-widest text-white/60 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-primary" />
+              <label className="font-label text-xs uppercase tracking-widest text-white/80 flex items-center gap-2 font-bold">
+                <Clock className="w-4 h-4 text-[#C8A96A]" />
                 Duration (Hours)
               </label>
-              <span className="font-headline text-2xl text-white">{durationHours} Hours</span>
+              <span className="font-headline text-2xl text-[#E3C281] font-bold">{durationHours} Hours</span>
             </div>
             <input
               type="range"
@@ -128,37 +128,32 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
               max="12"
               value={durationHours}
               onChange={(e) => setDurationHours(parseInt(e.target.value))}
-              className="w-full accent-primary"
+              className="w-full accent-[#C8A96A] cursor-pointer"
             />
             <div className="flex justify-between text-xs text-white/40 font-mono">
-              <span>5 Hours ($500 Base)</span>
-              <span>12 Hours ($125/Extra Hr)</span>
+              <span>5 Hours (Base)</span>
+              <span>12 Hours ($125/hr extra)</span>
             </div>
           </div>
 
           {/* Tropica Private Venue Booking Pricing Card */}
-          <div className="glass-card rounded-xl p-5 border-[#C8A96A]/30 bg-[#C8A96A]/10 space-y-3">
+          <div className="rounded-2xl p-5 border border-[#C8A96A]/30 bg-gradient-to-b from-[#C8A96A]/15 to-[#C8A96A]/5 space-y-3 shadow-lg">
             <div className="flex justify-between items-start">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#C8A96A]">Private Venue Package</span>
-                <h3 className="font-headline italic text-xl text-white">Tropica Venue Buyout</h3>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#C8A96A] font-label">Sanctuary Buyout</span>
+                <h3 className="font-headline italic text-xl text-white">Private Venue Package</h3>
               </div>
-              <span className="font-headline text-2xl text-[#C8A96A] font-bold">${calculatedCost.toLocaleString()}</span>
+              <span className="font-headline text-2xl text-[#E3C281] font-bold">${calculatedCost.toLocaleString()}</span>
             </div>
             <div className="space-y-1.5 text-xs text-white/80 border-t border-white/10 pt-3">
               <p className="flex items-center gap-2">
-                <span className="text-[#C8A96A] font-bold">✓ {durationHours} Hours Total</span>
-                <span className="text-white/60 text-[11px]">
-                  {durationHours > 5 ? `(5 hrs base + ${durationHours - 5} extra hrs @ $125/hr)` : "(5 hours base venue buyout)"}
-                </span>
+                <span className="text-[#C8A96A] font-bold">✓ {durationHours} Hours Private Access</span>
               </p>
               <p className="flex items-center gap-2">
-                <span className="text-[#C8A96A] font-bold">✓ 2 Bottles of Champagne</span>
-                <span className="text-white/60 text-[11px]">(Complimentary welcome champagne)</span>
+                <span className="text-[#C8A96A] font-bold">✓ 2 Bottles of Complimentary Champagne</span>
               </p>
               <p className="flex items-center gap-2">
-                <span className="text-white font-bold">$200 Deposit</span>
-                <span className="text-white/60 text-[11px]">(Secures date &amp; time; ${(calculatedCost - 200).toLocaleString()} balance due 72h prior)</span>
+                <span className="text-white font-bold">$200 Deposit to Lock Date</span>
               </p>
             </div>
           </div>
@@ -167,13 +162,13 @@ export const StepPrivateDate = ({ onNext, initialData }: StepPrivateDateProps) =
             onClick={handleNext}
             disabled={!date}
             className={cn(
-              "w-full py-4 rounded-xl font-label uppercase tracking-widest text-xs font-bold transition-all duration-300",
+              "w-full py-4 rounded-xl font-label uppercase tracking-widest text-xs font-bold transition-all duration-300 shadow-xl",
               date
-                ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)] transform hover:-translate-y-1"
-                : "bg-white/5 text-white/20 cursor-not-allowed"
+                ? "bg-[#C8A96A] text-[#0d1612] hover:bg-[#d8b97a] shadow-[0_0_20px_rgba(200,169,106,0.3)] hover:shadow-[0_0_30px_rgba(200,169,106,0.5)] transform hover:-translate-y-0.5 cursor-pointer"
+                : "bg-white/5 text-white/20 cursor-not-allowed border border-white/5"
             )}
           >
-            Check Availability
+            {date ? "Continue to Select Time ➔" : "Select a Date to Continue"}
           </button>
         </div>
       </div>

@@ -11,7 +11,7 @@ export default function BookVenuePage() {
     <div className="theme-astral min-h-screen bg-[#0F3D2E]">
       <NavBar />
       <main className="pt-24 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
           <PrivateBookingWizard />
         </div>
       </main>
