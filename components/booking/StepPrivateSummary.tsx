@@ -617,7 +617,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
                     )}
                   </div>
 
-                  {/* Customer Support Notice with Andrew's Tropica Phone Call */}
+                  {/* Customer Support Notice with Tropica Phone Call */}
                   <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-200/80 text-xs text-amber-950 space-y-2">
                     <div className="flex items-center gap-1.5 font-bold text-amber-900">
                       <Phone className="w-3.5 h-3.5 text-amber-600 shrink-0" />
@@ -632,7 +632,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600 text-white font-bold text-xs hover:bg-amber-700 transition-colors shadow-sm"
                       >
                         <Phone className="w-3.5 h-3.5" />
-                        <span>Call Andrew&apos;s Tropica at (866) 990-7422</span>
+                        <span>Call Tropica at (866) 990-7422</span>
                       </a>
                     </div>
                   </div>
