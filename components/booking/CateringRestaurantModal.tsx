@@ -192,8 +192,8 @@ export function CateringRestaurantModal({
 
         {/* Footer Actions */}
         <div className="p-4 sm:p-5 bg-black/40 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="text-[11px] text-white/50 text-center sm:text-left">
-            Included in your private event reservation package.
+          <div className="text-[11px] text-amber-300/90 text-center sm:text-left font-medium">
+            Add-on Service &bull; Food &amp; dishes are an extra cost confirmed by the restaurant partner.
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -220,11 +220,11 @@ export function CateringRestaurantModal({
               >
                 {isSelected ? (
                   <>
-                    <CheckCircle className="w-4 h-4" /> Selected For Event
+                    <CheckCircle className="w-4 h-4" /> Selected Add-on
                   </>
                 ) : (
                   <>
-                    <span>Select This Restaurant</span>
+                    <span>Select As Add-on</span>
                   </>
                 )}
               </button>

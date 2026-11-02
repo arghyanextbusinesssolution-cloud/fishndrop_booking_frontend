@@ -5,6 +5,7 @@ import { Music, UtensilsCrossed, Sparkles, Check, ArrowRight, Info, X, ExternalL
 import { cn } from "@/lib/utils";
 import { CATERING_RESTAURANTS, CateringRestaurant, getCateringRestaurant } from "@/lib/cateringRestaurants";
 import { CateringRestaurantModal } from "./CateringRestaurantModal";
+import { RestaurantNoticeModal } from "./RestaurantNoticeModal";
 
 interface StepEventPreferencesProps {
   onNext: (data: { needDj: boolean; cateringMenu: string; needDecoration: boolean; decorationStyle?: string; needPhotographer: boolean; photographerHours: number }) => void;
@@ -39,6 +40,14 @@ export const StepEventPreferences = ({
   // Restaurant Menu Modal state
   const [activeModalRestaurant, setActiveModalRestaurant] = useState<CateringRestaurant | null>(null);
 
+  // Restaurant Notice Modal state (Catering Add-on confirmation)
+  const [noticeRestaurant, setNoticeRestaurant] = useState<{
+    id: string;
+    name: string;
+    emoji: string;
+    cuisine: string;
+  } | null>(null);
+
   // Decoration Checkbox state
   const [needDecoration, setNeedDecoration] = useState<boolean>(initialNeedDecoration);
   const [decorationStyle, setDecorationStyle] = useState<string>(initialDecorationStyle);
@@ -50,6 +59,21 @@ export const StepEventPreferences = ({
 
   const hasCatering = cateringMenu && cateringMenu !== "none";
   const selectedRestaurant = hasCatering ? getCateringRestaurant(cateringMenu) : null;
+
+  const handleSelectRestaurantWithNotice = (restaurant: { id: string; name: string; emoji: string; cuisine: string }) => {
+    if (cateringMenu === restaurant.id) {
+      setCateringMenu("none");
+    } else {
+      setNoticeRestaurant(restaurant);
+    }
+  };
+
+  const confirmRestaurantSelection = () => {
+    if (noticeRestaurant) {
+      setCateringMenu(noticeRestaurant.id);
+      setNoticeRestaurant(null);
+    }
+  };
 
   const handleDjToggle = (wantDj: boolean) => {
     setNeedDj(wantDj);
@@ -76,8 +100,27 @@ export const StepEventPreferences = ({
         restaurant={activeModalRestaurant}
         isOpen={Boolean(activeModalRestaurant)}
         onClose={() => setActiveModalRestaurant(null)}
-        onSelectRestaurant={(id) => setCateringMenu(id)}
+        onSelectRestaurant={(id) => {
+          const rest = getCateringRestaurant(id);
+          setActiveModalRestaurant(null);
+          setNoticeRestaurant({
+            id: rest.id,
+            name: rest.name,
+            emoji: rest.emoji,
+            cuisine: rest.cuisine
+          });
+        }}
         isSelected={activeModalRestaurant?.id === cateringMenu}
+      />
+
+      {/* Restaurant Add-On Extra Cost Notice Modal */}
+      <RestaurantNoticeModal
+        isOpen={Boolean(noticeRestaurant)}
+        onClose={() => setNoticeRestaurant(null)}
+        onConfirm={confirmRestaurantSelection}
+        restaurantName={noticeRestaurant?.name}
+        restaurantEmoji={noticeRestaurant?.emoji}
+        restaurantCuisine={noticeRestaurant?.cuisine}
       />
 
       {/* DJ $300 Pop-Up Notice Modal */}
@@ -146,15 +189,18 @@ export const StepEventPreferences = ({
               <h3 className="font-headline italic text-xl md:text-2xl text-white">Select Event Restaurant Menu</h3>
             </div>
           </div>
-          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#C8A96A]/15 border border-[#C8A96A]/30 text-[#C8A96A]">
-            Included with Venue
+          <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300">
+            Add-on (Extra Cost)
           </span>
         </div>
 
         {/* Optional Catering Notice */}
-        <p className="text-white/60 font-body text-xs sm:text-sm font-light">
-          Partner catering is completely optional. Select any restaurant below if you want meals served, or choose <strong>"No Partner Catering"</strong> if you prefer to bring your own food or private chef.
-        </p>
+        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-start gap-3">
+          <span className="text-base flex-shrink-0 mt-0.5">ℹ️</span>
+          <div className="text-xs text-white/80 leading-relaxed font-body">
+            <strong className="text-amber-300">Venue Only vs. Catering Add-on:</strong> The website booking only covers the <strong>venue rental</strong>. Restaurant catering is an optional <strong>add-on with extra cost</strong>. The restaurant partner will confirm dish pricing and notify you directly after you select your dishes.
+          </div>
+        </div>
 
         {/* 3 Restaurant Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -163,7 +209,12 @@ export const StepEventPreferences = ({
             return (
               <div
                 key={rest.id}
-                onClick={() => setCateringMenu(prev => prev === rest.id ? "none" : rest.id)}
+                onClick={() => handleSelectRestaurantWithNotice({
+                  id: rest.id,
+                  name: rest.name,
+                  emoji: rest.emoji,
+                  cuisine: rest.cuisine
+                })}
                 className={cn(
                   "relative rounded-2xl overflow-hidden border-2 transition-all duration-300 flex flex-col justify-between cursor-pointer group select-none",
                   isSelected
@@ -250,7 +301,18 @@ export const StepEventPreferences = ({
 
         {/* Custom Menu Card / Option */}
         <div
-          onClick={() => setCateringMenu(prev => prev === "custom_catering" ? "none" : "custom_catering")}
+          onClick={() => {
+            if (cateringMenu === "custom_catering" || cateringMenu === "custom") {
+              setCateringMenu("none");
+            } else {
+              setNoticeRestaurant({
+                id: "custom_catering",
+                name: "Custom Menu / Multi-Restaurant Fusion",
+                emoji: "✍️",
+                cuisine: "Bespoke Multi-Restaurant Catering"
+              });
+            }
+          }}
           className={cn(
             "p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between gap-4 select-none",
             cateringMenu === "custom_catering" || cateringMenu === "custom"
@@ -306,7 +368,7 @@ export const StepEventPreferences = ({
             </div>
           </div>
           <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider flex-shrink-0">
-            Self-Managed
+            Venue Only
           </span>
         </div>
 
@@ -317,9 +379,9 @@ export const StepEventPreferences = ({
               <span className="text-lg">{selectedRestaurant.emoji}</span>
               <div>
                 <p className="text-xs font-bold text-white">
-                  Selected: <span className="text-[#C8A96A]">{selectedRestaurant.name}</span>
+                  Selected Catering Add-on: <span className="text-[#C8A96A]">{selectedRestaurant.name}</span>
                 </p>
-                <p className="text-[10px] text-white/60">{selectedRestaurant.cuisine}</p>
+                <p className="text-[10px] text-amber-300 font-medium">Add-on service &bull; Dish pricing confirmed by restaurant</p>
               </div>
             </div>
             <div className="flex items-center gap-3">

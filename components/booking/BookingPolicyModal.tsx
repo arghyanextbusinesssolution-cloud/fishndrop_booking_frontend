@@ -138,6 +138,9 @@ export const BookingPolicyModal = ({
               <li>
                 <strong className="text-white">Unpaid Balance:</strong> If the remaining balance is unpaid 72 hours prior to the event, the reservation <strong className="text-amber-400">may be canceled</strong>.
               </li>
+              <li>
+                <strong className="text-white">Catering &amp; Menu Add-On:</strong> The website total covers the venue rental only. Restaurant catering and dishes are an <strong className="text-[#C8A96A]">add-on service with extra cost</strong> confirmed and billed directly by the restaurant partner.
+              </li>
             </ul>
           </div>
 

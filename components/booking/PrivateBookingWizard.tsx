@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { StepPrivateDate } from "./StepPrivateDate";
 import { StepPrivateTime } from "./StepPrivateTime";
@@ -98,8 +98,13 @@ export const PrivateBookingWizard = () => {
     });
   };
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  }, [currentStep]);
+
   const handleNext = (stepData: any) => {
     updateData(stepData);
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
     if (currentStep === 5) {
       const chosenCatering = stepData.cateringMenu ?? bookingData.cateringMenu;
       if (!chosenCatering || chosenCatering === "none") {
@@ -113,6 +118,7 @@ export const PrivateBookingWizard = () => {
   };
 
   const handleBack = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
     if (currentStep === 7) {
       if (!bookingData.cateringMenu || bookingData.cateringMenu === "none") {
         setCurrentStep(5);
@@ -128,8 +134,8 @@ export const PrivateBookingWizard = () => {
 
   const steps = [
     { num: 1, title: "Calendar Date" },
-    { num: 2, title: "Guest Details" },
-    { num: 3, title: "Time Slot" },
+    { num: 2, title: "Time Slot" },
+    { num: 3, title: "Guest Details" },
     { num: 4, title: "Occasion" },
     { num: 5, title: "Preferences & DJ" },
     { num: 6, title: "Curate Menu" },
@@ -151,18 +157,18 @@ export const PrivateBookingWizard = () => {
         );
       case 2:
         return (
-          <StepGuestDetails
-            onNext={handleNext}
-            initialData={bookingData.guestDetails}
-          />
-        );
-      case 3:
-        return (
           <StepPrivateTime
             onNext={handleNext}
             date={bookingData.date}
             durationHours={bookingData.durationHours}
             selectedTime={bookingData.time}
+          />
+        );
+      case 3:
+        return (
+          <StepGuestDetails
+            onNext={handleNext}
+            initialData={bookingData.guestDetails}
           />
         );
       case 4:

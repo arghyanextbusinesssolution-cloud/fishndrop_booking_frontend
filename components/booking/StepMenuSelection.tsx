@@ -4,6 +4,7 @@ import { useState } from "react";
 import { UtensilsCrossed, Check, ArrowRight, Flame, Leaf, Sparkles, ChefHat, MessageSquare, Plus, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CATERING_RESTAURANTS, CateringRestaurant, getCateringRestaurant } from "@/lib/cateringRestaurants";
+import { RestaurantNoticeModal } from "./RestaurantNoticeModal";
 
 interface StepMenuSelectionProps {
   restaurantId: string;
@@ -28,6 +29,7 @@ export function StepMenuSelection({
   onChangeRestaurant
 }: StepMenuSelectionProps) {
   const [currentRestaurantId, setCurrentRestaurantId] = useState<string>(restaurantId || "jamaican_jerk_house");
+  const [pendingSwitchRestaurant, setPendingSwitchRestaurant] = useState<CateringRestaurant | null>(null);
   const restaurant: CateringRestaurant = getCateringRestaurant(currentRestaurantId);
 
   // Initialize selected dishes; if none selected, default to the restaurant's signature highlight dishes
@@ -132,8 +134,31 @@ export function StepMenuSelection({
       ? allItems
       : allItems.filter((item) => item.categoryName === activeCategory);
 
+  const onAttemptSwitch = (id: string) => {
+    if (id === currentRestaurantId) return;
+    const targetRest = getCateringRestaurant(id);
+    setPendingSwitchRestaurant(targetRest);
+  };
+
+  const confirmSwitch = () => {
+    if (pendingSwitchRestaurant) {
+      handleRestaurantChange(pendingSwitchRestaurant.id);
+      setPendingSwitchRestaurant(null);
+    }
+  };
+
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Restaurant Add-on Notice Modal */}
+      <RestaurantNoticeModal
+        isOpen={Boolean(pendingSwitchRestaurant)}
+        onClose={() => setPendingSwitchRestaurant(null)}
+        onConfirm={confirmSwitch}
+        restaurantName={pendingSwitchRestaurant?.name}
+        restaurantEmoji={pendingSwitchRestaurant?.emoji}
+        restaurantCuisine={pendingSwitchRestaurant?.cuisine}
+      />
+
       {/* Step Header */}
       <header className="space-y-2 sm:space-y-3">
         <div className="flex items-center gap-3">
@@ -149,6 +174,14 @@ export function StepMenuSelection({
         <p className="text-white/60 font-body text-xs sm:text-base font-light">
           Choose the items you want prepared and served for your private event.
         </p>
+
+        {/* Catering Add-on Extra Cost Notice Banner */}
+        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 mt-3">
+          <span className="text-base flex-shrink-0 mt-0.5">ℹ️</span>
+          <div className="text-xs text-white/80 leading-relaxed font-body">
+            <strong className="text-amber-300">Catering Add-on Notice:</strong> The booking on this website contains only the venue rental. Dishes and platters chosen below are an <strong>add-on with extra cost</strong>. The restaurant partner will review your dish selections and contact you directly with final dish pricing.
+          </div>
+        </div>
       </header>
 
       {/* Selected Restaurant Showcase & Quick Switcher */}
@@ -191,7 +224,7 @@ export function StepMenuSelection({
                 <button
                   key={rest.id}
                   type="button"
-                  onClick={() => handleRestaurantChange(rest.id)}
+                  onClick={() => onAttemptSwitch(rest.id)}
                   className={cn(
                     "px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5",
                     isCurrent
@@ -384,7 +417,7 @@ export function StepMenuSelection({
             <p className="text-[10px] uppercase tracking-widest text-[#C8A96A] font-bold flex items-center gap-1.5">
               <ChefHat className="w-3.5 h-3.5" /> Selected Event Platters ({selectedDishes.length})
             </p>
-            <span className="text-[10px] text-white/40">Included with venue booking</span>
+            <span className="text-[10px] text-amber-300 font-semibold">Add-on &bull; Extra cost confirmed by restaurant</span>
           </div>
           <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
             {selectedDishes.map((dish, i) => {

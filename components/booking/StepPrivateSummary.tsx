@@ -436,7 +436,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
                   <p className="text-[9px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold flex items-center gap-1">
                     <ChefHat className="w-3 h-3 text-[#C8A96A]" /> Selected Event Dishes ({bookingData.selectedDishes.length})
                   </p>
-                  <span className="text-[9px] text-[#0F4C3A] font-bold">Included</span>
+                  <span className="text-[9px] text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded font-bold">Add-on (Extra Cost)</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {bookingData.selectedDishes.map((dish: string, i: number) => {
@@ -454,6 +454,9 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
                     );
                   })}
                 </div>
+                <p className="text-[10px] text-[#1a1c1b]/60 italic font-body pt-0.5">
+                  * Note: The website payment covers venue rental only. Catering dishes are an add-on; the restaurant partner will contact you directly with dish pricing.
+                </p>
               </div>
             )}
 
