@@ -21,6 +21,7 @@ export function Sidebar({ closeMobile }: { closeMobile?: () => void }) {
         { href: "/admin/bookings", label: "Bookings" },
         { href: "/admin/users", label: "Users" },
         { href: "/admin/manual-booking", label: "Venue Booking" },
+        { href: "/admin/tour-checkouts", label: "Venue Booking Checkout" },
         { href: "/admin/catering", label: "Restaurants & Catering" },
         { href: "/admin/tables", label: "Tables" },
         { href: "/admin/coupons", label: "Coupons" },

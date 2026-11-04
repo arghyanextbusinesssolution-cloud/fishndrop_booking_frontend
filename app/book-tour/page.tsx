@@ -9,7 +9,9 @@ export default function BookTourPage() {
     <div className="theme-astral min-h-screen bg-[#0F3D2E] text-on-surface selection:bg-primary/30 selection:text-primary font-body overflow-x-hidden">
       <NavBar />
       <TourBookingPage />
-      <Footer />
+      <div className="hidden md:block">
+        <Footer />
+      </div>
     </div>
   );
 }

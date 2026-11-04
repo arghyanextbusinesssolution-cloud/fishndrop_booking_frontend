@@ -106,7 +106,7 @@ export const NavBar = () => {
             href="/book-tour"
             className="hidden xl:inline-flex items-center text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-[#E5E7EB]/80 hover:text-white border border-white/15 hover:border-[#C8A96A]/50 px-4 md:px-5 py-2.5 rounded-full hover:bg-white/5 transition-all duration-300 font-bold backdrop-blur-sm"
           >
-            Book Tour
+             Virtual tour
           </NavSpinnerLink>
 
           {/* Primary CTA (Sign In / Dashboard) */}
@@ -176,7 +176,7 @@ export const NavBar = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block text-center text-xs uppercase tracking-[0.2em] text-[#E5E7EB]/70 border border-white/10 py-3 rounded-full hover:bg-white/5 font-bold"
               >
-                Book Tour
+                Virtual Tour
               </Link>
             </div>
           </div>

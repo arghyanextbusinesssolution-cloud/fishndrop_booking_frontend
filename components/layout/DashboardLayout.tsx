@@ -21,6 +21,7 @@ import {
   Users,
   BookOpen,
   Camera,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -111,6 +112,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { icon: BookOpen, label: "Blog", href: "/admin/blog" },
     { icon: Camera, label: "Gallery & Photos", href: "/admin/gallery" },
     { icon: Wrench, label: "Settings", href: "/admin/settings" },
+    { icon: MapPin, label: "Venue Booking Checkout", href: "/admin/tour-checkouts" },
   ];
 
   const userNavItems = [
