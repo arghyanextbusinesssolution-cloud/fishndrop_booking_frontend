@@ -42,6 +42,7 @@ export default function ProfilePage() {
   // Profile Edit State
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
@@ -75,6 +76,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user) {
       setEditName(user.name || "");
+      setEditEmail(user.email || "");
       setEditPhone(user.phone || "");
     }
   }, [user]);
@@ -99,6 +101,7 @@ export default function ProfilePage() {
       setIsSavingProfile(true);
       const res = await api.post("/auth/update-profile", {
         name: editName.trim(),
+        email: editEmail.trim(),
         phone: editPhone.trim()
       });
       if (res.data?.success) {
@@ -322,6 +325,17 @@ export default function ProfilePage() {
                     onChange={(e) => setEditName(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-white text-sm focus:outline-none focus:border-emerald-400"
                     placeholder="Enter your name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-emerald-200 block mb-1">Registered Email</label>
+                  <input
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-emerald-950/60 border border-emerald-500/30 text-white text-sm focus:outline-none focus:border-emerald-400"
+                    placeholder="your@email.com"
                     required
                   />
                 </div>

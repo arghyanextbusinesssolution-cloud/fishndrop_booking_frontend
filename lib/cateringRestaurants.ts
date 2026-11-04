@@ -22,6 +22,7 @@ export interface CateringRestaurant {
   image: string;
   websiteUrl: string;
   websiteLabel: string;
+  phoneNumber?: string;
   isDoorDash?: boolean;
   shortDesc: string;
   fullDesc: string;
@@ -41,6 +42,7 @@ export const CATERING_RESTAURANTS: CateringRestaurant[] = [
     image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80",
     websiteUrl: "https://www.doordash.com/search/store/Jamaican%20Jerk%20House/",
     websiteLabel: "Check out Jamaican Jerk House on DoorDash!",
+    phoneNumber: "718-235-2023",
     isDoorDash: true,
     shortDesc: "Authentic Jamaican Jerk chicken, braised oxtail, curry goat, sweet plantains, rice & peas, and Jamaican festival.",
     fullDesc: "Jamaican Jerk House delivers true island culinary tradition directly to your private gathering. Marinated in authentic scotch bonnet peppers, pimento, thyme, and island spices, every platter is slow-smoked and bursting with flavor.",
@@ -126,6 +128,7 @@ export const CATERING_RESTAURANTS: CateringRestaurant[] = [
     image: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?auto=format&fit=crop&w=800&q=80",
     websiteUrl: "https://eastcoaststreettacos.com",
     websiteLabel: "Visit East Coast Street Tacos (eastcoaststreettacos.com)",
+    phoneNumber: "+1 (347) 702-9485",
     isDoorDash: false,
     shortDesc: "Fresh handcrafted tacos, slow-cooked birria with consomé, carne asada, al pastor, fresh guacamole, loaded nachos, and churros.",
     fullDesc: "East Coast Street Tacos brings the authentic flavors of Mexico's street taquerias with housemade corn tortillas, prime meats, vibrant salsas, and rich birria broth.",
@@ -202,6 +205,7 @@ export const CATERING_RESTAURANTS: CateringRestaurant[] = [
     image: "https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?auto=format&fit=crop&w=800&q=80",
     websiteUrl: "https://www.cooklyneats.com/",
     websiteLabel: "Visit Cooklyn Eats (www.cooklyneats.com)",
+    phoneNumber: "+1 (718) 535-6255",
     isDoorDash: false,
     shortDesc: "Golden crispy Southern fried chicken, smoked St. Louis BBQ ribs, 5-cheese baked mac & cheese, slow-braised collard greens, and sweet potato cornbread.",
     fullDesc: "Cooklyn Eats brings hearty, soulful Southern recipes crafted with premium cuts, homemade marinades, and generational comfort food recipes that elevate any celebration.",
@@ -273,25 +277,17 @@ export const CATERING_RESTAURANTS: CateringRestaurant[] = [
     id: "custom_catering",
     name: "Custom / Multi-Restaurant Mix",
     tagline: "Bespoke Dining Vision or Dietary Requirements",
-    cuisine: "Custom Catering Selection",
-    badge: "✍️ Custom Menu",
-    rating: "Bespoke Service",
-    emoji: "✨",
-    image: "https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=800&q=80",
-    websiteUrl: "https://eastcoaststreettacos.com",
-    websiteLabel: "Discuss custom catering arrangements with our event concierge",
-    shortDesc: "Want dishes from multiple partner restaurants, specific dietary accommodations (vegan, kosher, halal), or a custom chef tasting? We will tailor it for you.",
-    fullDesc: "Our event team will work with Jamaican Jerk House, East Coast Street Tacos, Cooklyn Eats, or custom private chefs to build a custom menu tailored to your exact preferences.",
-    highlightDishes: ["Multi-Cuisine Fusion", "Dietary Accommodations", "Custom Chef Platters"],
-    categories: [
-      {
-        categoryName: "Custom Options",
-        items: [
-          { name: "Multi-Restaurant Combo Platter", desc: "Select items across all 3 partner restaurants for maximum guest variety." },
-          { name: "Dietary-Specific Catering", desc: "Custom vegan, vegetarian, gluten-free, or halal preparations." }
-        ]
-      }
-    ]
+    cuisine: "Multi-Partner Culinary Experience",
+    badge: "✨ Custom Catering Mix",
+    rating: "Chef Curated",
+    emoji: "✍️",
+    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+    websiteUrl: "",
+    websiteLabel: "Custom Culinary Coordination",
+    shortDesc: "Tailored multi-course catering blending specialties across our partner kitchens or your personal culinary vision.",
+    fullDesc: "Work directly with our event concierges to curate a bespoke menu featuring dishes from Jamaican Jerk House, East Coast Street Tacos, Cooklyn Eats, or external licensed caterers.",
+    highlightDishes: [],
+    categories: []
   }
 ];
 
@@ -327,18 +323,83 @@ export const getCateringRestaurant = (id?: string): CateringRestaurant => {
   return CATERING_RESTAURANTS[0];
 };
 
+export const formatRestaurantKeyLabel = (key?: string): string => {
+  if (!key || key === "none" || key === "no_catering") return "No Partner Catering";
+  if (CATERING_LABEL_MAP[key]) return CATERING_LABEL_MAP[key];
+
+  // If comma or plus separated e.g. "jamaican_jerk_house,cooklyn_eats"
+  if (key.includes(",") || key.includes("+")) {
+    const parts = key.split(/[,+]/).map(s => s.trim()).filter(Boolean);
+    const labels = parts.map(p => {
+      const rest = CATERING_RESTAURANTS.find(r => r.id === p || r.id === p.toLowerCase());
+      if (rest) return `${rest.emoji} ${rest.name}`;
+      return CATERING_LABEL_MAP[p] || p;
+    });
+    return labels.join(" + ");
+  }
+
+  return key;
+};
+
 export interface CateringDishItem {
   name: string;
   quantity: number;
 }
 
+export interface CateringRestaurantGroup {
+  restaurant: CateringRestaurant;
+  restaurantKey: string;
+  restaurantLabel: string;
+  dishes: string[];
+  dishQuantities: Record<string, number>;
+  totalPlatters: number;
+}
+
+/**
+ * Finds which partner restaurant a given dish belongs to.
+ */
+export function findRestaurantForDish(dishName: string): CateringRestaurant | null {
+  const normalized = dishName.toLowerCase().trim();
+  if (!normalized) return null;
+
+  for (const r of CATERING_RESTAURANTS) {
+    if (r.id === "custom_catering") continue;
+    for (const cat of r.categories) {
+      for (const item of cat.items) {
+        const itemNorm = item.name.toLowerCase();
+        if (
+          normalized === itemNorm ||
+          normalized.includes(itemNorm) ||
+          itemNorm.includes(normalized)
+        ) {
+          return r;
+        }
+      }
+    }
+  }
+
+  // Fallback keyword matching
+  if (/jerk|oxtail|goat|escovitch|snapper|curry|plantain|festival|sorrel|ginger beer|caribbean/i.test(normalized)) {
+    return CATERING_RESTAURANTS.find(r => r.id === "jamaican_jerk_house") || null;
+  }
+  if (/taco|birria|asada|pastor|nacho|guacamole|elote|quesadilla|churro|horchata|carnitas/i.test(normalized)) {
+    return CATERING_RESTAURANTS.find(r => r.id === "east_coast_street_tacos") || null;
+  }
+  if (/fried chicken|ribs|bbq|salmon|grits|catfish|pork chop|collard|yams|cornbread|cobbler|peach|macaroni|soul|homestyle/i.test(normalized)) {
+    return CATERING_RESTAURANTS.find(r => r.id === "cooklyn_eats") || null;
+  }
+
+  return null;
+}
+
 export function parseCateringDetails(booking: {
   cateringMenu?: string;
   notes?: string;
+  dishes?: string[];
   dishQuantities?: Record<string, number> | Map<string, number>;
 }) {
   const restaurantKey = booking?.cateringMenu || "none";
-  const restaurantLabel = CATERING_LABEL_MAP[restaurantKey] || (restaurantKey === "none" ? "No Partner Catering" : restaurantKey);
+  const restaurantLabel = formatRestaurantKeyLabel(restaurantKey);
   
   let dishes: string[] = [];
   let dishQuantities: Record<string, number> = {};
@@ -354,11 +415,22 @@ export function parseCateringDetails(booking: {
     }
   }
 
+  // If booking has explicit dishes array
+  if (Array.isArray(booking?.dishes) && booking.dishes.length > 0) {
+    dishes = [...booking.dishes];
+  }
+
   if (booking?.notes) {
-    const dishesMatch = booking.notes.match(/\[Dishes:\s*([^\]]+)\]/i);
+    // Robust extraction: matches [Dishes: ... even if not closed with ']' (e.g. truncated notes)
+    const dishesMatch = booking.notes.match(/\[Dishes:\s*([\s\S]*?)(?:\]|\||(?=\[(?:Dietary|Decor|Notes|Special):)|$)/i);
     if (dishesMatch && dishesMatch[1]) {
-      const rawDishes = dishesMatch[1].split(",").map((s) => s.trim()).filter(Boolean);
-      dishes = rawDishes.map((raw) => {
+      const rawSegment = dishesMatch[1].trim();
+      const rawDishes = rawSegment
+        .split(",")
+        .map((s) => s.trim().replace(/^\[|\]$/g, ""))
+        .filter(Boolean);
+
+      const parsedFromNotes = rawDishes.map((raw) => {
         // Match patterns: "Dish Name (x2 platters)", "Dish Name (x2)", "Dish Name x2", "Dish Name (2 platters)"
         const qtyMatch =
           raw.match(/^(.*?)\s*\(?(?:x|\bqty:?)\s*(\d+)(?:\s*(?:platters?|plates?))?\)?$/i) ||
@@ -376,25 +448,97 @@ export function parseCateringDetails(booking: {
         }
         return raw;
       });
+
+      // Combine with existing dishes preserving order without duplicates
+      dishes = Array.from(new Set([...dishes, ...parsedFromNotes]));
     }
-    const dietaryMatch = booking.notes.match(/\[Dietary:\s*([^\]]+)\]/i);
+
+    const dietaryMatch = booking.notes.match(/\[Dietary:\s*([\s\S]*?)(?:\]|\||(?=\[(?:Decor|Dishes|Notes):)|$)/i);
     if (dietaryMatch && dietaryMatch[1]) {
       dietaryNotes = dietaryMatch[1].trim();
     }
-    // Clean base notes of [Dishes: ...] and [Dietary: ...] tags
+
+    // Clean base notes of [Dishes: ...], [Dietary: ...], and [Decor: ...] tags even if unclosed
     baseNotes = booking.notes
-      .replace(/\[Dishes:[^\]]*\]/gi, "")
-      .replace(/\[Dietary:[^\]]*\]/gi, "")
+      .replace(/\[Dishes:\s*[\s\S]*?(?:\]|(?=\s*\|\s*\[)|$)/gi, "")
+      .replace(/\[Dietary:\s*[\s\S]*?(?:\]|(?=\s*\|\s*\[)|$)/gi, "")
+      .replace(/\[Decor:\s*[\s\S]*?(?:\]|(?=\s*\|\s*\[)|$)/gi, "")
       .replace(/\|\s*\|/g, "|")
+      .replace(/^\s*\|\s*|\s*\|\s*$/g, "")
       .trim();
-    if (baseNotes.startsWith("|")) baseNotes = baseNotes.slice(1).trim();
-    if (baseNotes.endsWith("|")) baseNotes = baseNotes.slice(0, -1).trim();
+  }
+
+  // Ensure every dish in dishes array has an entry in dishQuantities
+  for (const d of dishes) {
+    if (dishQuantities[d] === undefined) {
+      dishQuantities[d] = 1;
+    }
   }
 
   const dishItems: CateringDishItem[] = dishes.map((name) => ({
     name,
     quantity: dishQuantities[name] || 1
   }));
+
+  // ================= GROUP DISHES BY RESTAURANT =================
+  // Under each restaurant (Jamaica, Cooklyn, Tacos, etc.) list its dishes and quantities cleanly!
+  // NEVER show "Custom / Multi-Restaurant Mix" and NEVER show 0-dish empty boxes.
+  const groupsMap = new Map<string, {
+    restaurant: CateringRestaurant;
+    dishes: string[];
+    dishQuantities: Record<string, number>;
+    totalPlatters: number;
+  }>();
+
+  const primaryKeyList = restaurantKey.split(/[,+]/).map(s => s.trim().toLowerCase()).filter(Boolean);
+
+  for (const dish of dishes) {
+    const qty = dishQuantities[dish] || 1;
+    let targetRest = findRestaurantForDish(dish);
+
+    // If dish not matched to specific restaurant, assign to first real partner restaurant in booking
+    if (!targetRest) {
+      for (const pKey of primaryKeyList) {
+        if (pKey !== "custom_catering" && pKey !== "custom" && pKey !== "none" && pKey !== "no_catering") {
+          targetRest = getCateringRestaurant(pKey);
+          break;
+        }
+      }
+    }
+
+    // Fallback: If still not found or matches custom_catering, use Jamaican Jerk House as default partner
+    if (!targetRest || targetRest.id === "custom_catering") {
+      targetRest = CATERING_RESTAURANTS[0]; // Jamaican Jerk House
+    }
+
+    if (!groupsMap.has(targetRest.id)) {
+      groupsMap.set(targetRest.id, {
+        restaurant: targetRest,
+        dishes: [],
+        dishQuantities: {},
+        totalPlatters: 0
+      });
+    }
+
+    const g = groupsMap.get(targetRest.id)!;
+    if (!g.dishes.includes(dish)) {
+      g.dishes.push(dish);
+    }
+    g.dishQuantities[dish] = qty;
+    g.totalPlatters += qty;
+  }
+
+  // Strictly filter: ONLY restaurants with at least 1 dish, and NEVER custom_catering!
+  const restaurantGroups: CateringRestaurantGroup[] = Array.from(groupsMap.values())
+    .filter(g => g.dishes.length > 0 && g.restaurant.id !== "custom_catering")
+    .map(g => ({
+      restaurant: g.restaurant,
+      restaurantKey: g.restaurant.id,
+      restaurantLabel: `${g.restaurant.emoji} ${g.restaurant.name}`,
+      dishes: g.dishes,
+      dishQuantities: g.dishQuantities,
+      totalPlatters: g.totalPlatters
+    }));
 
   return {
     restaurantKey,
@@ -403,7 +547,8 @@ export function parseCateringDetails(booking: {
     dishQuantities,
     dishItems,
     dietaryNotes,
-    baseNotes
+    baseNotes,
+    restaurantGroups
   };
 }
 
@@ -415,9 +560,11 @@ export function formatCateringNotes(
 ): string {
   const parts: string[] = [];
   const cleanBase = (baseNotes || "")
-    .replace(/\[Dishes:[^\]]*\]/gi, "")
-    .replace(/\[Dietary:[^\]]*\]/gi, "")
+    .replace(/\[Dishes:\s*[\s\S]*?(?:\]|(?=\s*\|\s*\[)|$)/gi, "")
+    .replace(/\[Dietary:\s*[\s\S]*?(?:\]|(?=\s*\|\s*\[)|$)/gi, "")
+    .replace(/\[Decor:\s*[\s\S]*?(?:\]|(?=\s*\|\s*\[)|$)/gi, "")
     .replace(/\|\s*\|/g, "|")
+    .replace(/^\s*\|\s*|\s*\|\s*$/g, "")
     .trim();
   
   if (cleanBase) parts.push(cleanBase);
@@ -434,6 +581,5 @@ export function formatCateringNotes(
   if (dietaryNotes && dietaryNotes.trim()) parts.push(`[Dietary: ${dietaryNotes.trim()}]`);
 
   const result = parts.join(" | ");
-  return result.length > 500 ? result.slice(0, 497) + "..." : result;
+  return result.length > 2000 ? result.slice(0, 1997) + "..." : result;
 }
-

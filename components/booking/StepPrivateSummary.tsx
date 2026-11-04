@@ -189,7 +189,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
       partySize: bookingData.guests,
       durationHours: bookingData.durationHours || 1,
       occasion: bookingData.occasion || "other",
-      notes: formattedNotes.slice(0, 500),
+      notes: formattedNotes.slice(0, 2500),
       needDj: bookingData.needDj ?? false,
       needPhotographer: bookingData.needPhotographer ?? false,
       photographerHours: bookingData.needPhotographer ? (bookingData.photographerHours || 2) : 0,

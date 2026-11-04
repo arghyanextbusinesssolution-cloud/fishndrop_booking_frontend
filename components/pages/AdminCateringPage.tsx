@@ -38,7 +38,8 @@ import {
   Loader2,
   RefreshCw,
   Plus,
-  Camera
+  Camera,
+  Phone
 } from "lucide-react";
 import { CalendarDropdown } from "@/components/shared/CalendarDropdown";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -547,93 +548,113 @@ export default function AdminCateringPage() {
                 {/* Body: Two Column Full-Page Inspection */}
                 <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
                   {/* Left Column (7 cols): Partner Restaurant, Custom Menu Dishes & Preferences */}
-                  <div className="lg:col-span-7 space-y-4">
-                    {/* Restaurant Partner Box */}
-                    <div className="p-4 rounded-xl bg-surface-container-low/50 border border-outline-variant/15 space-y-3">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl">{restaurant?.emoji || "🍽️"}</span>
-                          <div>
-                            <h4 className="font-headline text-base italic text-on-surface font-semibold">
-                              {catering.restaurantLabel}
-                            </h4>
-                            <p className="text-[11px] text-secondary">
-                              {restaurant?.cuisine || "Custom Partner Cuisine"} • {restaurant?.rating || "Top Partner"}
-                            </p>
+                  <div className="lg:col-span-7 space-y-3">
+                    {/* Partner Restaurants & Dishes (Direct, Clean List per Restaurant) */}
+                    {catering.restaurantGroups && catering.restaurantGroups.length > 0 ? (
+                      catering.restaurantGroups.map((group, gIdx) => (
+                        <div
+                          key={gIdx}
+                          className="p-4 rounded-xl bg-surface-container-low/60 border border-outline-variant/15 space-y-3"
+                        >
+                          {/* Restaurant Header */}
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xl">{group.restaurant.emoji || "🍽️"}</span>
+                              <h4 className="font-headline text-base italic text-on-surface font-bold">
+                                {group.restaurant.name}
+                              </h4>
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#C8A96A]/15 text-[#E8CB8A] border border-[#C8A96A]/30 font-bold">
+                                {group.dishes.length} {group.dishes.length === 1 ? "dish" : "dishes"} • {group.totalPlatters} {group.totalPlatters === 1 ? "platter" : "platters"}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {group.restaurant.phoneNumber && (
+                                <a
+                                  href={`tel:${group.restaurant.phoneNumber.replace(/[^\d+]/g, '')}`}
+                                  className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-300 hover:text-emerald-200 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-500/30 transition-colors shadow-sm"
+                                  title={`Call ${group.restaurant.name}`}
+                                >
+                                  <Phone className="w-3 h-3 text-emerald-400" />
+                                  <span>{group.restaurant.phoneNumber}</span>
+                                </a>
+                              )}
+                              {group.restaurant.websiteUrl && (
+                                <a
+                                  href={group.restaurant.websiteUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline font-bold bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg border border-primary/20 transition-colors"
+                                >
+                                  <span>{group.restaurant.isDoorDash ? "DoorDash Store" : "Partner Site"}</span>
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              )}
+                              <button
+                                onClick={() => setMenuBooking(b)}
+                                className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1 bg-white/5 hover:bg-white/10 px-2 py-1 rounded-lg border border-white/10 transition-colors"
+                              >
+                                <UtensilsCrossed className="w-3 h-3" />
+                                Edit Menu
+                              </button>
+                            </div>
                           </div>
-                        </div>
 
-                        {restaurant?.websiteUrl && (
-                          <a
-                            href={restaurant.websiteUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline font-bold bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg border border-primary/20 transition-colors"
-                          >
-                            <span>{restaurant.isDoorDash ? "DoorDash Store" : "Partner Site"}</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-                      </div>
-
-                      {restaurant?.shortDesc && (
-                        <p className="text-xs text-secondary leading-relaxed font-body">
-                          {restaurant.shortDesc}
-                        </p>
-                      )}
-
-                      {/* Chosen Dishes Badges */}
-                      <div className="pt-2 border-t border-outline-variant/10 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] uppercase tracking-wider text-outline font-bold flex items-center gap-1.5">
-                            <ChefHat className="w-3.5 h-3.5 text-primary" />
-                            Selected Dishes for Event ({catering.dishes.length})
-                          </span>
-                          <button
-                            onClick={() => setMenuBooking(b)}
-                            className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1"
-                          >
-                            <UtensilsCrossed className="w-3 h-3" />
-                            Edit Menu
-                          </button>
-                        </div>
-
-                        {catering.dishes.length > 0 ? (
-                          <div className="flex flex-wrap gap-1.5">
-                            {catering.dishes.map((dish, dI) => {
-                              const qty = catering.dishQuantities[dish] || 1;
+                          {/* Dishes directly with quantities */}
+                          <div className="flex flex-wrap gap-2 pt-1 border-t border-outline-variant/10">
+                            {group.dishes.map((dish, dI) => {
+                              const qty = group.dishQuantities[dish] || catering.dishQuantities[dish] || 1;
                               return (
                                 <span
                                   key={dI}
-                                  className="px-2.5 py-1 rounded-lg text-xs font-medium bg-white/5 border border-white/10 text-on-surface flex items-center gap-1.5"
+                                  className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-black/40 border border-[#C8A96A]/25 text-white flex items-center gap-2.5 shadow-sm"
                                 >
                                   <span>{dish}</span>
-                                  <span className="text-[10px] font-bold text-[#C8A96A] bg-[#C8A96A]/20 px-1.5 py-0.5 rounded">
-                                    {qty} {qty === 1 ? "platter" : "platters"}
+                                  <span className="text-[10px] font-bold text-[#0F2D24] bg-gradient-to-r from-[#C8A96A] to-[#E8CB8A] px-2 py-0.5 rounded-md font-mono shadow-sm">
+                                    x{qty} {qty === 1 ? "platter" : "platters"}
                                   </span>
                                 </span>
                               );
                             })}
                           </div>
-                        ) : (
-                          <p className="text-xs text-outline italic">
-                            No individual dishes selected yet. Standard chef selection applies.
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Dietary Notes Alert */}
-                      {catering.dietaryNotes && (
-                        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 space-y-0.5">
-                          <span className="text-[10px] uppercase tracking-wider font-bold block">
-                            ⚠️ Guest Dietary Requirements:
-                          </span>
-                          <p className="leading-relaxed">{catering.dietaryNotes}</p>
                         </div>
-                      )}
+                      ))
+                    ) : (
+                      <div className="p-4 rounded-xl bg-surface-container-low/50 border border-outline-variant/15 space-y-2">
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">{restaurant?.emoji || "🍽️"}</span>
+                            <h4 className="font-headline text-base italic text-on-surface font-semibold">
+                              {catering.restaurantLabel}
+                            </h4>
+                          </div>
+                          <button
+                            onClick={() => setMenuBooking(b)}
+                            className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1 bg-white/5 hover:bg-white/10 px-2 py-1 rounded-lg border border-white/10 transition-colors"
+                          >
+                            <UtensilsCrossed className="w-3 h-3" />
+                            Select Dishes
+                          </button>
+                        </div>
+                        <p className="text-xs text-outline italic">
+                          No individual dishes selected yet. Standard chef selection applies.
+                        </p>
+                      </div>
+                    )}
 
-                      {/* DJ & Add-on Preference */}
-                      <div className="flex items-center gap-2 pt-1 text-xs text-secondary">
+                    {/* Dietary Notes Alert */}
+                    {catering.dietaryNotes && (
+                      <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 space-y-0.5">
+                        <span className="text-[10px] uppercase tracking-wider font-bold block">
+                          ⚠️ Guest Dietary Requirements:
+                        </span>
+                        <p className="leading-relaxed">{catering.dietaryNotes}</p>
+                      </div>
+                    )}
+
+                    {/* DJ & Add-on Preference */}
+                    <div className="p-3 rounded-xl bg-surface-container-low/30 border border-outline-variant/10 flex flex-wrap gap-4 text-xs text-secondary">
+                      <div className="flex items-center gap-2">
                         <Music className="w-3.5 h-3.5 text-primary" />
                         <span>
                           {b.needDj
@@ -643,7 +664,7 @@ export default function AdminCateringPage() {
                       </div>
                       {/* Photographer Add-On */}
                       {b.needPhotographer && (
-                        <div className="flex items-center gap-2 text-xs text-secondary">
+                        <div className="flex items-center gap-2">
                           <span className="text-sm">📷</span>
                           <span className="font-semibold text-primary">
                             Photographer: {b.photographerHours || 2} hrs
@@ -653,7 +674,7 @@ export default function AdminCateringPage() {
                       )}
                     </div>
 
-                    {/* Customer Notes / Raw Comments */}
+                    {/* Customer Notes / Raw Comments (cleaned of any [Dishes: ...] markup) */}
                     {catering.baseNotes && (
                       <div className="p-3.5 rounded-xl bg-surface-container-low/30 border border-outline-variant/10 space-y-1">
                         <span className="text-[10px] uppercase tracking-wider text-outline font-bold block flex items-center gap-1">
@@ -1097,22 +1118,29 @@ export default function AdminCateringPage() {
                         </span>
                       </td>
 
-                      {/* Restaurant & Dishes */}
-                      <td className="px-4 py-4 align-top space-y-1.5 max-w-[280px]">
+                      {/* Restaurant & Dishes Grouped by Restaurant */}
+                      <td className="px-4 py-4 align-top space-y-2 max-w-[320px]">
                         <div className="flex items-center gap-1.5 font-semibold text-primary text-xs">
                           <UtensilsCrossed className="w-3 h-3 shrink-0" />
                           <span className="truncate">{catering.restaurantLabel}</span>
                         </div>
-                        {catering.dishes.length > 0 ? (
-                          <div className="flex flex-wrap gap-1">
-                            {catering.dishes.slice(0, 3).map((d, i) => (
-                              <span key={i} className="text-[9px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-white/80">
-                                {d}
-                              </span>
+                        {catering.restaurantGroups && catering.restaurantGroups.length > 0 ? (
+                          <div className="space-y-2">
+                            {catering.restaurantGroups.map((group, gIdx) => (
+                              <div key={gIdx} className="space-y-1">
+                                <div className="text-[10px] text-[#C8A96A] font-bold flex items-center justify-between">
+                                  <span>{group.restaurant.emoji} {group.restaurant.name}:</span>
+                                  <span className="text-[9px] text-outline font-mono">{group.totalPlatters} platters</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1">
+                                  {group.dishes.map((d, i) => (
+                                    <span key={i} className="text-[9px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-white/90">
+                                      {d} <strong className="text-[#C8A96A] font-bold">x{group.dishQuantities[d] || 1}</strong>
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
                             ))}
-                            {catering.dishes.length > 3 && (
-                              <span className="text-[9px] text-primary">+{catering.dishes.length - 3} more</span>
-                            )}
                           </div>
                         ) : (
                           <span className="text-[10px] text-outline italic">No dishes chosen</span>

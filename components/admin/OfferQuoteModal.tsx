@@ -20,7 +20,8 @@ import {
   Sparkles,
   Camera,
   Plus,
-  Minus
+  Minus,
+  Phone
 } from "lucide-react";
 
 interface OfferQuoteModalProps {
@@ -165,7 +166,7 @@ export function OfferQuoteModal({ isOpen, booking, onClose, onSuccess }: OfferQu
         </div>
 
         {/* Catering Details */}
-        <div className="p-4 rounded-xl bg-surface-container-low/40 border border-outline-variant/10 space-y-2">
+        <div className="p-4 rounded-xl bg-surface-container-low/40 border border-outline-variant/10 space-y-3">
           <div className="flex items-center justify-between text-xs">
             <span className="text-[10px] uppercase tracking-wider text-outline font-bold flex items-center gap-1.5">
               <UtensilsCrossed className="w-3.5 h-3.5 text-primary" />
@@ -174,43 +175,67 @@ export function OfferQuoteModal({ isOpen, booking, onClose, onSuccess }: OfferQu
             <span className="font-semibold text-primary">{cateringInfo.restaurantLabel}</span>
           </div>
 
-          {cateringInfo.dishes.length > 0 ? (
-            <div className="flex flex-wrap gap-2 pt-1">
-              {cateringInfo.dishes.map((dish, i) => {
-                const qty = dishQtys[dish] || 1;
-                return (
-                  <div
-                    key={i}
-                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-on-surface text-xs"
-                  >
-                    <span className="font-medium text-white/90">{dish}</span>
-                    <div className="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 rounded border border-white/15">
-                      <button
-                        type="button"
-                        onClick={() => updateDishQty(dish, -1)}
-                        className="w-4 h-4 flex items-center justify-center rounded text-white/60 hover:text-white hover:bg-white/10"
-                        title="Decrease platters"
-                      >
-                        <Minus className="w-2.5 h-2.5" />
-                      </button>
-                      <span className="font-bold text-[#C8A96A] text-[11px] min-w-[14px] text-center">
-                        {qty}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => updateDishQty(dish, 1)}
-                        className="w-4 h-4 flex items-center justify-center rounded text-white/60 hover:text-white hover:bg-white/10"
-                        title="Increase platters"
-                      >
-                        <Plus className="w-2.5 h-2.5" />
-                      </button>
+          {cateringInfo.restaurantGroups && cateringInfo.restaurantGroups.length > 0 ? (
+            <div className="space-y-3">
+              {cateringInfo.restaurantGroups.map((group, gIdx) => (
+                <div key={gIdx} className="space-y-1.5 bg-black/20 p-2.5 rounded-lg border border-white/5">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-[#C8A96A] flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span>{group.restaurant.emoji} {group.restaurant.name}</span>
+                      {group.restaurant.phoneNumber && (
+                        <a
+                          href={`tel:${group.restaurant.phoneNumber.replace(/[^\d+]/g, '')}`}
+                          className="text-[10px] text-emerald-400 hover:underline flex items-center gap-1 font-mono font-normal bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20"
+                          title={`Call ${group.restaurant.name}`}
+                        >
+                          <Phone className="w-2.5 h-2.5" />
+                          <span>{group.restaurant.phoneNumber}</span>
+                        </a>
+                      )}
                     </div>
-                    <span className="text-[10px] text-white/40">
-                      {qty === 1 ? "platter" : "platters"}
+                    <span className="text-[10px] text-white/40 font-mono">
+                      {group.dishes.reduce((sum, d) => sum + (dishQtys[d] || 1), 0)} platters
                     </span>
                   </div>
-                );
-              })}
+                  <div className="flex flex-wrap gap-2 pt-0.5">
+                    {group.dishes.map((dish, i) => {
+                      const qty = dishQtys[dish] || 1;
+                      return (
+                        <div
+                          key={i}
+                          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-on-surface text-xs"
+                        >
+                          <span className="font-medium text-white/90">{dish}</span>
+                          <div className="flex items-center gap-1 bg-black/40 px-1.5 py-0.5 rounded border border-white/15">
+                            <button
+                              type="button"
+                              onClick={() => updateDishQty(dish, -1)}
+                              className="w-4 h-4 flex items-center justify-center rounded text-white/60 hover:text-white hover:bg-white/10"
+                              title="Decrease platters"
+                            >
+                              <Minus className="w-2.5 h-2.5" />
+                            </button>
+                            <span className="font-bold text-[#C8A96A] text-[11px] min-w-[14px] text-center">
+                              {qty}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => updateDishQty(dish, 1)}
+                              className="w-4 h-4 flex items-center justify-center rounded text-white/60 hover:text-white hover:bg-white/10"
+                              title="Increase platters"
+                            >
+                              <Plus className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                          <span className="text-[10px] text-white/40">
+                            {qty === 1 ? "platter" : "platters"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <p className="text-xs text-secondary italic">No custom dishes chosen yet.</p>
