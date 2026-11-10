@@ -49,7 +49,7 @@ export default function AdminSettingsPage() {
   const [platformFeePercent, setPlatformFeePercent] = useState<number>(3.0);
   const [platformFixedFee, setPlatformFixedFee] = useState<number>(0.0);
   const [feeMode, setFeeMode] = useState<"customer_paid" | "promoter_paid">("customer_paid");
-  const [perGuestPrice, setPerGuestPrice] = useState<number>(35);
+  const [perGuestPrice, setPerGuestPrice] = useState<number>(50);
   const [maxGuestCapacity, setMaxGuestCapacity] = useState<number>(40);
   const [djPrice, setDjPrice] = useState<number>(300);
   const [photographerBasePrice, setPhotographerBasePrice] = useState<number>(300);
@@ -66,7 +66,7 @@ export default function AdminSettingsPage() {
         setPlatformFeePercent(s.platformFeePercent ?? 3.0);
         setPlatformFixedFee(s.platformFixedFee ?? 0.0);
         setFeeMode(s.feeMode ?? "customer_paid");
-        setPerGuestPrice(s.perGuestPrice ?? 35);
+        setPerGuestPrice(s.perGuestPrice ?? 50);
         setMaxGuestCapacity(s.maxGuestCapacity ?? 40);
         setDjPrice(s.djPrice ?? 300);
         setPhotographerBasePrice(s.photographerBasePrice ?? 300);
@@ -228,11 +228,11 @@ export default function AdminSettingsPage() {
                   type="number"
                   min="1"
                   value={perGuestPrice}
-                  onChange={(e) => setPerGuestPrice(parseFloat(e.target.value) || 35)}
+                  onChange={(e) => setPerGuestPrice(parseFloat(e.target.value) || 50)}
                   className="w-full bg-white/5 border border-white/15 rounded-xl pl-8 pr-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-[#C8A96A]"
                 />
               </div>
-              <p className="text-[11px] text-white/40 mt-1.5">Current specification: $35 per guest</p>
+              <p className="text-[11px] text-white/40 mt-1.5">Current specification: ${perGuestPrice} per guest</p>
             </div>
 
             <div>
@@ -330,7 +330,7 @@ export default function AdminSettingsPage() {
             type="text"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder="e.g. Updated platform fee to 3.0% and venue per-guest rate to $35"
+            placeholder="e.g. Updated platform fee to 3.0% and venue per-guest rate to $50"
             className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-xs text-white placeholder-white/30 focus:outline-none focus:border-[#C8A96A]"
           />
         </div>

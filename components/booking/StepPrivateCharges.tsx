@@ -31,14 +31,14 @@ export const StepPrivateCharges = ({
   guests,
   durationHours,
 }: StepPrivateChargesProps) => {
-  const [perGuestPrice, setPerGuestPrice] = useState<number>(35);
+  const [perGuestPrice, setPerGuestPrice] = useState<number>(50);
   const [extraHourPrice, setExtraHourPrice] = useState<number>(125);
   const [minDepositAmount, setMinDepositAmount] = useState<number>(200);
 
   useEffect(() => {
     api.get("/bookings/venue-capacity").then(({ data }) => {
       if (data?.success) {
-        setPerGuestPrice(data.perGuestPrice || 35);
+        setPerGuestPrice(data.perGuestPrice || 50);
         setExtraHourPrice(data.extraHourPrice || 125);
         setMinDepositAmount(data.minDepositAmount || 200);
       }

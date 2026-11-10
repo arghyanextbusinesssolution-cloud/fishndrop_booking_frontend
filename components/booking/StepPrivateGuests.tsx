@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import api from "@/lib/axios";
 import { cn } from "@/lib/utils";
 
-export const MIN_PRIVATE_GUESTS = 8;
+export const MIN_PRIVATE_GUESTS = 10;
 
 /* ───────── iPhone-style rolling digits ───────── */
 
@@ -56,7 +56,7 @@ interface Props {
 export const StepPrivateGuests = ({ onNext, date, initialGuests }: Props) => {
   const [guests, setGuests] = useState(Math.max(MIN_PRIVATE_GUESTS, initialGuests || MIN_PRIVATE_GUESTS));
   const [maxCapacity, setMaxCapacity] = useState(40);
-  const [perGuestPrice, setPerGuestPrice] = useState(35);
+  const [perGuestPrice, setPerGuestPrice] = useState(50);
   const holdRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const bumpControls = useAnimationControls();
   const firstRender = useRef(true);
@@ -77,7 +77,7 @@ export const StepPrivateGuests = ({ onNext, date, initialGuests }: Props) => {
         if (!data?.success) return;
         const cap = data.totalCapacity || 40;
         setMaxCapacity(cap);
-        setPerGuestPrice(data.perGuestPrice || 35);
+        setPerGuestPrice(data.perGuestPrice || 50);
         setGuests((g) => Math.min(cap, g));
       })
       .catch(() => undefined);
@@ -110,7 +110,7 @@ export const StepPrivateGuests = ({ onNext, date, initialGuests }: Props) => {
     holdRef.current = null;
   }
 
-  const quick = [8, 10, 15, 20, 25, 30, 35, 40].filter((n) => n <= maxCapacity);
+  const quick = [10, 15, 20, 25, 30, 35, 40].filter((n) => n <= maxCapacity);
   const dateLabel = date ? format(new Date(date), "EEEE, MMMM do") : "";
   const stepBtn =
     "w-16 h-16 rounded-full bg-white/10 hover:bg-[#C8A96A] hover:text-[#0d1612] disabled:opacity-20 disabled:hover:bg-white/10 disabled:hover:text-white disabled:cursor-not-allowed flex items-center justify-center text-white transition-colors active:scale-90 select-none touch-none shadow-lg cursor-pointer";

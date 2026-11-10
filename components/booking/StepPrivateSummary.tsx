@@ -67,7 +67,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
     photographerExtraHourPrice: number;
     minDepositAmount: number;
   }>({
-    perGuestPrice: 35,
+    perGuestPrice: 50,
     extraHourPrice: 125,
     djPrice: 300,
     photographerBasePrice: 300,
@@ -79,7 +79,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
     api.get("/bookings/venue-capacity").then(({ data }) => {
       if (data?.success) {
         setPricingSettings({
-          perGuestPrice: data.perGuestPrice || 35,
+          perGuestPrice: data.perGuestPrice || 50,
           extraHourPrice: data.extraHourPrice || 125,
           djPrice: data.djPrice || 300,
           photographerBasePrice: data.photographerBasePrice || 300,

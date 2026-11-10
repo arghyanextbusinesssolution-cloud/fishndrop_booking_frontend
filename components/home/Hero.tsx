@@ -37,14 +37,14 @@ export const Hero = ({ onTableReservationClick }: HeroProps) => {
                     <span className="italic">Garden Sanctuary</span>
                 </h1>
                 <p className="font-body text-[#C8A96A]/90 text-sm md:text-xl mb-8 md:mb-10 max-w-2xl mx-auto italic animate-fade-in-up delay-200 px-4">
-                    Exclusive venue buyouts from <strong className="text-[#E8CB8A] font-bold not-italic">$35 per guest</strong>. Complete with catering, private bar, sound system, and shareable QR guest invitations.
+                    Exclusive venue buyouts from <strong className="text-[#E8CB8A] font-bold not-italic">$50 per guest</strong>. Complete with catering, private bar, sound system, and shareable QR guest invitations.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4 animate-fade-in-up delay-500 w-full max-w-4xl mx-auto px-4">
                     <NavSpinnerLink
                         href="/book-venue"
                         className="w-full sm:w-auto bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] text-[#0d1612] px-8 md:px-9 py-4 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-black hover:scale-105 transition-all shadow-xl shadow-[#C8A96A]/25"
                     >
-                        BOOK EVENT ($35/GUEST)
+                        BOOK EVENT ($50/GUEST)
                     </NavSpinnerLink>
                     <NavSpinnerLink
                         href="/partner"

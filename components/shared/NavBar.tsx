@@ -158,7 +158,7 @@ export const NavBar = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block text-center text-xs uppercase tracking-[0.2em] text-[#E5C77A] border border-[#C8A96A]/40 py-3 rounded-full hover:bg-[#C8A96A]/10 font-bold"
               >
-                Book Private Space ($35/Guest)
+                Book Private Space ($50/Guest)
               </Link>
               <Link
                 href="/partner"
