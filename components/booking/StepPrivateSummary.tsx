@@ -8,6 +8,8 @@ import { StripePaymentForm } from "./StripePaymentForm";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/axios";
 import {
+  Calendar,
+  Users,
   Loader2,
   Ticket,
   Check,
@@ -24,7 +26,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { cn } from "@/lib/utils";
+import { cn, formatTimeTo12Hour, formatBookingDate } from "@/lib/utils";
 import { getAttributionPayload, trackMetaConversion } from "@/lib/tracking";
 
 import { BookingPolicyModal } from "./BookingPolicyModal";
@@ -38,6 +40,18 @@ const stripePromise = getStripe();
 
 import { CATERING_LABEL_MAP } from "@/lib/cateringRestaurants";
 
+
+const calculateEndTime = (startSlot: string, duration: number): string => {
+  if (!startSlot) return "";
+  const [hStr, mStr] = startSlot.split(":");
+  const startHour = parseInt(hStr, 10);
+  const mins = mStr || "00";
+  const totalHours = startHour + duration;
+  const endHour = totalHours >= 24 ? totalHours - 24 : totalHours;
+  const formattedEnd = `${endHour < 10 ? "0" : ""}${endHour}:${mins}`;
+  return formatTimeTo12Hour(formattedEnd);
+};
+
 export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateSummaryProps) {
   const router = useRouter();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -45,24 +59,55 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
   const [error, setError] = useState<string | null>(null);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
   const { setAuth } = useAuthStore();
+  const [pricingSettings, setPricingSettings] = useState<{
+    perGuestPrice: number;
+    extraHourPrice: number;
+    djPrice: number;
+    photographerBasePrice: number;
+    photographerExtraHourPrice: number;
+    minDepositAmount: number;
+  }>({
+    perGuestPrice: 35,
+    extraHourPrice: 125,
+    djPrice: 300,
+    photographerBasePrice: 300,
+    photographerExtraHourPrice: 150,
+    minDepositAmount: 200,
+  });
 
-  const djCost = bookingData.needDj ? 300 : 0;
-  const extraHours = (bookingData.durationHours || 5) > 5 ? (bookingData.durationHours - 5) * 125 : 0;
+  useEffect(() => {
+    api.get("/bookings/venue-capacity").then(({ data }) => {
+      if (data?.success) {
+        setPricingSettings({
+          perGuestPrice: data.perGuestPrice || 35,
+          extraHourPrice: data.extraHourPrice || 125,
+          djPrice: data.djPrice || 300,
+          photographerBasePrice: data.photographerBasePrice || 300,
+          photographerExtraHourPrice: data.photographerExtraHourPrice || 150,
+          minDepositAmount: data.minDepositAmount || 200,
+        });
+      }
+    }).catch(() => {});
+  }, []);
+
+  const djCost = bookingData.needDj ? pricingSettings.djPrice : 0;
+  const extraHours = (bookingData.durationHours || 5) > 5 ? (bookingData.durationHours - 5) * pricingSettings.extraHourPrice : 0;
   const photographerCost = bookingData.needPhotographer
-    ? 300 + Math.max(0, (bookingData.photographerHours || 2) - 2) * 150
+    ? pricingSettings.photographerBasePrice + Math.max(0, (bookingData.photographerHours || 2) - 2) * pricingSettings.photographerExtraHourPrice
     : 0;
-  const baseCost = 500 + extraHours + djCost + photographerCost;
+  const guestCost = (bookingData.guests || 1) * pricingSettings.perGuestPrice;
+  const baseCost = guestCost + extraHours + djCost + photographerCost;
   const [submitting, setSubmitting] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
   const [isValidating, setIsValidating] = useState(false);
 
   const finalCost = appliedCoupon ? Math.max(0, baseCost - appliedCoupon.discountAmount) : baseCost;
-  const minDeposit = Math.min(finalCost, 200);
+  const minDeposit = Math.min(finalCost, pricingSettings.minDepositAmount);
   const [customDeposit, setCustomDeposit] = useState<number>(minDeposit);
 
   useEffect(() => {
-    setCustomDeposit(Math.min(finalCost, 200));
+    setCustomDeposit(Math.min(finalCost, pricingSettings.minDepositAmount));
   }, [finalCost]);
 
   const handleApplyCoupon = async () => {
@@ -265,25 +310,32 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
       toast.error("Your 15-minute slot hold has expired. Please re-hold the slot.");
       return;
     }
+    if (!screenshotPreview) {
+      toast.error("Please upload your Zelle payment screenshot first.");
+      return;
+    }
     setSubmitting(true);
     try {
-      if (screenshotPreview) {
-        try {
-          await api.post("/payments/upload-zelle-proof", {
-            bookingId,
-            imageBase64: screenshotPreview
-          });
-        } catch (proofErr) {
-          console.warn("Direct Zelle proof upload error:", proofErr);
-        }
+      // The booking is only sent for verification once the screenshot upload succeeds
+      try {
+        await api.post("/payments/upload-zelle-proof", {
+          bookingId,
+          imageBase64: screenshotPreview
+        });
+      } catch (proofErr: any) {
+        const code = proofErr?.response?.data?.code;
+        if (code === "HOLD_EXPIRED") setIsZelleExpired(true);
+        toast.error(proofErr?.response?.data?.message || "Screenshot upload failed. Please try again.");
+        return;
       }
       trackMetaConversion("Lead", {
         content_name: "Private Sanctuary Booking - Zelle",
         currency: "USD",
         value: customDeposit
       });
-      toast.success("Private venue Zelle booking submitted! Redirecting to verification status...");
-      router.push(`/user/payment/zelle-pending?bookingId=${bookingId}`);
+      toast.success("Zelle screenshot submitted! We're verifying your payment.");
+      // Host dashboard → share-your-invite popup (Zelle status shown there)
+      router.push(`/user/celebrations/${bookingId}?share=zelle`);
     } catch (err: any) {
       console.error("Zelle submit failed:", err);
       toast.error("Failed to complete Zelle booking.");
@@ -342,58 +394,6 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
 
   const handlePaymentSuccess = (bookingId: string, paymentIntentId?: string) => {
     if (bookingId) {
-      try {
-        fetch(
-          "https://services.leadconnectorhq.com/hooks/3HmJCw40C6xzJYaLg6cK/webhook-trigger/bc6da1e0-2155-4d01-a223-318afd60c723",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: bookingData.guestDetails.name,
-              email: bookingData.guestDetails.email,
-              phone: bookingData.guestDetails.phone,
-              bookingDate: bookingData.date,
-              bookingTime: bookingData.time || "19:00",
-              partySize: bookingData.guests,
-              durationHours: bookingData.durationHours || 1,
-              occasion: bookingData.occasion || "other",
-              needDj: bookingData.needDj ?? false,
-              cateringMenu: bookingData.cateringMenu || "seafood_buffet",
-              notes: bookingData.notes || "",
-              depositAmount: customDeposit,
-              totalAmount: finalCost,
-              bookingId,
-              paymentIntentId: paymentIntentId || "",
-              bookingType: "private_event",
-              status: "confirmed",
-              couponApplied: Boolean(appliedCoupon),
-              couponCode: appliedCoupon?.code || "",
-              couponDiscountAmount: appliedCoupon?.discountAmount || 0,
-              couponDetails: appliedCoupon
-                ? { code: appliedCoupon.code, discountAmount: appliedCoupon.discountAmount }
-                : null,
-              bookingDetails: {
-                occasion: bookingData.occasion || "other",
-                needDj: bookingData.needDj ?? false,
-                cateringMenu: bookingData.cateringMenu || "seafood_buffet",
-                notes: bookingData.notes || "",
-                partySize: bookingData.guests,
-                durationHours: bookingData.durationHours || 1,
-                bookingDate: bookingData.date,
-                bookingTime: bookingData.time || "19:00",
-                depositAmount: customDeposit,
-                totalAmount: finalCost,
-                customDepositAmount: customDeposit,
-              },
-            }),
-          }
-        ).catch((ghlErr) => {
-          console.warn("Lead Connector webhook failed:", ghlErr);
-        });
-      } catch (ghlErr) {
-        console.warn("Lead Connector webhook failed:", ghlErr);
-      }
-
       let url = `/user/payment/confirmed?bookingId=${bookingId}`;
       if (paymentIntentId) url += `&payment_intent=${paymentIntentId}`;
       router.push(url);
@@ -409,11 +409,64 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
 
           {/* Deposit / Total Header */}
           <div className="space-y-3 border-b border-black/10 pb-4">
-            <div className="flex justify-between items-center">
+            {/* Event Schedule & Reservation Overview */}
+            <div className="p-4 rounded-xl bg-gradient-to-br from-[#0F3D2E] to-[#174838] text-white border border-[#C8A96A]/40 shadow-md space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#C8A96A] flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#C8A96A]" /> Private Event Reservation
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#C8A96A]/20 text-[#E8CB8A] font-bold">
+                  {bookingData.durationHours || 5} Hours
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs pt-1 border-t border-white/10">
+                <div>
+                  <p className="text-[9px] uppercase tracking-widest text-white/50 font-bold flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-[#C8A96A]" /> Date
+                  </p>
+                  <p className="text-white font-bold text-sm mt-0.5">
+                    {formatBookingDate(bookingData.date, { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-[9px] uppercase tracking-widest text-white/50 font-bold flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-[#C8A96A]" /> Time Window
+                  </p>
+                  <p className="text-white font-bold text-sm mt-0.5">
+                    {formatTimeTo12Hour(bookingData.time || "18:00")} – {calculateEndTime(bookingData.time || "18:00", bookingData.durationHours || 5)}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-[9px] uppercase tracking-widest text-white/50 font-bold flex items-center gap-1">
+                    <Users className="w-3 h-3 text-[#C8A96A]" /> Guest Count
+                  </p>
+                  <p className="text-white font-bold text-sm mt-0.5">
+                    {bookingData.guests} Guests <span className="text-[11px] text-[#C8A96A] font-normal">(@ ${pricingSettings.perGuestPrice}/guest)</span>
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-[9px] uppercase tracking-widest text-white/50 font-bold">Occasion</p>
+                  <p className="text-white font-bold text-sm mt-0.5 capitalize">
+                    {bookingData.occasion || "Celebration"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center pt-2">
               <div>
                 <p className="font-label text-[9px] sm:text-[10px] tracking-[0.2em] uppercase text-[#1a1c1b]/60 font-bold leading-tight">Total Venue Package</p>
                 <p className="font-headline text-2xl sm:text-4xl text-[#1a1c1b] font-bold tracking-tighter">${finalCost.toFixed(2)}</p>
-                <p className="text-[10px] text-[#1a1c1b]/50 font-light mt-0.5">$500 base (5 hrs) · $125/extra hr</p>
+                <p className="text-[10px] text-[#1a1c1b]/70 font-semibold mt-0.5">
+                  ${pricingSettings.perGuestPrice}/guest × {bookingData.guests} guests (${(bookingData.guests * pricingSettings.perGuestPrice).toFixed(2)})
+                  {bookingData.durationHours > 5 && ` + ${bookingData.durationHours - 5} extra hrs (${(bookingData.durationHours - 5) * pricingSettings.extraHourPrice})`}
+                  {bookingData.needDj && ` + DJ (${pricingSettings.djPrice})`}
+                  {bookingData.needPhotographer && ` + Photo (${pricingSettings.photographerBasePrice})`}
+                </p>
               </div>
               {appliedCoupon && (
                 <div className="text-right">
@@ -810,7 +863,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
                 <button
                   type="button"
                   onClick={handleSubmitZelle}
-                  disabled={submitting || isZelleExpired || !bookingId}
+                  disabled={submitting || isZelleExpired || !bookingId || !screenshotPreview}
                   className="w-full text-white py-3 sm:py-3.5 rounded-xl text-xs uppercase tracking-widest font-black transition shadow-lg bg-gradient-to-r from-purple-800 to-indigo-900 hover:from-purple-900 hover:to-indigo-950 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {submitting ? (
@@ -819,7 +872,11 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
                       <span>Submitting Zelle Verification...</span>
                     </>
                   ) : (
-                    <span>Confirm &amp; Submit Zelle Reservation (${customDeposit.toFixed(2)})</span>
+                    <span>
+                      {screenshotPreview
+                        ? `Confirm & Submit Zelle Reservation ($${customDeposit.toFixed(2)})`
+                        : "Upload your Zelle screenshot to submit"}
+                    </span>
                   )}
                 </button>
 

@@ -284,7 +284,7 @@ export function useAdmin() {
     }
   }, []);
 
-  const getAllUsers = useCallback(async (page = 1, search = "", role = "all", verified = "all", limit = 20) => {
+  const getAllUsers = useCallback(async (page = 1, search = "", role = "all", verified = "all", limit = 20, incomplete = false) => {
     setLoading(true);
     setError(null);
     try {
@@ -293,7 +293,8 @@ export function useAdmin() {
         limit,
         search: search.trim() || undefined,
         role: role === "all" ? undefined : role,
-        verified: verified === "all" ? undefined : verified
+        verified: verified === "all" ? undefined : verified,
+        incomplete: incomplete ? "true" : undefined
       };
       const { data } = await api.get<UsersResponse>("/admin/users", { params });
       return data;

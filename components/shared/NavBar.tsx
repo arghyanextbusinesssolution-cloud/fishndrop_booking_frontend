@@ -7,11 +7,12 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { useState, useEffect } from "react";
 import { NavSpinnerLink } from "@/components/shared/NavSpinnerLink";
-import { Menu, X } from "lucide-react";
+import { UserProfileMenu } from "@/components/shared/UserProfileMenu";
+import { Menu, X, Sparkles } from "lucide-react";
 
 export const NavBar = () => {
   const pathname = usePathname();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -38,6 +39,7 @@ export const NavBar = () => {
   const useTransparentNav = isHomePage && !isScrolled;
 
   const navLinks = [
+    { href: "/events", label: "Events" },
     { href: "/about", label: "About" },
     { href: "/our-dining", label: "Our Dining" },
     { href: "/gallery", label: "Gallery" },
@@ -76,7 +78,7 @@ export const NavBar = () => {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "font-label text-xs uppercase tracking-[0.25em] font-semibold transition-all duration-300 py-1 relative",
+                  "font-label text-xs uppercase tracking-[0.2em] font-semibold transition-all duration-300 py-1 relative",
                   isActive
                     ? "text-[#E5C77A] drop-shadow-[0_0_12px_rgba(200,169,106,0.5)]"
                     : "text-[#E5E7EB]/80 hover:text-[#E5C77A]"
@@ -92,36 +94,23 @@ export const NavBar = () => {
         </nav>
 
         {/* Right Navigation & Actions */}
-        <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
-          {/* Book a Private Space Button */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* Book Private Space Button */}
           <NavSpinnerLink
             href="/book-venue"
-            className="hidden sm:inline-flex items-center text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-[#E5C77A] border border-[#C8A96A]/35 px-4 md:px-5 py-2.5 rounded-full hover:bg-[#C8A96A]/15 hover:border-[#C8A96A] hover:shadow-[0_0_20px_rgba(200,169,106,0.25)] transition-all duration-300 font-bold backdrop-blur-sm"
+            className="hidden sm:inline-flex items-center text-[10px] md:text-[11px] uppercase tracking-[0.18em] text-[#E5C77A] border border-[#C8A96A]/40 px-4 md:px-5 py-2.5 rounded-full hover:bg-[#C8A96A]/15 hover:border-[#C8A96A] hover:shadow-[0_0_20px_rgba(200,169,106,0.25)] transition-all duration-300 font-bold backdrop-blur-sm"
           >
             Book Private Space
-          </NavSpinnerLink>
-
-          {/* Book Tour */}
-          <NavSpinnerLink
-            href="/book-tour"
-            className="hidden xl:inline-flex items-center text-[10px] md:text-[11px] uppercase tracking-[0.2em] text-[#E5E7EB]/80 hover:text-white border border-white/15 hover:border-[#C8A96A]/50 px-4 md:px-5 py-2.5 rounded-full hover:bg-white/5 transition-all duration-300 font-bold backdrop-blur-sm"
-          >
-             Virtual tour
           </NavSpinnerLink>
 
           {/* Primary CTA (Sign In / Dashboard) */}
           {mounted && (
             isAuthenticated ? (
-              <NavSpinnerLink
-                href={user?.role === "admin" ? "/admin" : "/user"}
-                className="bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] px-5 sm:px-7 py-2.5 rounded-full text-[#0d1612] font-body tracking-[0.2em] uppercase text-[10px] md:text-[11px] font-black shadow-lg shadow-[#C8A96A]/25 hover:shadow-[0_0_25px_rgba(200,169,106,0.45)] hover:scale-[1.03] active:scale-95 transition-all duration-300"
-              >
-                Dashboard
-              </NavSpinnerLink>
+              <UserProfileMenu />
             ) : (
               <NavSpinnerLink
                 href="/login"
-                className="bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] px-5 sm:px-7 py-2.5 rounded-full text-[#0d1612] font-body tracking-[0.2em] uppercase text-[10px] md:text-[11px] font-black shadow-lg shadow-[#C8A96A]/25 hover:shadow-[0_0_25px_rgba(200,169,106,0.45)] hover:scale-[1.03] active:scale-95 transition-all duration-300"
+                className="bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] px-5 sm:px-7 py-2.5 rounded-full text-[#0d1612] font-body tracking-[0.18em] uppercase text-[10px] md:text-[11px] font-black shadow-lg shadow-[#C8A96A]/25 hover:shadow-[0_0_25px_rgba(200,169,106,0.45)] hover:scale-[1.03] active:scale-95 transition-all duration-300"
               >
                 Sign In
               </NavSpinnerLink>
@@ -152,13 +141,13 @@ export const NavBar = () => {
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
-                    "font-label text-sm uppercase tracking-[0.2em] py-2 transition-colors",
+                    "font-label text-sm uppercase tracking-[0.2em] py-2 transition-colors flex items-center justify-between",
                     isActive
                       ? "text-[#E5C77A] font-bold"
                       : "text-white/80 hover:text-[#E5C77A]"
                   )}
                 >
-                  {link.label}
+                  <span>{link.label}</span>
                 </Link>
               );
             })}
@@ -169,14 +158,15 @@ export const NavBar = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block text-center text-xs uppercase tracking-[0.2em] text-[#E5C77A] border border-[#C8A96A]/40 py-3 rounded-full hover:bg-[#C8A96A]/10 font-bold"
               >
-                Book Private Space
+                Book Private Space ($35/Guest)
               </Link>
               <Link
-                href="/book-tour"
+                href="/partner"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block text-center text-xs uppercase tracking-[0.2em] text-[#E5E7EB]/70 border border-white/10 py-3 rounded-full hover:bg-white/5 font-bold"
+                className="flex items-center justify-center gap-2 text-center text-xs uppercase tracking-[0.2em] text-[#0d1612] bg-[#E5C77A] py-3 rounded-full font-black shadow-lg hover:bg-[#d8b97a]"
               >
-                Virtual Tour
+                <Sparkles className="w-3.5 h-3.5 text-[#0d1612]" />
+                <span>Become a Promoter</span>
               </Link>
             </div>
           </div>

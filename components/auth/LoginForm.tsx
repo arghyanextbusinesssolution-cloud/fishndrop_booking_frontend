@@ -36,7 +36,7 @@ export function LoginForm() {
     try {
       const data = await login({ email, password });
       toast.success("Welcome back! Redirecting to dashboard...");
-      const destination = data.user.role === "admin" ? "/admin" : "/user";
+      const destination = data.user.role === "admin" || data.user.role === "owner" || data.user.role === "staff" ? "/admin" : data.user.role === "promoter" ? "/promoter" : "/user";
       try {
         router.replace(destination);
       } catch {
@@ -55,7 +55,7 @@ export function LoginForm() {
   const handleOtpSuccess = (user: any) => {
     toast.success("Welcome back! Redirecting to dashboard...");
     const role = user?.role || useAuthStore.getState().user?.role || "user";
-    const destination = role === "admin" ? "/admin" : "/user";
+    const destination = role === "admin" || role === "owner" || role === "staff" ? "/admin" : role === "promoter" ? "/promoter" : "/user";
     try {
       router.replace(destination);
     } catch {

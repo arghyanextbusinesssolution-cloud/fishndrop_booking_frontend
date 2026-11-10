@@ -12,7 +12,7 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace(user?.role === "admin" ? "/admin" : "/user");
+      router.replace(user?.role === "admin" || user?.role === "owner" || user?.role === "staff" ? "/admin" : user?.role === "promoter" ? "/promoter" : "/user");
     }
   }, [isAuthenticated, router, user?.role]);
 

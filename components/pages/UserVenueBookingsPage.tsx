@@ -4,7 +4,7 @@ import { Fragment, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useBookings } from "@/hooks/useBookings";
 import { Booking } from "@/types";
-import { CalendarDays, Loader2, Star, Eye, Music, UtensilsCrossed, CheckCircle2, AlertCircle, XCircle, Clock, Copy, Check, TableProperties, ChefHat, Sparkles, CreditCard } from "lucide-react";
+import { Users, CalendarDays, Loader2, Star, Eye, Music, UtensilsCrossed, CheckCircle2, AlertCircle, XCircle, Clock, Copy, Check, TableProperties, ChefHat, Sparkles, CreditCard } from "lucide-react";
 import { cn, formatBookingDate, formatVenueDateTime } from "@/lib/utils";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -741,6 +741,16 @@ export default function UserVenueBookingsPage() {
                                     <span>{isBalancePending ? "Installment" : `Pay Balance ($${remainingAmt.toFixed(0)})`}</span>
                                   </Link>
                                 )}
+
+                                {/* Manage Guests & Passes Link */}
+                                <Link
+                                  href={`/user/venue-bookings/${booking._id}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-widest uppercase bg-[#C8A96A]/20 hover:bg-[#C8A96A]/30 text-[#E8CB8A] border border-[#C8A96A]/40 transition-all shadow-sm"
+                                >
+                                  <Users className="w-3 h-3" />
+                                  <span>Guest Passes</span>
+                                </Link>
 
                                 {/* Cancel Booking Button */}
                                 <button

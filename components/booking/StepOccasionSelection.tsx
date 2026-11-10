@@ -85,11 +85,11 @@ export const StepOccasionSelection = ({ onNext, selectedOccasion }: StepOccasion
           <span className="font-headline italic text-[#C8A96A] text-base">04.</span>
           <div className="h-[1px] w-8 bg-white/20"></div>
           <span className="font-label uppercase tracking-widest text-[10px] text-white/50 font-bold">
-            Step 04 of 06 &bull; The Celebration Type
+            Step 04 of 06 &bull; Party Occasion
           </span>
         </div>
         <h2 className="font-headline italic text-4xl md:text-5xl text-white leading-tight">
-          Select Your <span className="text-gold-gradient">Occasion</span>
+          Select Your <span className="text-gold-gradient">Party Occasion</span>
         </h2>
         <p className="text-white/60 font-body text-base md:text-lg font-light max-w-2xl">
           Choose an occasion so our concierge and culinary teams can tailor your private sanctuary atmosphere.

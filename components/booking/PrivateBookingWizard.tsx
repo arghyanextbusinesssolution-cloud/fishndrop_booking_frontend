@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { StepPrivateDate } from "./StepPrivateDate";
 import { StepPrivateTime } from "./StepPrivateTime";
+import { StepPrivateGuests, MIN_PRIVATE_GUESTS } from "./StepPrivateGuests";
 import { StepPhoneVerification } from "./StepPhoneVerification";
 import { StepOccasionSelection } from "./StepOccasionSelection";
 import { StepAddonCardsHub } from "./StepAddonCardsHub";
@@ -45,7 +46,7 @@ export const PrivateBookingWizard = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingData, setBookingData] = useState<PrivateBookingData>({
     date: null,
-    guests: 20,
+    guests: MIN_PRIVATE_GUESTS,
     durationHours: 5,
     time: null,
     occasion: "celebration",
@@ -59,7 +60,7 @@ export const PrivateBookingWizard = () => {
     needDecoration: false,
     decorationStyle: "tropical_arch",
     guestDetails: {
-      name: user?.name || "Guest User",
+      name: user?.name || "",
       email: user?.email || "",
       phone: user?.phone || "",
       notes: "",
@@ -84,14 +85,15 @@ export const PrivateBookingWizard = () => {
         };
       }
 
-      // If phone was provided from StepPhoneVerification
+      // If phone and name/email were provided from StepPhoneVerification
       if (stepData.phone) {
         return {
           ...prev,
           guestDetails: {
             ...prev.guestDetails,
             phone: stepData.phone,
-            email: prev.guestDetails.email || `guest_${stepData.phone.replace(/\D/g, "")}@fishndrop.com`
+            name: stepData.name || prev.guestDetails.name,
+            email: stepData.email || prev.guestDetails.email || `guest_${stepData.phone.replace(/\D/g, "")}@tropica.nyc`
           }
         };
       }
@@ -115,10 +117,10 @@ export const PrivateBookingWizard = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, [currentStep]);
 
-  const handleNext = (stepData: any) => {
+  const handleNext = (stepData: any = {}) => {
     updateData(stepData);
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-    if (currentStep < 6) {
+    if (currentStep < 7) {
       setCurrentStep((prev) => prev + 1);
     }
   };
@@ -134,11 +136,12 @@ export const PrivateBookingWizard = () => {
 
   const steps = [
     { num: 1, title: "Calendar Date" },
-    { num: 2, title: "Time Slot" },
-    { num: 3, title: "Phone Verification" },
-    { num: 4, title: "Occasion" },
-    { num: 5, title: "Add-ons Hub" },
-    { num: 6, title: "Checkout & Deposit" }
+    { num: 2, title: "Guests" },
+    { num: 3, title: "Time & Duration" },
+    { num: 4, title: "Verification & Host" },
+    { num: 5, title: "Party Occasion" },
+    { num: 6, title: "Add-ons Hub" },
+    { num: 7, title: "Checkout & Deposit" }
   ];
 
   const renderStep = () => {
@@ -149,35 +152,38 @@ export const PrivateBookingWizard = () => {
             onNext={handleNext}
             initialData={{
               date: bookingData.date,
-              guests: bookingData.guests,
-              durationHours: bookingData.durationHours
             }}
           />
         );
       case 2:
+        return <StepPrivateGuests onNext={handleNext} date={bookingData.date} initialGuests={bookingData.guests} />;
+      case 3:
         return (
           <StepPrivateTime
             onNext={handleNext}
             date={bookingData.date}
-            durationHours={bookingData.durationHours}
+            guests={bookingData.guests}
+            initialDurationHours={bookingData.durationHours}
             selectedTime={bookingData.time}
           />
         );
-      case 3:
+      case 4:
         return (
           <StepPhoneVerification
             onNext={handleNext}
             initialPhone={bookingData.guestDetails.phone}
+            initialName={bookingData.guestDetails.name}
+            initialEmail={bookingData.guestDetails.email}
           />
         );
-      case 4:
+      case 5:
         return (
           <StepOccasionSelection
             onNext={handleNext}
             selectedOccasion={bookingData.occasion}
           />
         );
-      case 5:
+      case 6:
         return (
           <StepAddonCardsHub
             onNext={handleNext}
@@ -190,7 +196,7 @@ export const PrivateBookingWizard = () => {
             initialCateringNotes={bookingData.cateringNotes}
           />
         );
-      case 6:
+      case 7:
         return (
           <StepPrivateSummary
             bookingData={bookingData}
@@ -203,7 +209,7 @@ export const PrivateBookingWizard = () => {
   };
 
   return (
-    <div className={cn("mx-auto flex flex-col mt-2 md:mt-4 transition-all duration-700", currentStep === 6 ? "max-w-7xl" : "max-w-5xl")}>
+    <div className={cn("mx-auto flex flex-col mt-2 md:mt-4 transition-all duration-700", currentStep === 7 ? "max-w-7xl" : "max-w-5xl")}>
       {/* ─── Mobile-Friendly Progress Header (< sm screens) ─── */}
       <div className="sm:hidden mb-4 px-1 space-y-2">
         <div className="flex items-center justify-between text-xs font-medium">
@@ -215,7 +221,7 @@ export const PrivateBookingWizard = () => {
           </span>
         </div>
         {/* Compact Segmented Progress Bar for mobile */}
-        <div className="grid grid-cols-6 gap-1">
+        <div className="grid grid-cols-7 gap-1">
           {steps.map((step) => {
             const isCompleted = currentStep > step.num;
             const isCurrent = currentStep === step.num;
@@ -299,4 +305,3 @@ export const PrivateBookingWizard = () => {
     </div>
   );
 };
-

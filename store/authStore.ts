@@ -89,7 +89,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initAuth: () => {
     const state = getInitialState();
     set(state);
-    if (state.isAuthenticated && !state.user?.name) {
+    if (state.isAuthenticated) {
       get().fetchMe();
     }
   },

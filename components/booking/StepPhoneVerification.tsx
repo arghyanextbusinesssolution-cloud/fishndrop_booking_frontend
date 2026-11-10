@@ -9,7 +9,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  Lock
+  User,
+  Mail
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useAuthStore } from "@/store/authStore";
@@ -40,18 +41,27 @@ const formatNorthAmericanNumber = (value: string): string => {
 };
 
 interface StepPhoneVerificationProps {
-  onNext: (data: { phone: string }) => void;
+  onNext: (data: { phone: string; name?: string; email?: string }) => void;
   initialPhone?: string;
+  initialName?: string;
+  initialEmail?: string;
 }
 
-export const StepPhoneVerification = ({ onNext, initialPhone = "" }: StepPhoneVerificationProps) => {
+export const StepPhoneVerification = ({
+  onNext,
+  initialPhone = "",
+  initialName = "",
+  initialEmail = "",
+}: StepPhoneVerificationProps) => {
   const { user } = useAuthStore();
   const { sendOTP, verifyOTP, loading } = useAuth();
 
   const [selectedCountryId, setSelectedCountryId] = useState<string>("US");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otpCode, setOtpCode] = useState("");
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [step, setStep] = useState<"phone" | "otp" | "name">("phone");
+  const [hostName, setHostName] = useState(initialName || user?.name || "");
+  const [hostEmail, setHostEmail] = useState(initialEmail || user?.email || "");
   const [resendCooldown, setResendCooldown] = useState(0);
   const [errMessage, setErrMessage] = useState<string | null>(null);
   const [isSuccessVerified, setIsSuccessVerified] = useState(false);
@@ -80,6 +90,8 @@ export const StepPhoneVerification = ({ onNext, initialPhone = "" }: StepPhoneVe
         setIsSuccessVerified(true);
       }
     }
+    if (user?.name && !hostName) setHostName(user.name);
+    if (user?.email && !hostEmail) setHostEmail(user.email);
   }, [initialPhone, user]);
 
   // Resend cooldown timer
@@ -89,8 +101,21 @@ export const StepPhoneVerification = ({ onNext, initialPhone = "" }: StepPhoneVe
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
-  const rawDigits = phoneNumber.replace(/\D/g, "");
-  const fullPhone = rawDigits ? `${selectedCountry.code}${rawDigits}` : "";
+  const cleanDigits = (() => {
+    let d = phoneNumber.replace(/\D/g, "");
+    const codeDigits = selectedCountry.code.replace(/\D/g, "");
+    // If user typed/pasted with country code, strip it so it is not doubled
+    if (d.startsWith(codeDigits) && d.length > 10) {
+      d = d.slice(codeDigits.length);
+    }
+    if (d.startsWith("0")) {
+      d = d.slice(1);
+    }
+    return d;
+  })();
+
+  const rawDigits = cleanDigits;
+  const fullPhone = cleanDigits ? `${selectedCountry.code}${cleanDigits}` : "";
 
   const handleSendOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -125,16 +150,36 @@ export const StepPhoneVerification = ({ onNext, initialPhone = "" }: StepPhoneVe
       await verifyOTP(fullPhone, cleanCode);
       setIsSuccessVerified(true);
       toast.success("Phone verified successfully!");
-      setTimeout(() => {
-        onNext({ phone: fullPhone });
-      }, 350);
+      // Proceed to take host name & email
+      setStep("name");
     } catch (err: any) {
       setErrMessage(err.message || "Invalid or expired code. (Dev test code: 1234)");
     }
   };
 
+  const handleNameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hostName.trim()) {
+      setErrMessage("Please enter your full name.");
+      return;
+    }
+    onNext({
+      phone: fullPhone || user?.phone || "",
+      name: hostName.trim(),
+      email: hostEmail.trim() || undefined,
+    });
+  };
+
   const handleProceedAlreadyVerified = () => {
-    onNext({ phone: fullPhone || user?.phone || "" });
+    if (hostName.trim()) {
+      onNext({
+        phone: fullPhone || user?.phone || "",
+        name: hostName.trim(),
+        email: hostEmail.trim() || undefined,
+      });
+    } else {
+      setStep("name");
+    }
   };
 
   return (
@@ -145,30 +190,29 @@ export const StepPhoneVerification = ({ onNext, initialPhone = "" }: StepPhoneVe
           <span className="font-headline italic text-[#C8A96A] text-base">03.</span>
           <div className="h-[1px] w-8 bg-white/20"></div>
           <span className="font-label uppercase tracking-widest text-[10px] text-white/50 font-bold">
-            Step 03 &bull; Phone Verification
+            Step 03 &bull; Booker Identity &amp; Verification
           </span>
         </div>
         <h2 className="font-headline italic text-4xl md:text-5xl text-white leading-tight">
-          Verify Your <span className="text-gold-gradient">Phone Number</span>
+          Verify Your <span className="text-gold-gradient">Reservation</span>
         </h2>
         <p className="text-white/60 font-body text-base md:text-lg font-light">
-          We use direct SMS instant verification to secure your reservation. No passwords or long forms required.
+          Verify your mobile phone and provide host details so we can send your private booking pass and guest invitation link.
         </p>
       </header>
 
-      {/* Main Verification Card */}
-      <div className="bg-[#121614] rounded-3xl p-6 sm:p-8 md:p-10 border border-[#C8A96A]/25 shadow-[0_15px_50px_rgba(0,0,0,0.6)] backdrop-blur-xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#C8A96A]/50 to-transparent" />
-
+      {/* Main Glass Form Card */}
+      <div className="glass-card rounded-3xl p-6 sm:p-8 border-white/10 bg-white/[0.03] shadow-2xl relative overflow-hidden">
         {/* State A: User is already verified */}
-        {isSuccessVerified && (
+        {isSuccessVerified && step !== "name" && (
           <div className="space-y-6 text-center py-4">
-            <div className="w-16 h-16 rounded-full bg-[#C8A96A]/20 border border-[#C8A96A]/50 text-[#C8A96A] flex items-center justify-center mx-auto shadow-[0_0_25px_rgba(200,169,106,0.3)]">
-              <CheckCircle2 className="w-8 h-8 text-[#C8A96A]" />
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 mx-auto flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <CheckCircle2 className="w-8 h-8" />
             </div>
+
             <div className="space-y-1">
               <span className="text-[11px] font-bold uppercase tracking-widest text-[#C8A96A] font-label">
-                Verified Customer
+                Verified Booker Phone
               </span>
               <h3 className="font-headline text-2xl text-white">Phone Confirmed</h3>
               <p className="text-white/70 font-mono text-lg font-bold">
@@ -189,10 +233,10 @@ export const StepPhoneVerification = ({ onNext, initialPhone = "" }: StepPhoneVe
               </button>
               <button
                 type="button"
-                onClick={handleProceedAlreadyVerified}
-                className="w-full sm:w-1/2 py-3.5 rounded-xl bg-[#C8A96A] text-[#0d1612] hover:bg-[#d8b97a] font-label uppercase tracking-widest text-xs font-bold transition-all shadow-[0_0_20px_rgba(200,169,106,0.3)] flex items-center justify-center gap-2"
+                onClick={() => setStep("name")}
+                className="w-full sm:w-1/2 py-3.5 rounded-xl bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] text-[#0d1612] font-black font-label uppercase tracking-widest text-xs transition-all shadow-xl shadow-[#C8A96A]/30 flex items-center justify-center gap-2 cursor-pointer"
               >
-                Continue to Add-ons <ArrowRight className="w-4 h-4" />
+                Continue to Host Name <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -207,7 +251,7 @@ export const StepPhoneVerification = ({ onNext, initialPhone = "" }: StepPhoneVe
                 Mobile Phone Number
               </label>
               <p className="text-[11px] text-white/50">
-                You will receive a 4-digit SMS verification code to verify this booking.
+                You will receive a 4-digit SMS verification code to secure this reservation.
               </p>
 
               <div className="flex items-center rounded-2xl border border-white/15 bg-white/[0.04] p-1.5 focus-within:border-[#C8A96A] focus-within:ring-2 focus-within:ring-[#C8A96A]/20 transition-all">
@@ -251,16 +295,11 @@ export const StepPhoneVerification = ({ onNext, initialPhone = "" }: StepPhoneVe
             <button
               type="submit"
               disabled={loading || rawDigits.length < 7}
-              className={cn(
-                "w-full py-4 rounded-xl font-label uppercase tracking-widest text-xs font-bold transition-all duration-300 shadow-xl flex items-center justify-center gap-2",
-                rawDigits.length >= 7 && !loading
-                  ? "bg-[#C8A96A] text-[#0d1612] hover:bg-[#d8b97a] shadow-[0_0_20px_rgba(200,169,106,0.3)] hover:shadow-[0_0_30px_rgba(200,169,106,0.5)] transform hover:-translate-y-0.5 cursor-pointer"
-                  : "bg-white/5 text-white/20 cursor-not-allowed border border-white/5"
-              )}
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] text-[#0d1612] font-black font-label text-xs uppercase tracking-[0.2em] shadow-xl shadow-[#C8A96A]/30 hover:scale-[1.02] active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Sending SMS Code...
+                  <Loader2 className="w-4 h-4 animate-spin" /> Sending Code...
                 </>
               ) : (
                 <>
@@ -271,37 +310,28 @@ export const StepPhoneVerification = ({ onNext, initialPhone = "" }: StepPhoneVe
           </form>
         )}
 
-        {/* State C: Step 2 - Enter 4-digit Code */}
+        {/* State C: Step 2 - Enter OTP Code */}
         {!isSuccessVerified && step === "otp" && (
           <form onSubmit={handleVerifyOtp} className="space-y-6">
-            <div className="space-y-2 text-center">
-              <div className="w-12 h-12 rounded-full bg-[#C8A96A]/10 border border-[#C8A96A]/30 text-[#C8A96A] flex items-center justify-center mx-auto mb-2">
-                <ShieldCheck className="w-6 h-6 text-[#C8A96A]" />
-              </div>
-              <label className="font-label text-xs uppercase tracking-widest text-[#C8A96A] font-bold block">
-                Enter 4-Digit Code
-              </label>
+            <div className="space-y-2 text-center sm:text-left">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#C8A96A] font-label">
+                Security Check
+              </span>
+              <h3 className="font-headline text-2xl text-white">Enter 4-Digit SMS Code</h3>
               <p className="text-xs text-white/60">
-                Code sent via SMS to <strong className="text-white font-mono">{fullPhone}</strong>
+                We sent a 4-digit code to <strong className="text-white font-mono">{fullPhone}</strong>
               </p>
             </div>
 
-            <div className="flex justify-center">
+            <div className="py-2">
               <input
                 type="text"
-                inputMode="numeric"
                 maxLength={4}
                 autoFocus
                 placeholder="••••"
                 value={otpCode}
-                onChange={(e) => {
-                  const cleaned = e.target.value.replace(/\D/g, "").slice(0, 4);
-                  setOtpCode(cleaned);
-                  if (cleaned.length === 4) {
-                    setErrMessage(null);
-                  }
-                }}
-                className="w-48 text-center text-4xl sm:text-5xl font-mono font-bold tracking-[0.3em] bg-white/[0.06] border-2 border-[#C8A96A]/40 rounded-2xl py-3 text-[#E3C281] outline-none focus:border-[#C8A96A] focus:ring-4 focus:ring-[#C8A96A]/20 transition-all shadow-inner"
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
+                className="w-full text-center text-4xl sm:text-5xl font-mono tracking-[0.5em] bg-white/[0.05] border border-white/20 rounded-2xl py-4 text-white focus:outline-none focus:border-[#C8A96A] focus:ring-2 focus:ring-[#C8A96A]/30"
               />
             </div>
 
@@ -312,63 +342,108 @@ export const StepPhoneVerification = ({ onNext, initialPhone = "" }: StepPhoneVe
               </div>
             )}
 
-            <div className="flex flex-col gap-3">
+            <button
+              type="submit"
+              disabled={loading || otpCode.length !== 4}
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] text-[#0d1612] font-black font-label text-xs uppercase tracking-[0.2em] shadow-xl shadow-[#C8A96A]/30 hover:scale-[1.02] active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Verifying...
+                </>
+              ) : (
+                <>
+                  Verify Code <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+
+            <div className="flex items-center justify-between text-xs text-white/50 pt-2 border-t border-white/5">
               <button
-                type="submit"
-                disabled={loading || otpCode.trim().length !== 4}
-                className={cn(
-                  "w-full py-4 rounded-xl font-label uppercase tracking-widest text-xs font-bold transition-all duration-300 shadow-xl flex items-center justify-center gap-2",
-                  otpCode.trim().length === 4 && !loading
-                    ? "bg-[#C8A96A] text-[#0d1612] hover:bg-[#d8b97a] shadow-[0_0_20px_rgba(200,169,106,0.3)] hover:shadow-[0_0_30px_rgba(200,169,106,0.5)] transform hover:-translate-y-0.5 cursor-pointer"
-                    : "bg-white/5 text-white/20 cursor-not-allowed border border-white/5"
-                )}
+                type="button"
+                onClick={() => setStep("phone")}
+                className="hover:text-white transition-colors underline cursor-pointer"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Verifying...
-                  </>
-                ) : (
-                  <>
-                    Verify &amp; Continue <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
+                Change Phone Number
               </button>
-
-              <div className="flex items-center justify-between text-xs pt-2 px-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep("phone");
-                    setOtpCode("");
-                    setErrMessage(null);
-                  }}
-                  className="text-white/50 hover:text-white underline font-label transition-colors"
-                >
-                  Edit phone number
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleSendOtp}
-                  disabled={loading || resendCooldown > 0}
-                  className={cn(
-                    "font-label flex items-center gap-1.5 transition-colors",
-                    resendCooldown > 0 ? "text-white/30 cursor-not-allowed" : "text-[#C8A96A] hover:underline"
-                  )}
-                >
-                  <RefreshCw className={cn("w-3 h-3", loading && "animate-spin")} />
-                  {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend Code"}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={resendCooldown > 0}
+                className="text-[#C8A96A] hover:underline disabled:opacity-40 disabled:no-underline flex items-center gap-1 cursor-pointer"
+              >
+                <RefreshCw className="w-3 h-3" />
+                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Code"}
+              </button>
             </div>
           </form>
         )}
-      </div>
 
-      {/* Trust reassurance banner */}
-      <div className="flex items-center justify-center gap-2 text-center text-xs text-white/40 font-label">
-        <Lock className="w-3.5 h-3.5 text-[#C8A96A]" />
-        <span>Your information is strictly private. We never send spam or share your number.</span>
+        {/* State D: Step 3 - Host Name & Email Taken After OTP */}
+        {step === "name" && (
+          <form onSubmit={handleNameSubmit} className="space-y-6 animate-fade-in">
+            <div className="space-y-1.5 text-center sm:text-left">
+              <div className="flex items-center gap-2 justify-center sm:justify-start">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 font-label">
+                  Phone Verified: {fullPhone || user?.phone}
+                </span>
+              </div>
+              <h3 className="font-headline text-2xl sm:text-3xl text-white">Who Is Hosting This Party?</h3>
+              <p className="text-xs text-white/60">
+                Please provide your name and email so we can send your host itinerary, guest invitation link, and QR pass.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-white/80 font-bold mb-1.5 font-label flex items-center gap-2">
+                  <User className="w-3.5 h-3.5 text-[#C8A96A]" />
+                  Host Full Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  value={hostName}
+                  onChange={(e) => setHostName(e.target.value)}
+                  placeholder="e.g. Maria Gonzalez"
+                  className="w-full bg-white/[0.05] border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 text-base focus:outline-none focus:border-[#C8A96A] transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs uppercase tracking-wider text-white/80 font-bold mb-1.5 font-label flex items-center gap-2">
+                  <Mail className="w-3.5 h-3.5 text-[#C8A96A]" />
+                  Email Address (For Confirmation &amp; Passes)
+                </label>
+                <input
+                  type="email"
+                  value={hostEmail}
+                  onChange={(e) => setHostEmail(e.target.value)}
+                  placeholder="e.g. maria@example.com"
+                  className="w-full bg-white/[0.05] border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 text-base focus:outline-none focus:border-[#C8A96A] transition-all"
+                />
+              </div>
+            </div>
+
+            {errMessage && (
+              <div className="p-3.5 rounded-xl border border-red-500/30 bg-red-500/10 flex items-center gap-2 text-xs text-red-200">
+                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                <span>{errMessage}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={!hostName.trim()}
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] text-[#0d1612] font-black font-label text-xs uppercase tracking-[0.2em] shadow-xl shadow-[#C8A96A]/30 hover:scale-[1.02] active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>Continue to Party Occasion</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </form>
+        )}
       </div>
     </div>
   );

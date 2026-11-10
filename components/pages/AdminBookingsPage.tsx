@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useAdmin } from "@/hooks/useAdmin";
 import { Booking } from "@/types";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -245,6 +246,14 @@ type PendingAction = { bookingId: string; action: "cancel" | "delete" | "mark_pa
 
 export default function AdminBookingsPage() {
   const { getAllBookings, adminCancelBooking, deleteBooking } = useAdmin();
+  const pathname = usePathname() || "";
+  const router = useRouter();
+  const detailHref = (id: string) => `${pathname.startsWith("/employee") ? "/employee" : "/admin"}/bookings/${id}`;
+  /** Open the booking's detail page, unless the click was on a button/link/input inside the row. */
+  const openDetail = (e: React.MouseEvent, id: string) => {
+    if ((e.target as HTMLElement).closest("button, a, input, select, textarea, label")) return;
+    router.push(detailHref(id));
+  };
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
@@ -586,7 +595,8 @@ export default function AdminBookingsPage() {
                   {filtered.map((b, i) => (
                     <div
                       key={b._id}
-                      className="p-5 space-y-4 hover:bg-surface-container/30 transition-colors"
+                      onClick={(e) => openDetail(e, b._id)}
+                      className="p-5 space-y-4 hover:bg-surface-container/30 transition-colors cursor-pointer"
                     >
                         <div className="flex items-center justify-between gap-2 flex-wrap">
                           <div className="flex items-center gap-2">
@@ -600,7 +610,9 @@ export default function AdminBookingsPage() {
                         <div className="space-y-1">
                           <div className="flex items-baseline justify-between gap-2">
                             <h3 className="font-headline text-lg italic text-on-surface">
-                              {b.customerName || b.user?.name}
+                              <Link href={detailHref(b._id)} className="hover:text-primary hover:underline underline-offset-2">
+                                {b.customerName || b.user?.name}
+                              </Link>
                             </h3>
                             <OccasionBadge occasion={b.occasion} />
                           </div>
@@ -802,13 +814,17 @@ export default function AdminBookingsPage() {
                       {filtered.map((b, i) => (
                         <tr
                           key={b._id}
-                          className="hover:bg-surface-container/50 transition-colors"
+                          onClick={(e) => openDetail(e, b._id)}
+                          title="Open full booking details"
+                          className="hover:bg-surface-container/50 transition-colors cursor-pointer"
                         >
                             <td className="px-3 py-2.5 font-body text-xs text-secondary">{(page - 1) * 10 + i + 1}</td>
                             <td className="px-3 py-2.5"><CategoryBadge status={b.status} paymentStatus={b.paymentStatus} /></td>
                             <td className="px-3 py-2.5"><TypeBadge type={b.bookingType} /></td>
                             <td className="px-3 py-2.5 font-headline text-sm italic text-on-surface whitespace-nowrap">
-                              {b.customerName || b.user?.name}
+                              <Link href={detailHref(b._id)} className="hover:text-primary hover:underline underline-offset-2">
+                                {b.customerName || b.user?.name}
+                              </Link>
                             </td>
                             <td className="px-3 py-2.5"><OccasionBadge occasion={b.occasion} /></td>
                             <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap">

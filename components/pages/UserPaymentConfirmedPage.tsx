@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { CheckCircle2, CalendarDays, Clock, Users, Sparkles, ShieldCheck, CreditCard } from "lucide-react";
 import { useBookings } from "@/hooks/useBookings";
@@ -22,6 +22,7 @@ export default function UserPaymentConfirmedPage() {
   const [booking, setBooking] = useState<Booking | null>(null);
   const [error, setError] = useState<string | null>(null);
   const attempted = useRef(false);
+  const router = useRouter();
 
   const runVerify = useCallback(async () => {
     if (attempted.current) return;
@@ -48,6 +49,17 @@ export default function UserPaymentConfirmedPage() {
     const t = window.setTimeout(() => { void runVerify(); }, 300);
     return () => window.clearTimeout(t);
   }, [sessionId, paymentIntentId, bookingIdFallback, runVerify]);
+
+  // Private venue paid → host dashboard with the "share your invite" popup
+  const bookingIdForRedirect = (booking as any)?._id || (booking as any)?.id;
+  const paidPrivate =
+    booking?.bookingType === "private_event" &&
+    ((booking as any).status === "confirmed" || ["deposit_paid", "paid"].includes((booking as any).paymentStatus));
+  useEffect(() => {
+    if (!paidPrivate || !bookingIdForRedirect) return;
+    const t = window.setTimeout(() => router.replace(`/user/celebrations/${bookingIdForRedirect}?share=1`), 2500);
+    return () => window.clearTimeout(t);
+  }, [paidPrivate, bookingIdForRedirect, router]);
 
   if (!sessionId && !paymentIntentId && !bookingIdFallback) {
     return (
@@ -98,6 +110,16 @@ export default function UserPaymentConfirmedPage() {
                 ? "Your venue is fully booked and confirmed. See you on the day!"
                 : "Your table reservation is paid and secured."}
           </p>
+          {paidPrivate && bookingIdForRedirect && (
+            <Link
+              href={`/user/celebrations/${bookingIdForRedirect}?share=1`}
+              className="mt-5 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-wider"
+              style={{ background: GOLD, color: DARK }}
+            >
+              Invite your guests →
+            </Link>
+          )}
+          {paidPrivate && <p className="mt-2 text-[11px] text-white/45">Taking you to your dashboard to share your invite…</p>}
         </div>
       </div>
 

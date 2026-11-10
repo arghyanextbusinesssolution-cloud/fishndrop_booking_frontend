@@ -24,13 +24,39 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Only apply role redirect when we have full user data
+    // Role-based route protection
     if (user?.role) {
-      if (pathname.startsWith("/admin") && user.role !== "admin") {
-        router.replace("/user");
+      const role = user.role;
+
+      // Admin routes: only admin/owner
+      if (pathname.startsWith("/admin") && role !== "admin" && role !== "owner") {
+        if (role === "staff") {
+          router.replace("/employee");
+        } else if (role === "promoter") {
+          router.replace("/promoter");
+        } else {
+          router.replace("/user");
+        }
       }
-      if (pathname.startsWith("/user") && user.role === "admin") {
-        router.replace("/admin");
+
+      // Employee routes: only staff
+      if (pathname.startsWith("/employee") && role !== "staff") {
+        if (role === "admin" || role === "owner") {
+          router.replace("/admin");
+        } else if (role === "promoter") {
+          router.replace("/promoter");
+        } else {
+          router.replace("/user");
+        }
+      }
+
+      // User routes: redirect admin/owner/staff to their dashboards
+      if (pathname.startsWith("/user")) {
+        if (role === "admin" || role === "owner") {
+          router.replace("/admin");
+        } else if (role === "staff") {
+          router.replace("/employee");
+        }
       }
     }
   }, [isAuthenticated, isLoading, mounted, pathname, router, user?.role]);

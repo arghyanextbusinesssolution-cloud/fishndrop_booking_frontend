@@ -3,6 +3,8 @@
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import {
+  History,
+  PlusCircle,
   LogOut,
   LayoutDashboard,
   CalendarDays,
@@ -22,11 +24,22 @@ import {
   BookOpen,
   Camera,
   MapPin,
+  ShieldCheck,
+  UserPlus,
+  QrCode,
+  Clock,
+  BarChart3,
+  Percent,
+  PartyPopper,
+  MailOpen,
+  Database,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import { useState, useEffect } from "react";
+import { useUpcomingParties, relativeDay } from "@/hooks/useUpcomingParties";
+import { formatTimeTo12Hour } from "@/lib/utils";
 
 const SidebarItem = ({
   icon: Icon,
@@ -75,8 +88,15 @@ const SidebarItem = ({
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, clearAuth } = useAuthStore();
+  const { user, clearAuth, fetchMe } = useAuthStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Sync latest user profile & verification status from DB on mount
+  useEffect(() => {
+    if (user) {
+      void fetchMe();
+    }
+  }, []);
 
   const isAdmin = user?.role === "admin" || user?.role === "owner";
   const isOwnerOrAdmin =
@@ -97,6 +117,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const isStaff = user?.role === "staff";
+  const isPromoter = user?.role === "promoter";
+  const isApprovedPromoter = isPromoter && user?.promoterStatus === "approved";
+  const isGuestUser = !!user && !isAdmin && !isStaff && !isPromoter;
+  const upcoming = useUpcomingParties(isGuestUser);
+  const nextUp = upcoming?.[0];
+
   const adminNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
     ...(isOwnerOrAdmin
@@ -104,6 +131,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       : []),
     { icon: CalendarDays, label: "Bookings", href: "/admin/bookings" },
     { icon: Users, label: "Users", href: "/admin/users" },
+    { icon: Database, label: "Data Center", href: "/admin/data-center" },
+    { icon: ShieldCheck, label: "Verify Promoters", href: "/admin/promoters" },
+    { icon: BarChart3, label: "Events", href: "/admin/events-overview" },
+    { icon: Percent, label: "Commission", href: "/admin/commission" },
+    { icon: Ticket, label: "Verify Events", href: "/admin/events" },
+    { icon: UserPlus, label: "Employees", href: "/admin/employees" },
+    { icon: QrCode, label: "Door QR Check-In", href: "/admin/check-in" },
     { icon: UtensilsCrossed, label: "Restaurants & Catering", href: "/admin/catering" },
     { icon: TableProperties, label: "Tables", href: "/admin/tables" },
     { icon: CreditCard, label: "Payments", href: "/admin/payments" },
@@ -115,20 +149,61 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { icon: MapPin, label: "Venue Booking Checkout", href: "/admin/tour-checkouts" },
   ];
 
+  const staffNavItems = [
+    { icon: LayoutDashboard, label: "Dashboard", href: "/employee" },
+    { icon: ShieldCheck, label: "Verify Promoters", href: "/employee/promoters" },
+    { icon: BarChart3, label: "Events", href: "/employee/events-overview" },
+    { icon: Ticket, label: "Verify Events", href: "/employee/events" },
+    { icon: CreditCard, label: "Payments & Payouts", href: "/employee/payments" },
+    { icon: QrCode, label: "Door QR Check-In", href: "/employee/check-in" },
+    { icon: CalendarDays, label: "Bookings", href: "/employee/bookings" },
+    { icon: TableProperties, label: "Tables", href: "/employee/tables" },
+    { icon: UtensilsCrossed, label: "Restaurants & Catering", href: "/employee/catering" },
+  ];
+
+  const promoterNavItems = [
+    { icon: LayoutDashboard, label: "Dashboard", href: "/promoter" },
+    { icon: BarChart3, label: "Events", href: "/promoter/analytics" },
+    { icon: CalendarDays, label: "My Events", href: "/promoter/events" },
+    { icon: PlusCircle, label: "Create Event", href: "/promoter/events/new" },
+    { icon: History, label: "Sales History", href: "/promoter/bookings" },
+    { icon: QrCode, label: "Door QR Check-In", href: "/promoter/check-in" },
+    { icon: DollarSign, label: "Stripe & Payouts", href: "/promoter/payouts" },
+  ];
+
+  const pendingPromoterNavItems = [
+    { icon: Clock, label: "Application Status", href: "/promoter" },
+  ];
+
   const userNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/user" },
     { icon: CalendarDays, label: "Reservations", href: "/user/bookings" },
+    { icon: Ticket, label: "Event Tickets", href: "/user/tickets" },
+    { icon: PartyPopper, label: "Celebrations", href: "/user/celebrations" },
+    { icon: MailOpen, label: "Invitations", href: "/user/invites" },
     { icon: UtensilsCrossed, label: "Venue Bookings", href: "/user/venue-bookings" },
     { icon: User, label: "Dining Profile", href: "/user/profile" },
   ];
 
-  const navItems = isAdmin ? adminNavItems : userNavItems;
+  const navItems = isAdmin
+    ? adminNavItems
+    : isStaff
+    ? staffNavItems
+    : isApprovedPromoter
+    ? promoterNavItems
+    : isPromoter
+    ? pendingPromoterNavItems
+    : userNavItems;
 
   const isActive = (href: string) => {
-    if (href === "/admin" || href === "/user") {
+    if (href === "/admin" || href === "/user" || href === "/promoter" || href === "/employee") {
       return pathname === href;
     }
-    return pathname.startsWith(href);
+    if (!(pathname === href || pathname.startsWith(`${href}/`))) return false;
+    // A more specific menu item wins (e.g. "/promoter/events/new" over "/promoter/events")
+    return !navItems.some(
+      (item) => item.href.length > href.length && (pathname === item.href || pathname.startsWith(`${item.href}/`))
+    );
   };
 
   return (
@@ -206,10 +281,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </div>
           <div className="space-y-0.5">
             <p className="font-headline text-lg italic leading-none truncate max-w-[120px] text-[#C8A96A]">
-              {isAdmin ? "The Concierge" : (user?.name || "Guest")}
+              {isAdmin ? "The Concierge" : isStaff ? (user?.name || "Staff Member") : isPromoter ? (user?.companyName || user?.name || "Promoter") : (user?.name || "Guest")}
             </p>
             <p className="text-[8px] uppercase tracking-widest text-[#C8A96A]/50 font-bold truncate max-w-[120px]">
-              {isAdmin ? "System Admin" : "Tropica Guest"}
+              {isAdmin ? "System Admin" : isStaff ? "Employee" : isApprovedPromoter ? "Event Organizer" : isPromoter ? "Pending Approval" : "Tropica Guest"}
             </p>
           </div>
         </div>
@@ -224,7 +299,28 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             />
           ))}
 
-          {!isAdmin && (
+          {isGuestUser && nextUp && (
+            <div className="px-6 pt-6">
+              <Link
+                href={nextUp.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block rounded-xl border border-[#C8A96A]/30 bg-[#C8A96A]/10 hover:bg-[#C8A96A]/15 p-4 transition-colors"
+              >
+                <p className="text-[8px] uppercase tracking-[0.25em] font-bold text-[#C8A96A]">
+                  Up next · {relativeDay(nextUp.dayKey)}
+                </p>
+                <p className="mt-1 text-sm font-semibold text-white leading-snug line-clamp-2">{nextUp.title}</p>
+                <p className="text-[10px] text-white/55 mt-0.5">
+                  {formatTimeTo12Hour(nextUp.startTime)} · {nextUp.badge}
+                </p>
+                {upcoming && upcoming.length > 1 && (
+                  <p className="text-[9px] text-white/40 mt-1.5">+{upcoming.length - 1} more coming up</p>
+                )}
+              </Link>
+            </div>
+          )}
+
+          {!isAdmin && !isStaff && !isPromoter && (
             <div className="px-8 pt-8">
               <Link
                 href="/"

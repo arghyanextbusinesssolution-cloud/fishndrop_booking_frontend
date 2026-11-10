@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays, ChevronRight, UserCircle, Loader2, ArrowRight } from "lucide-react";
+import { CalendarDays, ChevronRight, UserCircle, Loader2, ArrowRight, Clock, PartyPopper, Ticket, MailOpen } from "lucide-react";
+import { useUpcomingParties, relativeDay } from "@/hooks/useUpcomingParties";
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/axios";
@@ -18,6 +19,7 @@ export default function UserDashboardPage() {
   const { user } = useAuthStore();
   const [bookings, setBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const upNext = useUpcomingParties(true);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -111,6 +113,51 @@ export default function UserDashboardPage() {
           <div className="absolute -bottom-6 -left-6 w-32 h-32 border-b border-l border-primary/20 pointer-events-none" />
         </div>
       </header>
+
+      {/* Up next: parties you're invited to, parties you host, event tickets */}
+      {upNext && upNext.length > 0 && (
+        <section className="space-y-6">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-primary">Coming up</p>
+              <h3 className="font-headline text-4xl italic text-on-surface">Up next</h3>
+            </div>
+            <Link href="/user/invites" className="text-[9px] uppercase tracking-[0.3em] font-bold text-primary hover:underline">
+              All invitations
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {upNext.slice(0, 3).map((item, idx) => {
+              const Icon = item.kind === "invite" ? MailOpen : item.kind === "hosting" ? PartyPopper : Ticket;
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className={`group rounded-xl p-6 ambient-shadow border transition-all hover:-translate-y-0.5 ${
+                    idx === 0 ? "bg-[#C8A96A]/10 border-[#C8A96A]/40" : "bg-surface-container-lowest border-outline-variant/10"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 text-[9px] uppercase tracking-widest font-bold text-primary">
+                      <Icon className="w-3.5 h-3.5" /> {item.badge}
+                    </span>
+                    <span className="text-[10px] font-bold text-on-surface/70">{relativeDay(item.dayKey)}</span>
+                  </div>
+                  <p className="mt-4 font-headline text-2xl italic text-on-surface leading-tight line-clamp-2">{item.title}</p>
+                  <p className="mt-1 text-xs text-secondary">{item.subtitle}</p>
+                  <p className="mt-4 inline-flex items-center gap-1.5 text-xs text-secondary">
+                    <Clock className="w-3.5 h-3.5 text-primary" />
+                    {formatBookingDate(item.date, { weekday: "short", month: "short", day: "numeric" })} · {formatTimeTo12Hour(item.startTime)}
+                  </p>
+                  <span className="mt-5 flex items-center gap-1 text-[9px] uppercase tracking-[0.25em] font-bold text-primary group-hover:gap-2 transition-all">
+                    {item.kind === "invite" ? "Open my pass" : item.kind === "hosting" ? "Guest list" : "My tickets"} <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Cards Grid */}
       <section className="grid grid-cols-1 xl:grid-cols-12 gap-12">

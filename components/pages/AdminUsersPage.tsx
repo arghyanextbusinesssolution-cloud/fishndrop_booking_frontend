@@ -54,7 +54,7 @@ function RoleBadge({ role }: { role: string }) {
       )}
     >
       {isAdmin ? <ShieldCheck className="w-3 h-3 text-[#C8A96A]" /> : null}
-      {role}
+      {role === "staff" ? "employee" : role}
     </span>
   );
 }
@@ -86,7 +86,7 @@ export default function AdminUsersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<"all" | "users" | "admins" | "verified">("all");
+  const [activeTab, setActiveTab] = useState<"all" | "users" | "staff" | "promoters" | "admins" | "verified" | "unnamed">("all");
   const [counts, setCounts] = useState({
     totalUsers: 0,
     verifiedUsers: 0,
@@ -105,9 +105,18 @@ export default function AdminUsersPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const roleParam = activeTab === "admins" ? "admin" : activeTab === "users" ? "user" : "all";
+      const roleParam =
+        activeTab === "admins"
+          ? "admin"
+          : activeTab === "users"
+          ? "user"
+          : activeTab === "staff"
+          ? "staff"
+          : activeTab === "promoters"
+          ? "promoter"
+          : "all";
       const verifiedParam = activeTab === "verified" ? "true" : "all";
-      const data = await getAllUsers(page, search, roleParam, verifiedParam);
+      const data = await getAllUsers(page, search, roleParam, verifiedParam, 20, activeTab === "unnamed");
       setUsers(data.users);
       setTotal(data.total);
       setTotalPages(data.totalPages);
@@ -196,7 +205,7 @@ export default function AdminUsersPage() {
         message={
           pendingDeleteAction?.type === "bulk"
             ? `Are you sure you want to permanently delete all ${selectedIds.length} selected user accounts? This cannot be undone.`
-            : `Are you sure you want to permanently delete this user account? All access for this phone/email will be removed.`
+            : `Are you sure you want to permanently delete this user account? All access for this phone/email will be removed, including any duplicate accounts with the same phone number or email.`
         }
         confirmLabel={pendingDeleteAction?.type === "bulk" ? `Delete (${selectedIds.length})` : "Delete User"}
         cancelLabel="Cancel"
@@ -310,8 +319,11 @@ export default function AdminUsersPage() {
           {[
             { key: "all", label: "All Users" },
             { key: "users", label: "Customers" },
+            { key: "staff", label: "Employees" },
+            { key: "promoters", label: "Promoters" },
             { key: "verified", label: "Verified" },
-            { key: "admins", label: "Admins" }
+            { key: "admins", label: "Admins" },
+            { key: "unnamed", label: "No name" }
           ].map((tab) => (
             <button
               key={tab.key}

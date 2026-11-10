@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { NavSpinnerLink } from '@/components/shared/NavSpinnerLink';
+import { Sparkles } from 'lucide-react';
 
 interface HeroProps {
     onTableReservationClick?: () => void;
@@ -35,25 +36,32 @@ export const Hero = ({ onTableReservationClick }: HeroProps) => {
                     Your Private <br />
                     <span className="italic">Garden Sanctuary</span>
                 </h1>
-                <p className="font-body text-[#C8A96A]/80 text-sm md:text-xl mb-8 md:mb-10 max-w-2xl mx-auto italic animate-fade-in-up delay-200 px-4">
-                    A hidden gem crafted for intimate dining, celebrations, and unforgettable evenings in the heart of the city.
+                <p className="font-body text-[#C8A96A]/90 text-sm md:text-xl mb-8 md:mb-10 max-w-2xl mx-auto italic animate-fade-in-up delay-200 px-4">
+                    Exclusive venue buyouts from <strong className="text-[#E8CB8A] font-bold not-italic">$35 per guest</strong>. Complete with catering, private bar, sound system, and shareable QR guest invitations.
                 </p>
-                <div className="flex flex-col md:flex-row items-center justify-center gap-4 animate-fade-in-up delay-500 w-full md:w-auto px-6 md:px-0">
+                <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4 animate-fade-in-up delay-500 w-full max-w-4xl mx-auto px-4">
                     <NavSpinnerLink
                         href="/book-venue"
-                        className="w-full md:w-auto bg-[#C8A96A] text-[#0F3D2E] px-8 md:px-10 py-4 md:py-5 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:scale-105 transition-all shadow-xl shadow-[#C8A96A]/20"
+                        className="w-full sm:w-auto bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] text-[#0d1612] px-8 md:px-9 py-4 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-black hover:scale-105 transition-all shadow-xl shadow-[#C8A96A]/25"
                     >
-                        RESERVE THE PRIVATE SPACE
+                        BOOK EVENT ($35/GUEST)
+                    </NavSpinnerLink>
+                    <NavSpinnerLink
+                        href="/partner"
+                        className="w-full sm:w-auto bg-[#C8A96A]/15 hover:bg-[#C8A96A]/25 border border-[#C8A96A] text-[#E8CB8A] hover:text-white px-7 md:px-8 py-4 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-black/40"
+                    >
+                        <Sparkles className="w-3.5 h-3.5 text-[#C8A96A]" />
+                        <span>BECOME A PROMOTER</span>
                     </NavSpinnerLink>
                     <NavSpinnerLink
                         href="/book-tour"
-                        className="w-full md:w-auto border border-[#C8A96A]/30 text-[#C8A96A] px-8 md:px-10 py-4 md:py-5 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:bg-[#C8A96A]/10 transition-all font-body text-center"
+                        className="w-full sm:w-auto border border-white/20 hover:border-[#C8A96A]/50 text-white/80 hover:text-white px-7 md:px-8 py-4 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:bg-white/10 transition-all font-body text-center backdrop-blur-sm"
                     >
                         BOOK A TOUR
                     </NavSpinnerLink>
                     <NavSpinnerLink
                         href="/gallery"
-                        className="w-full md:w-auto border border-[#C8A96A]/30 text-[#C8A96A] px-8 md:px-10 py-4 md:py-5 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:bg-[#C8A96A]/10 transition-all font-body text-center"
+                        className="w-full sm:w-auto border border-white/20 hover:border-[#C8A96A]/50 text-white/80 hover:text-white px-7 md:px-8 py-4 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold hover:bg-white/10 transition-all font-body text-center backdrop-blur-sm"
                     >
                         OUR GALLERY
                     </NavSpinnerLink>

@@ -12,7 +12,12 @@ export default function LoginPage() {
   const { isAuthenticated, user } = useAuthStore();
   
   useEffect(() => {
-    if (isAuthenticated) router.replace(user?.role === "admin" ? "/admin" : "/user");
+    if (isAuthenticated) {
+      if (user?.role === "admin" || user?.role === "owner") router.replace("/admin");
+      else if (user?.role === "staff") router.replace("/employee");
+      else if (user?.role === "promoter") router.replace("/promoter");
+      else router.replace("/user");
+    }
   }, [isAuthenticated, router, user?.role]);
   
   return (
@@ -31,19 +36,26 @@ export default function LoginPage() {
         </Link>
         <h1 className="mb-6 text-center font-headline text-3xl italic text-white">Guest Login</h1>
         <LoginForm />
-        <div className="mt-8 text-center space-y-3 font-body text-sm text-white/60">
+        <div className="mt-8 text-center space-y-4 font-body text-sm text-white/60">
           <p>
             No account?{" "}
             <Link href="/register" className="text-[#C8A96A] hover:text-white transition-colors uppercase tracking-widest text-[10px] font-bold">
               Register
             </Link>
           </p>
-          {/* <p>
-            Admin?{" "}
-            <Link href="/admin-login" className="text-[#C8A96A] hover:text-white transition-colors uppercase tracking-widest text-[10px] font-bold">
-              Use admin login
+          <div className="pt-3 border-t border-white/10 flex flex-wrap items-center justify-center gap-3 text-[10px] uppercase font-bold tracking-widest">
+            <Link href="/partner?tab=login" className="text-[#C8A96A] hover:text-white transition-colors">
+              Promoter Login
             </Link>
-          </p> */}
+            <span className="text-white/20">•</span>
+            <Link href="/partner?tab=signup" className="text-[#C8A96A] hover:text-white transition-colors">
+              Promoter Sign Up
+            </Link>
+            <span className="text-white/20">•</span>
+            <Link href="/employee-login" className="text-[#C8A96A] hover:text-white transition-colors">
+              Employee Login
+            </Link>
+          </div>
         </div>
       </div>
     </div>
