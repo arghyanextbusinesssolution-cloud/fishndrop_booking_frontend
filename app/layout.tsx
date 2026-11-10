@@ -109,14 +109,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             }(window, document, 'ttq');
           `}
         </Script>
-        <Script
-          src="https://widgets.leadconnectorhq.com/loader.js"
-          data-resources-url="https://widgets.leadconnectorhq.com/chat-widget/loader.js"
-          data-widget-id="6a315a5281870ee2fdf63b71"
-          data-source="WEB_USER"
-          strategy="lazyOnload"
-        />
-
         <noscript>
           <img
             height="1"
