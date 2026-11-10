@@ -61,8 +61,7 @@ export const StepPhoneVerification = ({
   const [otpCode, setOtpCode] = useState("");
   const [step, setStep] = useState<"phone" | "otp" | "name">("phone");
   const [hostName, setHostName] = useState(initialName || user?.name || "");
-  const [hostEmail, setHostEmail] = useState(initialEmail || user?.email || "");
-  const [resendCooldown, setResendCooldown] = useState(0);
+  const [hostEmail, setHostEmail] = useState(initialEmail || user?.email || "");  const [resendCooldown, setResendCooldown] = useState(0);
   const [errMessage, setErrMessage] = useState<string | null>(null);
   const [isSuccessVerified, setIsSuccessVerified] = useState(false);
 

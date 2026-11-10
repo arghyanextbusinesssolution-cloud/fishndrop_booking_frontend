@@ -8,6 +8,8 @@ import dynamic from "next/dynamic";
 import { NavBar } from "@/components/shared/NavBar";
 import { TicketVenueDetails, TicketBackButton } from "@/components/events/TicketVenueDetails";
 const QrCodeCard = dynamic(() => import("@/components/shared/QrCodeCard"), { ssr: false });
+const LiveTicketQr = dynamic(() => import("@/components/shared/LiveTicketQr"), { ssr: false });
+import Cookies from "js-cookie";
 import {
   Calendar,
   Clock,
@@ -32,6 +34,9 @@ interface TicketData {
   checkedIn: boolean;
   checkedInAt?: string;
   checkedInByName?: string;
+  liveQr?: boolean; // guest-sharing ticket: rotating QR, only for the signed-in holder
+  attendeeName?: string;
+  guestOf?: string | null;
   event: {
     title: string;
     date: string;
@@ -53,6 +58,9 @@ export default function DigitalTicketPassPage() {
   const [ticket, setTicket] = useState<TicketData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => setSignedIn(!!Cookies.get("token")), []);
 
   useEffect(() => {
     if (!token) return;
@@ -118,12 +126,12 @@ export default function DigitalTicketPassPage() {
         {/* Top Actions */}
         <div className="flex items-center justify-between text-xs text-white/60 print:hidden">
           <TicketBackButton />
-          <button
+          {!ticket.liveQr && <button
             onClick={handlePrint}
             className="inline-flex items-center gap-1.5 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg border border-white/10 text-white cursor-pointer transition-all"
           >
             <Printer className="w-3.5 h-3.5" /> Print / Save Pass
-          </button>
+          </button>}
         </div>
 
         {/* Physical Pass Style Card */}
@@ -167,7 +175,18 @@ export default function DigitalTicketPassPage() {
 
             {/* QR Code Centerpiece */}
             <div className="py-2 flex flex-col items-center justify-center">
-              <QrCodeCard value={ticket.qrCodeToken} size={210} />
+              {!ticket.liveQr ? (
+                <QrCodeCard value={ticket.qrCodeToken} size={210} />
+              ) : signedIn ? (
+                <LiveTicketQr ticketId={ticket._id} size={210} />
+              ) : (
+                <div className="text-center space-y-2 py-6 px-4 rounded-2xl border border-white/10 bg-white/[0.03]">
+                  <p className="text-xs text-white/70">Sign in with {ticket.attendeeName}&apos;s phone number, then open My Event Tickets to show the live door QR.</p>
+                  <Link href="/login" className="inline-block px-4 py-2 bg-[#C8A96A] text-black text-xs font-bold rounded-xl">
+                    Sign in
+                  </Link>
+                </div>
+              )}
               <div className="mt-3 text-center">
                 <div className="font-mono text-sm font-bold tracking-widest text-[#C8A96A]">
                   {ticket.ticketCode}
@@ -181,7 +200,10 @@ export default function DigitalTicketPassPage() {
             {/* Attendee */}
             <div className="flex justify-between items-center bg-white/[0.03] border border-white/10 rounded-2xl px-4 py-3 text-xs">
               <span className="text-white/50 uppercase tracking-wider text-[10px]">Attendee</span>
-              <span className="font-semibold text-white">{ticket.customerName}</span>
+              <span className="font-semibold text-white text-right">
+                {ticket.attendeeName || ticket.customerName}
+                {ticket.guestOf && <span className="block text-[10px] font-normal text-white/45">Guest of {ticket.guestOf}</span>}
+              </span>
             </div>
 
             {/* Venue details */}

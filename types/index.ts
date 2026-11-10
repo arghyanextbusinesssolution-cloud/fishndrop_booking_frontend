@@ -11,6 +11,7 @@ export interface User {
   chargesEnabled?: boolean;
   payoutsEnabled?: boolean;
   isPhoneVerified?: boolean;
+  dateOfBirth?: string; // "YYYY-MM-DD"
   createdAt?: string;
 }
 

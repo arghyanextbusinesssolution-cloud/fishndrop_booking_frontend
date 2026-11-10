@@ -19,7 +19,8 @@ import {
   User as UserIcon,
   X,
   AlertCircle,
-  Timer
+  Timer,
+  Cake
 } from "lucide-react";
 import { isAxiosError } from "axios";
 import api from "@/lib/axios";
@@ -27,6 +28,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAuthStore } from "@/store/authStore";
 import { getStripe } from "@/lib/stripe";
 import { TicketPaymentForm } from "./TicketPaymentForm";
+import { BirthdayPicker } from "@/components/shared/BirthdayPicker";
 
 const stripePromise = getStripe();
 
@@ -57,7 +59,7 @@ interface Props {
   totalAmount: number;
 }
 
-type Step = "checking" | "phone" | "otp" | "details" | "review" | "payment";
+type Step = "checking" | "phone" | "otp" | "details" | "birthday" | "review" | "payment";
 
 interface PendingPayment {
   orderId: string;
@@ -71,6 +73,7 @@ interface Buyer {
   name: string;
   email: string;
   phone: string;
+  dob: string; // "YYYY-MM-DD" or "" (optional, birthday bonus)
 }
 
 /* ───────────────────── Country handling ──────────────────── */
@@ -99,7 +102,18 @@ interface SessionUser {
   email?: string;
   phone?: string;
   isPhoneVerified?: boolean;
+  dateOfBirth?: string;
 }
+
+/** Latest allowed birth date (13+), as "YYYY-MM-DD" for the date input. */
+const maxDob = (() => {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - 13);
+  return d.toISOString().slice(0, 10);
+})();
+const isDobOk = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && v <= maxDob && v >= "1915-01-01";
+const formatDob = (v: string) =>
+  new Date(`${v}T00:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
 
 const errMsg = (err: unknown, fallback: string) => (err instanceof Error && err.message) || fallback;
 
@@ -138,7 +152,10 @@ export function TicketCheckoutModal({ isOpen, onClose, event, lines, subtotal, p
   const [countryId, setCountryId] = useState<CountryId>("US");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
-  const [buyer, setBuyer] = useState<Buyer>({ name: "", email: "", phone: "" });
+  const [buyer, setBuyer] = useState<Buyer>({ name: "", email: "", phone: "", dob: "" });
+  const [dobDraft, setDobDraft] = useState("");
+  const [savingDob, setSavingDob] = useState(false);
+  const [dobSkipped, setDobSkipped] = useState(false); // skipped once → don't ask again this checkout
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
@@ -169,11 +186,14 @@ export function TicketCheckoutModal({ isOpen, onClose, event, lines, subtotal, p
         setStep("phone");
         return;
       }
-      const b = { name: realName(user.name), email: user.email || "", phone: user.phone || "" };
+      const b = { name: realName(user.name), email: user.email || "", phone: user.phone || "", dob: user.dateOfBirth || "" };
       setBuyer(b);
       if (!user.phone || !user.isPhoneVerified) setStep("phone");
       else if (!b.name || !b.email) setStep("details");
-      else setStep("review");
+      else if (!b.dob) {
+        setDobDraft("");
+        setStep("birthday");
+      } else setStep("review");
     })();
 
     return () => {
@@ -286,10 +306,10 @@ export function TicketCheckoutModal({ isOpen, onClose, event, lines, subtotal, p
     try {
       const data = await verifyOTP(fullPhone, code);
       const u: SessionUser = data.user || {};
-      const b = { name: realName(u.name), email: u.email || "", phone: u.phone || fullPhone };
+      const b = { name: realName(u.name), email: u.email || "", phone: u.phone || fullPhone, dob: u.dateOfBirth || "" };
       setBuyer(b);
       toast.success("Mobile number verified");
-      setStep(b.name && b.email ? "review" : "details");
+      setStep(!b.name || !b.email ? "details" : b.dob ? "review" : "birthday");
     } catch (err: unknown) {
       setError(errMsg(err, "Invalid or expired code"));
       setOtp(Array(OTP_LENGTH).fill(""));
@@ -334,7 +354,11 @@ export function TicketCheckoutModal({ isOpen, onClose, event, lines, subtotal, p
       if (data?.success && data.user && token) setAuth(data.user, token);
       setBuyer((b) => ({ ...b, name, email }));
       toast.success("Your account is ready");
-      setStep("review");
+      if (buyer.dob || dobSkipped) setStep("review");
+      else {
+        setDobDraft("");
+        setStep("birthday");
+      }
     } catch (err: unknown) {
       const res = isAxiosError<{ message?: string }>(err) ? err.response?.data : undefined;
       setError(res?.message || "Could not save your details. Please try again.");
@@ -383,10 +407,33 @@ export function TicketCheckoutModal({ isOpen, onClose, event, lines, subtotal, p
     setBusy(false);
   };
 
+  /** Birthday step: save to the account, then review. */
+  const saveDob = async () => {
+    if (!isDobOk(dobDraft)) {
+      setError("Please enter a valid date of birth (13+)");
+      return;
+    }
+    setError(null);
+    setSavingDob(true);
+    try {
+      const { data } = await api.post("/auth/update-profile", { dateOfBirth: dobDraft });
+      const token = Cookies.get("token");
+      if (data?.success && data.user && token) setAuth(data.user, token);
+      setBuyer((b) => ({ ...b, dob: dobDraft }));
+      toast.success("Birthday saved");
+      setStep("review");
+    } catch (err: unknown) {
+      const res = isAxiosError<{ message?: string }>(err) ? err.response?.data : undefined;
+      setError(res?.message || "Could not save your birthday");
+    } finally {
+      setSavingDob(false);
+    }
+  };
+
   /* ───────── UI ───────── */
 
-  const stepIndex = { checking: 0, phone: 0, otp: 0, details: 1, review: 2, payment: 3 }[step];
-  const STEP_LABELS = ["Verify", "Details", "Review", "Pay"];
+  const stepIndex = { checking: 0, phone: 0, otp: 0, details: 1, birthday: 2, review: 3, payment: 4 }[step];
+  const STEP_LABELS = ["Verify", "Details", "Birthday", "Review", "Pay"];
 
   const goldBtn =
     "w-full py-3.5 rounded-xl bg-gradient-to-r from-[#C8A96A] via-[#E0C68E] to-[#C8A96A] text-[#0a120e] text-xs font-black uppercase tracking-[0.15em] shadow-lg shadow-[#C8A96A]/20 flex items-center justify-center gap-2 transition-all disabled:opacity-40 cursor-pointer";
@@ -652,10 +699,42 @@ export function TicketCheckoutModal({ isOpen, onClose, event, lines, subtotal, p
 
               <button type="submit" disabled={busy} className={goldBtn}>
                 {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {busy ? "Saving your account…" : "Continue to checkout"}
+                {busy ? "Saving your account…" : "Continue"}
                 {!busy && <ArrowRight className="w-4 h-4" />}
               </button>
             </form>
+          )}
+
+          {/* ── Step: birthday (optional) ── */}
+          {step === "birthday" && (
+            <div className="space-y-5">
+              <div className="text-center space-y-1">
+                <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full border border-[#C8A96A]/40 bg-[#C8A96A]/10">
+                  <Cake className="w-6 h-6 text-[#E0C68E]" />
+                </div>
+                <h4 className="text-lg font-bold">When&apos;s your birthday?</h4>
+                <p className="text-xs text-white/60">Add it to get a special bonus when you celebrate with us. It&apos;s optional.</p>
+              </div>
+
+              <BirthdayPicker compact value={dobDraft} onChange={setDobDraft} />
+
+              <button type="button" onClick={saveDob} disabled={!dobDraft || savingDob} className={goldBtn}>
+                {savingDob ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {savingDob ? "Saving…" : "Continue"}
+                {!savingDob && <ArrowRight className="w-4 h-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setDobSkipped(true);
+                  setError(null);
+                  setStep("review");
+                }}
+                className="w-full py-1 text-[11px] font-bold uppercase tracking-wider text-white/50 hover:text-white cursor-pointer"
+              >
+                Skip for now
+              </button>
+            </div>
           )}
 
           {/* ── Step: review & pay ── */}
@@ -704,6 +783,17 @@ export function TicketCheckoutModal({ isOpen, onClose, event, lines, subtotal, p
                 <div className="font-semibold text-sm">{buyer.name}</div>
                 <div className="text-white/60">{buyer.email}</div>
                 <div className="text-white/60 font-mono">{buyer.phone}</div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDobDraft(buyer.dob);
+                    setStep("birthday");
+                  }}
+                  className="text-white/60 hover:text-[#E0C68E] flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Cake className="w-3.5 h-3.5 text-[#C8A96A]" />
+                  {buyer.dob ? formatDob(buyer.dob) : <span className="text-[#C8A96A] underline underline-offset-2">Add birthday for a bonus</span>}
+                </button>
               </div>
 
               <button type="button" onClick={handlePay} disabled={busy} className={goldBtn}>

@@ -6,6 +6,7 @@ import { StepPrivateDate } from "./StepPrivateDate";
 import { StepPrivateTime } from "./StepPrivateTime";
 import { StepPrivateGuests, MIN_PRIVATE_GUESTS } from "./StepPrivateGuests";
 import { StepPhoneVerification } from "./StepPhoneVerification";
+import { StepBirthday } from "./StepBirthday";
 import { StepOccasionSelection } from "./StepOccasionSelection";
 import { StepAddonCardsHub } from "./StepAddonCardsHub";
 import StepPrivateSummary from "./StepPrivateSummary";
@@ -32,6 +33,7 @@ interface PrivateBookingData {
     name: string;
     email: string;
     phone: string;
+    dateOfBirth?: string; // "YYYY-MM-DD", optional (birthday bonus)
     notes: string;
     occasion: string;
     agreedToTransactional: boolean;
@@ -63,6 +65,7 @@ export const PrivateBookingWizard = () => {
       name: user?.name || "",
       email: user?.email || "",
       phone: user?.phone || "",
+      dateOfBirth: user?.dateOfBirth || "",
       notes: "",
       occasion: "celebration",
       agreedToTransactional: true,
@@ -93,6 +96,7 @@ export const PrivateBookingWizard = () => {
             ...prev.guestDetails,
             phone: stepData.phone,
             name: stepData.name || prev.guestDetails.name,
+            dateOfBirth: stepData.dateOfBirth ?? prev.guestDetails.dateOfBirth,
             email: stepData.email || prev.guestDetails.email || `guest_${stepData.phone.replace(/\D/g, "")}@tropica.nyc`
           }
         };
@@ -120,7 +124,7 @@ export const PrivateBookingWizard = () => {
   const handleNext = (stepData: any = {}) => {
     updateData(stepData);
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-    if (currentStep < 7) {
+    if (currentStep < steps.length) {
       setCurrentStep((prev) => prev + 1);
     }
   };
@@ -139,9 +143,10 @@ export const PrivateBookingWizard = () => {
     { num: 2, title: "Guests" },
     { num: 3, title: "Time & Duration" },
     { num: 4, title: "Verification & Host" },
-    { num: 5, title: "Party Occasion" },
-    { num: 6, title: "Add-ons Hub" },
-    { num: 7, title: "Checkout & Deposit" }
+    { num: 5, title: "Birthday" },
+    { num: 6, title: "Party Occasion" },
+    { num: 7, title: "Add-ons Hub" },
+    { num: 8, title: "Checkout & Deposit" }
   ];
 
   const renderStep = () => {
@@ -178,12 +183,20 @@ export const PrivateBookingWizard = () => {
         );
       case 5:
         return (
+          <StepBirthday
+            onNext={handleNext}
+            initialDob={bookingData.guestDetails.dateOfBirth}
+            partyDate={bookingData.date}
+          />
+        );
+      case 6:
+        return (
           <StepOccasionSelection
             onNext={handleNext}
             selectedOccasion={bookingData.occasion}
           />
         );
-      case 6:
+      case 7:
         return (
           <StepAddonCardsHub
             onNext={handleNext}
@@ -196,7 +209,7 @@ export const PrivateBookingWizard = () => {
             initialCateringNotes={bookingData.cateringNotes}
           />
         );
-      case 7:
+      case 8:
         return (
           <StepPrivateSummary
             bookingData={bookingData}
@@ -209,7 +222,7 @@ export const PrivateBookingWizard = () => {
   };
 
   return (
-    <div className={cn("mx-auto flex flex-col mt-2 md:mt-4 transition-all duration-700", currentStep === 7 ? "max-w-7xl" : "max-w-5xl")}>
+    <div className={cn("mx-auto flex flex-col mt-2 md:mt-4 transition-all duration-700", currentStep === steps.length ? "max-w-7xl" : "max-w-5xl")}>
       {/* ─── Mobile-Friendly Progress Header (< sm screens) ─── */}
       <div className="sm:hidden mb-4 px-1 space-y-2">
         <div className="flex items-center justify-between text-xs font-medium">

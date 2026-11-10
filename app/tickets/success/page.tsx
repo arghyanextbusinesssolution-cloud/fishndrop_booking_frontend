@@ -4,7 +4,6 @@ import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/axios";
-import Cookies from "js-cookie";
 import toast from "react-hot-toast";
 import {
   CheckCircle2,
@@ -17,16 +16,19 @@ import {
   ShieldCheck,
   AlertCircle,
   Users,
-  User as UserIcon,
   QrCode,
-  Loader2
+  Copy,
+  Share2
 } from "lucide-react";
 
 interface IssuedTicket {
+  _id: string;
   ticketCode: string;
   tierName: string;
   customerName: string;
-  qrCodeToken: string;
+  qrCodeToken?: string;
+  isBuyerSeat: boolean;
+  holderStatus: "unassigned" | "pending" | "accepted";
   status: string;
 }
 
@@ -41,36 +43,30 @@ function TicketSuccessContent() {
   const [orderData, setOrderData] = useState<any>(null);
   const [eventData, setEventData] = useState<any>(null);
   const [tickets, setTickets] = useState<IssuedTicket[]>([]);
-  const [qrMode, setQrMode] = useState<"individual" | "group" | null>(null);
-  const [groupToken, setGroupToken] = useState<string | null>(null);
-  const [savingMode, setSavingMode] = useState<"individual" | "group" | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  /** Save the buyer's QR choice (fetch, not axios: a 401 must not bounce them to /login). */
-  const chooseMode = async (mode: "individual" | "group") => {
-    const id = orderData?.orderId || orderId;
-    const token = Cookies.get("token");
-    if (!id || !token) {
-      toast.error("Please sign in again to change how your QR passes work.");
-      return;
-    }
-    setSavingMode(mode);
+  const shareUrl =
+    orderData?.shareToken && typeof window !== "undefined" ? `${window.location.origin}/tickets/share/${orderData.shareToken}` : "";
+
+  const copyShare = async () => {
     try {
-      const base = process.env.NEXT_PUBLIC_API_URL || "/api";
-      const res = await fetch(`${base}/tickets/orders/${id}/qr-mode`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ mode })
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.success) throw new Error(data.message || "Could not save your choice");
-      setQrMode(data.qrMode);
-      setGroupToken(data.groupQrToken || null);
-      toast.success(mode === "group" ? "One group QR created for everyone" : "Separate QR for each person");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Could not save your choice");
-    } finally {
-      setSavingMode(null);
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      toast.success("Link copied");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Copy failed. Long-press the link to copy it.");
     }
+  };
+
+  const shareLink = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: eventData?.title, text: `I got you a ticket for ${eventData?.title}! Claim it here:`, url: shareUrl });
+      } catch {
+        /* closed */
+      }
+    } else void copyShare();
   };
 
   useEffect(() => {
@@ -98,8 +94,6 @@ function TicketSuccessContent() {
           setOrderData(data.order);
           setEventData(data.event);
           setTickets(data.tickets);
-          setQrMode(data.order?.qrMode || (data.tickets?.length > 1 ? null : "individual"));
-          setGroupToken(data.order?.groupQrToken || null);
           setIsLoading(false);
           return;
         }
@@ -215,102 +209,65 @@ function TicketSuccessContent() {
             </div>
           )}
 
-          {/* QR passes: ask group vs individual for multi-ticket orders */}
+          {/* Your ticket + share link for the extra seats */}
           <div className="space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-white/80 flex items-center gap-2">
-              <Ticket className="w-4 h-4 text-[#C8A96A]" /> Your QR Admission Passes ({tickets.length})
+              <Ticket className="w-4 h-4 text-[#C8A96A]" /> Your Tickets ({tickets.length})
             </h3>
 
-            {tickets.length > 1 && qrMode === null && (
-              <div className="rounded-2xl border border-[#C8A96A]/40 bg-[#C8A96A]/5 p-5 space-y-4">
-                <div>
-                  <p className="text-sm font-bold text-white">How would you like your {tickets.length} QR passes?</p>
-                  <p className="text-xs text-white/55">You can change this later from My Event Tickets.</p>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => chooseMode("group")}
-                    disabled={!!savingMode}
-                    className="text-left rounded-xl border border-white/15 hover:border-[#C8A96A] bg-black/30 p-4 transition-colors cursor-pointer disabled:opacity-50"
+            {tickets
+              .filter((t) => t.isBuyerSeat || !orderData?.shareToken)
+              .map((t) => (
+                <div
+                  key={t._id || t.ticketCode}
+                  className="bg-white/[0.02] border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                >
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Your ticket &bull; {t.tierName}</span>
+                    <div className="text-sm font-bold text-white">{t.customerName}</div>
+                    <div className="text-xs text-[#C8A96A] font-mono">{t.ticketCode}</div>
+                  </div>
+                  <Link
+                    href="/user/tickets"
+                    className="inline-flex items-center justify-center gap-1.5 bg-[#C8A96A] hover:bg-[#d8b97a] text-[#070B09] px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider self-start sm:self-auto"
                   >
-                    <Users className="w-6 h-6 text-[#C8A96A] mb-2" />
-                    <span className="block text-sm font-bold">One QR for everyone</span>
-                    <span className="block text-[11px] text-white/55 mt-0.5">
-                      One scan lets all {tickets.length} people in. Best if you arrive together.
-                    </span>
-                    {savingMode === "group" && <Loader2 className="w-4 h-4 animate-spin text-[#C8A96A] mt-2" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => chooseMode("individual")}
-                    disabled={!!savingMode}
-                    className="text-left rounded-xl border border-white/15 hover:border-[#C8A96A] bg-black/30 p-4 transition-colors cursor-pointer disabled:opacity-50"
-                  >
-                    <UserIcon className="w-6 h-6 text-[#C8A96A] mb-2" />
-                    <span className="block text-sm font-bold">Separate QR for each person</span>
-                    <span className="block text-[11px] text-white/55 mt-0.5">
-                      Send each friend their own pass, so they can arrive at different times.
-                    </span>
-                    {savingMode === "individual" && <Loader2 className="w-4 h-4 animate-spin text-[#C8A96A] mt-2" />}
-                  </button>
+                    <QrCode className="w-3.5 h-3.5" /> My live QR
+                  </Link>
                 </div>
-              </div>
-            )}
+              ))}
 
-            {qrMode === "group" && groupToken && (
-              <div className="rounded-2xl border border-[#C8A96A]/40 bg-[#C8A96A]/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {orderData?.shareToken && (
+              <div className="rounded-2xl border border-[#C8A96A]/40 bg-[#C8A96A]/5 p-5 space-y-3">
                 <div className="flex items-start gap-3">
                   <Users className="w-6 h-6 text-[#C8A96A] shrink-0" />
                   <div>
-                    <p className="text-sm font-bold text-white">Group QR · admits {tickets.length} people</p>
-                    <p className="text-[11px] text-white/55">Show this one QR at the door. One scan lets your whole group in.</p>
+                    <p className="text-sm font-bold text-white">
+                      Share your other {tickets.length - 1} ticket{tickets.length - 1 === 1 ? "" : "s"}
+                    </p>
+                    <p className="text-[11px] text-white/55">
+                      Send this link to your friends. Each one verifies their phone and enters their name, then you accept or
+                      reject them in My Event Tickets. Everyone gets their own ticket and can arrive at any time.
+                    </p>
                   </div>
                 </div>
-                <Link
-                  href={`/tickets/group/${groupToken}`}
-                  className="inline-flex items-center justify-center gap-1.5 bg-[#C8A96A] hover:bg-[#d8b97a] text-[#070B09] px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider shrink-0"
-                >
-                  <QrCode className="w-4 h-4" /> Open group QR
+                <div className="flex gap-2">
+                  <input
+                    readOnly
+                    value={shareUrl}
+                    onFocus={(e) => e.target.select()}
+                    className="flex-1 min-w-0 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-[11px] font-mono text-white/80"
+                  />
+                  <button onClick={copyShare} className="shrink-0 inline-flex items-center gap-1 px-3 rounded-lg border border-white/15 text-[11px] hover:bg-white/5 cursor-pointer">
+                    {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />} Copy
+                  </button>
+                  <button onClick={shareLink} className="shrink-0 inline-flex items-center gap-1 px-3 rounded-lg bg-[#C8A96A] text-[#070B09] text-[11px] font-bold cursor-pointer">
+                    <Share2 className="w-3.5 h-3.5" /> Share
+                  </button>
+                </div>
+                <Link href="/user/tickets" className="inline-flex items-center gap-1 text-[11px] text-[#C8A96A] underline underline-offset-2">
+                  Manage guests <ExternalLink className="w-3 h-3" />
                 </Link>
               </div>
-            )}
-
-            {(qrMode === "individual" || (qrMode === null && tickets.length <= 1)) && (
-              <div className="space-y-3">
-                {tickets.map((t, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-white/[0.02] border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-[#C8A96A]/30 transition-all"
-                  >
-                    <div className="space-y-0.5">
-                      <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider">
-                        Pass #{idx + 1} &bull; {t.tierName}
-                      </span>
-                      <div className="text-sm font-bold text-white">{t.customerName}</div>
-                      <div className="text-xs text-[#C8A96A] font-mono">{t.ticketCode}</div>
-                    </div>
-
-                    <Link
-                      href={`/tickets/${t.qrCodeToken}`}
-                      className="inline-flex items-center justify-center gap-1.5 bg-[#C8A96A] hover:bg-[#d8b97a] text-[#070B09] px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all self-start sm:self-auto cursor-pointer"
-                    >
-                      View QR Pass <ExternalLink className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {tickets.length > 1 && qrMode !== null && (
-              <button
-                type="button"
-                onClick={() => chooseMode(qrMode === "group" ? "individual" : "group")}
-                disabled={!!savingMode}
-                className="text-[11px] text-[#C8A96A] hover:text-[#E0C68E] underline underline-offset-2 cursor-pointer disabled:opacity-50"
-              >
-                {savingMode ? "Saving…" : qrMode === "group" ? "Switch to a separate QR for each person" : "Switch to one QR for the whole group"}
-              </button>
             )}
           </div>
 
@@ -320,11 +277,7 @@ function TicketSuccessContent() {
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               Present your QR code at the door on your mobile phone for scanning.
             </p>
-            <p>
-              {qrMode === "group"
-                ? "The group QR admits everyone once. Anyone already inside is never counted twice."
-                : "Each QR code is unique and valid for one admission only."}
-            </p>
+            <p>Each QR is live and changes every 5 minutes, so screenshots stop working.</p>
           </div>
         </div>
 

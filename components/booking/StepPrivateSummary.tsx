@@ -228,6 +228,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
       customerName: bookingData.guestDetails?.name || "Guest User",
       customerEmail: bookingData.guestDetails?.email || (cleanPhone ? `guest_${cleanPhone}@fishndrop.com` : "guest@fishndrop.com"),
       customerPhone: bookingData.guestDetails?.phone || "",
+      dateOfBirth: bookingData.guestDetails?.dateOfBirth || undefined,
       password: bookingData.guestDetails?.password || undefined,
       bookingDate: bookingData.date,
       bookingTime: bookingData.time || "19:00",

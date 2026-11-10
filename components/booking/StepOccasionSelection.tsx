@@ -12,45 +12,45 @@ interface StepOccasionSelectionProps {
 const occasionOptions = [
   {
     id: "birthday",
-    label: "Birthday Celebration",
+    label: "Birthday",
     icon: Cake,
-    desc: "Honoring another year of life. Allow our team to curate a memorable festive experience for your party."
+    desc: "Another year to celebrate, with festive touches."
   },
   {
     id: "anniversary",
-    label: "Anniversary Celebration",
+    label: "Anniversary",
     icon: Sparkles,
-    desc: "A celebration of enduring love. Prime table settings and celebratory touches."
+    desc: "Celebrate your love with special settings."
   },
   {
     id: "baby_shower",
-    label: "Baby Shower / Family Event",
+    label: "Baby Shower / Family",
     icon: Baby,
-    desc: "Welcoming a new arrival or family gathering with comfort seating and dedicated service."
+    desc: "New arrivals and family gatherings."
   },
   {
     id: "celebration",
-    label: "Celebration & Milestone Gathering",
+    label: "Milestone",
     icon: PartyPopper,
-    desc: "Graduation, promotion, reunion, or milestone moments elevating your special group celebration."
+    desc: "Graduation, promotion, reunion and more."
   },
   {
     id: "business",
-    label: "Corporate / Business Dinner",
+    label: "Corporate / Business",
     icon: Briefcase,
-    desc: "Where influence meets excellence. A private setting conducive to refined conversation and networking."
+    desc: "Private dinners, teams and networking."
   },
   {
     id: "quiet",
-    label: "A Quiet Sanctuary Evening",
+    label: "Quiet Evening",
     icon: Moon,
-    desc: "Simple epicurean appreciation. No special occasion needed—only a desire for private culinary artistry."
+    desc: "No occasion needed, just great food."
   },
   {
     id: "other",
-    label: "Other Bespoke Event",
+    label: "Something Else",
     icon: Edit3,
-    desc: "Have something unique in mind like an engagement, retirement, or custom theme? Specify your details."
+    desc: "Engagement, retirement or a custom theme? Tell us."
   }
 ];
 
@@ -78,14 +78,14 @@ export const StepOccasionSelection = ({ onNext, selectedOccasion }: StepOccasion
   };
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-4xl mx-auto">
+    <div className="space-y-6 sm:space-y-8 animate-fade-in max-w-3xl mx-auto">
       {/* Header */}
       <header className="space-y-3 text-center sm:text-left">
         <div className="flex items-center justify-center sm:justify-start gap-4">
-          <span className="font-headline italic text-[#C8A96A] text-base">04.</span>
+          <span className="font-headline italic text-[#C8A96A] text-base">06.</span>
           <div className="h-[1px] w-8 bg-white/20"></div>
           <span className="font-label uppercase tracking-widest text-[10px] text-white/50 font-bold">
-            Step 04 of 06 &bull; Party Occasion
+            Party Occasion
           </span>
         </div>
         <h2 className="font-headline italic text-4xl md:text-5xl text-white leading-tight">
@@ -96,73 +96,53 @@ export const StepOccasionSelection = ({ onNext, selectedOccasion }: StepOccasion
         </p>
       </header>
 
-      {/* Horizontal Rectangular Cards Stack */}
-      <div className="flex flex-col gap-3 sm:gap-4">
+      {/* Compact icon cards, two per row ("Other" spans the full row) */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {occasionOptions.map((option) => {
           const Icon = option.icon;
           const isSelected = selectedId === option.id;
+          const isOther = option.id === "other";
 
           return (
             <button
               key={option.id}
               type="button"
+              aria-pressed={isSelected}
               onClick={() => handleSelect(option.id)}
               className={cn(
-                "w-full p-4 sm:p-5 rounded-2xl border text-left transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-5 group cursor-pointer relative overflow-hidden backdrop-blur-md",
+                "group relative rounded-2xl border text-left transition-all duration-300 cursor-pointer",
+                isOther ? "col-span-2 flex items-center gap-4 p-4" : "flex flex-col gap-3 p-4 sm:p-5",
                 isSelected
-                  ? "bg-[#C8A96A]/15 border-[#C8A96A] shadow-[0_0_25px_rgba(200,169,106,0.25)] ring-1 ring-[#C8A96A]/60"
-                  : "bg-[#121614] border-white/10 hover:border-[#C8A96A]/40 hover:bg-white/[0.04] shadow-md"
+                  ? "bg-[#C8A96A]/15 border-[#C8A96A] shadow-[0_0_25px_rgba(200,169,106,0.2)]"
+                  : "bg-[#121614] border-white/10 hover:border-[#C8A96A]/40 hover:bg-white/[0.04]"
               )}
             >
-              {/* Left: Icon & Details */}
-              <div className="flex items-center gap-4 flex-1 min-w-0">
-                <div
-                  className={cn(
-                    "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300",
-                    isSelected
-                      ? "bg-[#C8A96A] text-[#0d1612] shadow-md shadow-[#C8A96A]/30 scale-105"
-                      : "bg-white/[0.05] border border-white/10 text-[#C8A96A] group-hover:bg-[#C8A96A]/10 group-hover:border-[#C8A96A]/30"
-                  )}
-                >
-                  <Icon className="w-6 h-6" />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3
-                      className={cn(
-                        "font-headline text-lg sm:text-xl font-bold truncate transition-colors",
-                        isSelected ? "text-[#E3C281]" : "text-white group-hover:text-[#E3C281]"
-                      )}
-                    >
-                      {option.label}
-                    </h3>
-                  </div>
-                  <p className="text-xs text-white/60 line-clamp-2 mt-0.5 font-body">
-                    {option.desc}
-                  </p>
-                </div>
-              </div>
-
-              {/* Right: Selection Action Pill */}
-              <div className="shrink-0 flex items-center justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5">
+              {isSelected && (
+                <span className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-[#C8A96A] text-[#0d1612]">
+                  <Check className="w-3 h-3 stroke-[3]" />
+                </span>
+              )}
+              <span
+                className={cn(
+                  "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-all duration-300",
+                  isSelected
+                    ? "bg-[#C8A96A] text-[#0d1612]"
+                    : "bg-white/[0.05] border border-white/10 text-[#C8A96A] group-hover:bg-[#C8A96A]/10 group-hover:border-[#C8A96A]/30"
+                )}
+              >
+                <Icon className="w-5 h-5" />
+              </span>
+              <span className="min-w-0 pr-5">
                 <span
                   className={cn(
-                    "text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full font-label transition-all flex items-center gap-1.5",
-                    isSelected
-                      ? "bg-[#C8A96A] text-[#0d1612] shadow-sm font-extrabold"
-                      : "bg-white/5 text-white/50 border border-white/10 group-hover:border-[#C8A96A]/40 group-hover:text-white"
+                    "block font-headline text-base sm:text-lg font-bold leading-tight transition-colors",
+                    isSelected ? "text-[#E3C281]" : "text-white group-hover:text-[#E3C281]"
                   )}
                 >
-                  {isSelected ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 stroke-[3]" /> Selected
-                    </>
-                  ) : (
-                    "Select ➔"
-                  )}
+                  {option.label}
                 </span>
-              </div>
+                <span className="mt-1 block text-[11px] sm:text-xs text-white/55 leading-snug line-clamp-2 font-body">{option.desc}</span>
+              </span>
             </button>
           );
         })}
