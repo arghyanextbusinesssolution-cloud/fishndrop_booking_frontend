@@ -363,7 +363,7 @@ export default function TicketSharePage() {
       {/* Claim popup: phone OTP → name */}
       {modalOpen && (
         <div
-          className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md"
+          className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
           role="dialog"
           aria-modal="true"
           aria-label="Claim your ticket"
@@ -371,7 +371,7 @@ export default function TicketSharePage() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl border border-[#C8A96A]/30 bg-[#0c1612] p-6 space-y-5 shadow-2xl"
+            className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-3xl border border-[#C8A96A]/30 bg-[#0c1612] p-6 space-y-5 shadow-2xl"
           >
             <button
               onClick={() => setModalOpen(false)}

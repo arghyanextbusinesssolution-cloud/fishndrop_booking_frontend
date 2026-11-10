@@ -5,22 +5,16 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { NavBar } from "@/components/shared/NavBar";
 import { Footer } from "@/components/shared/Footer";
-import { Calendar } from "@/components/booking/Calendar";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { Hero } from "@/components/home/Hero";
-import { Experience } from "@/components/home/Experience";
 import { NavSpinnerLink } from "@/components/shared/NavSpinnerLink";
 import { cn } from "@/lib/utils";
 
 export default function Home() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isNavigating, setIsNavigating] = useState(false);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
-  const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] = useState(false);
-  const [pendingDate, setPendingDate] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
@@ -51,50 +45,9 @@ export default function Home() {
     void checkBackend();
   }, []);
 
-  const handleInitialDateSelect = (date: Date) => {
-    setSelectedDate(date);
-    setPendingDate(date);
-    setShowDisclaimer(true);
-  };
-
-  const proceedWithDate = () => {
-    setShowDisclaimer(false);
-    if (!pendingDate) return;
-
-    setIsNavigating(true);
-    try {
-      const year = pendingDate.getFullYear();
-      const month = String(pendingDate.getMonth() + 1).padStart(2, '0');
-      const day = String(pendingDate.getDate()).padStart(2, '0');
-      const dateString = `${year}-${month}-${day}`;
-      router.push(`/book-table?date=${dateString}`);
-    } catch (e) {
-      console.error("Date selection error:", e);
-      setIsNavigating(false);
-    }
-  };
-
   return (
     <div className="theme-astral min-h-screen bg-[#0F3D2E] text-on-surface selection:bg-primary/30 selection:text-primary font-body overflow-x-hidden">
       <LoadingScreen isLoading={isLoading} />
-
-      {/* Navigation Loader */}
-      {isNavigating && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#0F3D2E]/80 backdrop-blur-md transition-all duration-500">
-          <div className="flex flex-col items-center gap-8">
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full border-2 border-[#C8A96A]/10 border-t-[#C8A96A] animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="material-symbols-outlined text-[#C8A96A] animate-pulse">sync_saved_locally</span>
-              </div>
-            </div>
-            <div className="text-center space-y-2">
-              <h2 className="font-headline text-3xl italic text-[#C8A96A] animate-pulse">Compiling Reservation...</h2>
-              <p className="font-label text-[10px] uppercase tracking-[0.3em] text-[#C8A96A]/60">Checking seasonal availability</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Booking Notice Modal */}
       {showDisclaimer && (
@@ -144,64 +97,8 @@ export default function Home() {
             setShowDisclaimer(true);
           }} />
 
-          {/* Experience Section */}
-          <Experience />
-
-          {/* Reservations Section */}
-          <section id="reservations" className="py-16 md:py-24 px-4 md:px-12 bg-[#0F2D24]">
-            <div className="max-w-4xl mx-auto flex flex-col items-center">
-              <div className="text-center mb-12 md:mb-16">
-                <span className="font-label text-[8px] md:text-[10px] uppercase tracking-[0.4em] text-[#C8A96A] font-bold">Reservation</span>
-                <h2 className="font-headline text-3xl md:text-7xl text-on-surface mt-4 mb-6 tracking-tight italic leading-tight">When shall we expect you?</h2>
-                <p className="font-body text-on-surface/60 text-[10px] md:text-base max-w-lg mx-auto leading-relaxed mb-8 md:mb-12 px-4">
-                  Select a preferred date for your private garden experience.
-                </p>
-              </div>
-
-              {/* Calendar Container */}
-              <div className="w-full bg-[#1a1c1b] rounded-2xl border border-[#C8A96A]/10 p-4 md:p-12 shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
-                  <span className="material-symbols-outlined text-[80px] md:text-[120px]">spa</span>
-                </div>
-
-                <Calendar selectedDate={selectedDate} onSelect={handleInitialDateSelect} />
-
-                {/* Calendar Legend */}
-                <div className="mt-6 md:mt-8 pt-6 md:pt-8 border-t border-[#C8A96A]/10 flex justify-center gap-6 md:gap-12 items-center">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-[#C8A96A]" />
-                    <span className="font-label text-[8px] md:text-[10px] uppercase tracking-widest text-[#C8A96A]/40 font-bold">Available</span>
-                  </div>
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-[#333534] border border-[#C8A96A]/10" />
-                    <span className="font-label text-[8px] md:text-[10px] uppercase tracking-widest text-[#C8A96A]/40 font-bold">Full</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Gallery Section Preview */}
-              <div className="mt-20 md:mt-32 w-full">
-                <div className="text-center mb-12 md:mb-16">
-                  <span className="font-label text-[8px] md:text-[10px] uppercase tracking-[0.4em] text-[#C8A96A] font-bold">Gallery</span>
-                  <h2 className="font-headline text-3xl md:text-6xl text-[#C8A96A] mt-4 mb-12 md:mb-16">Captured Moments</h2>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:grid-cols-3 md:gap-8">
-                  {[
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuBSXkv1bUTfT0-n4B887NnK9lcdaAiQyHPUtwpI2g6sJ0UQBso7OcEN2Dg3borLpRXTCX2tJ-QL503TjPzXaaN4Z6fFCSUQ-Dr3HOAJsaVPtXr4cT5ZEfkq-P4ymleX1dq06oIwT4y_m3FyXZJrO8OfUo3fYpHWFs-NeCormJTzH7wip230wKeAzC5uLw5oIT9-3tMWHffcAe8evlWkHjo1MRqSZZHcn695Ha5hmSI21seRVrl4KiuT-H_og6c0QrVR_ssiG2g3Oxo",
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuD4qH16qwWZ8umR_Zj--U_ihIIxlL9L707YZ20Ml3SkjLt2Mx8WTmhxAfeL7KFjr71UBXr0FH84TXwsJBLFoDS1PNpA8WNWQ7Fdhld9S301PZJkyr4II6cTTQ-dmFO6l-3UY33Yf4SdWGqBosz6VwKzL5pxlAhJTbpCyWb6mnLR4iTlozoV-Jxz-aDytNZk2w_PH4x30nwPIcUubQzcHd2bysEM8-E36G4O4ILDEcvOCOvmXErwS1xDk5vyOeXJGgYe1RxwyNSsMN0",
-                    "https://lh3.googleusercontent.com/aida-public/AB6AXuBjhoXkdcSxBZno7ebjD6pTJlR3s9468JNQ6RpbyA1y6pRFyJD_3VcYuX0BWRqDM98Jy0K5PFQu0N50e5ZtF1cgyLnjIEoURPFKGnUXfwH5E9whxQggqABdbFy3fw6qcHF3CfHIxJeRAxYx5c6v5KjlfJbps6cHen7vbeV0Izvbtu_6aoWTYDjeHqz7jG6me4l7nu70UD6xIFv6i7hfLe3Cu0pR56oEGIK_pZeQ9tgbIVSmSwOnpWYFG4tGWnwwbYHbcznMaQV0dl4"
-                  ].map((url, i) => (
-                    <div key={i} className="aspect-[3/4] overflow-hidden rounded-2xl border border-[#C8A96A]/10 group relative cursor-pointer shadow-xl">
-                      <img className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 brightness-[0.8] group-hover:brightness-100" src={url} alt={`Gallery ${i + 1}`} />
-                      <div className="absolute inset-0 bg-[#0F3D2E]/20 group-hover:bg-transparent transition-all duration-500" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
         </main>
-        <Footer />
+        <Footer showCta={false} />
       </div>
     </div>
   );

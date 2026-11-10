@@ -20,6 +20,7 @@ interface Invite {
   passCode: string;
   qrCodeToken: string;
   status: "approved" | "pending_approval";
+  canCancel?: boolean;
   checkedIn: boolean;
 }
 
@@ -80,6 +81,11 @@ export default function MyInvitesPage() {
         </Link>
       ) : (
         <span className="text-xs text-amber-200 shrink-0">Waiting for the host to approve you</span>
+      )}
+      {i.canCancel && !i.checkedIn && (
+        <Link href={`/invite/${i.inviteToken}`} className="text-[11px] text-rose-300 hover:text-rose-200 underline shrink-0">
+          Can&apos;t make it?
+        </Link>
       )}
     </div>
   );

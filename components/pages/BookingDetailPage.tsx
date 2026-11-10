@@ -31,7 +31,7 @@ interface Guest {
   guestPhone: string;
   guestEmail?: string;
   passCode: string;
-  status: "approved" | "pending_approval" | "rejected";
+  status: "approved" | "pending_approval" | "rejected" | "cancelled";
   checkedIn: boolean;
   checkedInAt?: string;
   checkedInByName?: string;
@@ -314,6 +314,8 @@ export default function BookingDetailPage() {
                             <span className="text-emerald-300">Approved</span>
                           ) : g.status === "pending_approval" ? (
                             <span className="text-amber-300">Awaiting host</span>
+                          ) : g.status === "cancelled" ? (
+                            <span className="text-white/50">Not attending</span>
                           ) : (
                             <span className="text-rose-300 inline-flex items-center gap-1">
                               <XCircle className="w-3.5 h-3.5" /> Rejected

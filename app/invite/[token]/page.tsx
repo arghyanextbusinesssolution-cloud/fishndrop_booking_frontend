@@ -33,9 +33,11 @@ const QrCodeCard = dynamic(() => import("@/components/shared/QrCodeCard"), { ssr
 interface MyPass {
   passCode: string;
   qrCodeToken: string;
-  status: "approved" | "pending_approval" | "rejected";
+  status: "approved" | "pending_approval" | "rejected" | "cancelled";
   guestName: string;
   checkedIn: boolean;
+  cancelDeadline?: string | null;
+  canCancel?: boolean;
 }
 
 interface Invitation {
@@ -82,6 +84,8 @@ export default function InvitePage() {
   const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [welcome, setWelcome] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const autoOpened = useRef(false);
 
   const country = COUNTRIES.find((c) => c.id === countryId)!;
@@ -138,6 +142,23 @@ export default function InvitePage() {
       setFormError(res?.message || "Could not join the guest list. Please try again.");
     } finally {
       setBusy(false);
+    }
+  };
+
+  /** Guest says they're not attending; the spot opens up again for someone else. */
+  const cancelSpot = async () => {
+    setCancelling(true);
+    try {
+      const { data } = await api.post(`/invitations/${token}/cancel`);
+      toast.success(data.message || "You're off the guest list");
+      setConfirmCancel(false);
+      setWelcome(false);
+      await load();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Could not cancel. Please try again.");
+      await load();
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -208,6 +229,10 @@ export default function InvitePage() {
   const occasion = invite.occasion.replace(/_/g, " ");
   const dateLabel = new Date(invite.date).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
   const pass = invite.myPass;
+  const isCancelled = pass?.status === "cancelled";
+  const cancelByLabel = pass?.cancelDeadline
+    ? new Date(pass.cancelDeadline).toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+    : "";
 
   return (
     <div className="min-h-screen bg-[#070B09] text-white">
@@ -254,19 +279,28 @@ export default function InvitePage() {
               </p>
             )}
 
-            {!pass && !invite.isHost && (
+            {(!pass || isCancelled) && !invite.isHost && (
               <button
                 onClick={openJoin}
                 disabled={invite.isCapacityFull}
                 className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-[#C8A96A] via-[#E0C68E] to-[#C8A96A] text-[#0a120e] text-xs font-black uppercase tracking-[0.15em] disabled:opacity-40 cursor-pointer"
               >
-                {invite.isCapacityFull ? "Guest list full" : "Join the guest list"} {!invite.isCapacityFull && <ArrowRight className="w-4 h-4" />}
+                {invite.isCapacityFull ? "Guest list full" : isCancelled ? "I can come after all" : "Join the guest list"} {!invite.isCapacityFull && <ArrowRight className="w-4 h-4" />}
               </button>
             )}
           </div>
 
           {/* Welcome + pass */}
-          {pass && (
+          {pass && isCancelled && (
+            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 text-center space-y-2">
+              <p className="text-sm font-bold">You&apos;re not attending</p>
+              <p className="text-xs text-white/55">
+                You cancelled your spot and {invite.hostName} was notified. Your old QR no longer works.
+              </p>
+            </div>
+          )}
+
+          {pass && !isCancelled && (
             <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 text-center space-y-4">
               {welcome && (
                 <div className="rounded-2xl bg-gradient-to-r from-[#C8A96A]/20 to-[#C8A96A]/5 border border-[#C8A96A]/40 p-4 space-y-1">
@@ -299,6 +333,44 @@ export default function InvitePage() {
               ) : (
                 <p className="text-sm text-rose-300">The host couldn&apos;t add you to this guest list.</p>
               )}
+
+              {pass.canCancel && (
+                <div className="pt-4 border-t border-white/10 space-y-2">
+                  {!confirmCancel ? (
+                    <>
+                      <button
+                        onClick={() => setConfirmCancel(true)}
+                        className="text-xs font-bold text-rose-300 hover:text-rose-200 underline cursor-pointer"
+                      >
+                        Can&apos;t make it? Cancel my spot
+                      </button>
+                      {cancelByLabel && <p className="text-[11px] text-white/40">You can cancel until {cancelByLabel}</p>}
+                    </>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-xs text-white/70">
+                        Cancel your spot? Your QR will stop working and the spot opens up for someone else. {invite.hostName} will be notified.
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setConfirmCancel(false)}
+                          disabled={cancelling}
+                          className="flex-1 py-2.5 rounded-xl border border-white/15 text-xs font-bold cursor-pointer"
+                        >
+                          Keep my spot
+                        </button>
+                        <button
+                          onClick={cancelSpot}
+                          disabled={cancelling}
+                          className="flex-1 py-2.5 rounded-xl bg-rose-500/90 hover:bg-rose-500 text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                        >
+                          {cancelling && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Not attending
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -306,8 +378,8 @@ export default function InvitePage() {
 
       {/* Join popup: phone OTP → name */}
       {modalOpen && (
-        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md" role="dialog" aria-modal="true" aria-label="Join the guest list" onClick={() => !busy && setModalOpen(false)}>
-          <div onClick={(e) => e.stopPropagation()} className="relative w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl border border-[#C8A96A]/30 bg-[#0c1612] p-6 space-y-5 shadow-2xl">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" role="dialog" aria-modal="true" aria-label="Join the guest list" onClick={() => !busy && setModalOpen(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-sm max-h-[90vh] overflow-y-auto rounded-3xl border border-[#C8A96A]/30 bg-[#0c1612] p-6 space-y-5 shadow-2xl">
             <button onClick={() => setModalOpen(false)} disabled={busy} aria-label="Close" className="absolute top-3 right-3 p-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 cursor-pointer">
               <X className="w-5 h-5" />
             </button>

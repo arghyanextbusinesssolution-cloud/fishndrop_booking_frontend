@@ -57,11 +57,12 @@ export const Calendar = ({ onSelect, selectedDate, showAvailabilityBadges = true
   const canGoPrev = !(year === today.getFullYear() && month <= today.getMonth());
 
   // Determine status for each date: NO SOLD OUT!
-  // Only specific dates in a row have "1 LEFT" (e.g. Days 5, 6, 7 and Day 17)
-  const isOneLeftDate = (cellDate: Date, dayNum: number): boolean => {
+  // Weekend dates (Friday, Saturday, Sunday) show "1 LEFT"
+  const isOneLeftDate = (cellDate: Date): boolean => {
     if (cellDate < today) return false;
     if (!showAvailabilityBadges) return false;
-    return dayNum === 5 || dayNum === 6 || dayNum === 7 || dayNum === 17;
+    const weekday = cellDate.getDay(); // 0 = Sun, 5 = Fri, 6 = Sat
+    return weekday === 5 || weekday === 6 || weekday === 0;
   };
 
   return (
@@ -140,7 +141,7 @@ export const Calendar = ({ onSelect, selectedDate, showAvailabilityBadges = true
 
           const isTrailing = !d.current;
           const isPast = isTrailing || cellDate < today;
-          const isOneLeft = !isPast && isOneLeftDate(cellDate, d.day);
+          const isOneLeft = !isPast && isOneLeftDate(cellDate);
           const isDisabled = isPast;
 
           return (

@@ -33,7 +33,7 @@ interface GuestPass {
   guestPhone: string;
   passCode: string;
   qrCodeToken: string;
-  status: "approved" | "pending_approval" | "rejected";
+  status: "approved" | "pending_approval" | "rejected" | "cancelled";
   checkedIn: boolean;
   checkedInAt?: string;
   createdAt: string;
@@ -377,6 +377,10 @@ export default function BookingGuestsPage() {
                       ) : guest.status === "pending_approval" ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                           <Clock className="w-3 h-3" /> Pending Host
+                        </span>
+                      ) : guest.status === "cancelled" ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/60 border border-white/15">
+                          <XCircle className="w-3 h-3" /> Not Attending
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/20 text-red-300 border border-red-500/30">
