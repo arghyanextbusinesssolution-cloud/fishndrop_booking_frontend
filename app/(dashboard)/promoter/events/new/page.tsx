@@ -29,6 +29,13 @@ import {
   SALES_CLOSE_MINUTES
 } from "@/components/events/EventFormPickers";
 
+interface BusyRange {
+  start: number;
+  end: number;
+  label: string;
+  display: string;
+}
+
 interface TicketTierInput {
   name: string;
   price: number;
@@ -76,6 +83,69 @@ export default function CreateEventPage() {
       toast("That start time has already passed today. Please pick a later time.", { icon: "\u23F0" });
     }
   }, [minStartMinutes, startTime]);
+
+  /* ── Tropica availability: one shared calendar with venue bookings & other events ── */
+  // Busy ranges in minutes from 00:00 on `date` (may run past 1440 = into the next morning)
+  const [busy, setBusy] = useState<BusyRange[]>([]);
+  const [busyLoading, setBusyLoading] = useState(false);
+  const [busyError, setBusyError] = useState(false);
+  const checksVenue = venueType === "tropica" && !!date;
+
+  useEffect(() => {
+    if (!checksVenue) {
+      setBusy([]);
+      setBusyError(false);
+      return;
+    }
+    let cancelled = false;
+    setBusyLoading(true);
+    setBusyError(false);
+    api
+      .get("/events/venue-availability", { params: { date } })
+      .then(({ data }) => !cancelled && setBusy(data.busy || []))
+      .catch(() => {
+        if (!cancelled) {
+          setBusy([]);
+          setBusyError(true);
+        }
+      })
+      .finally(() => !cancelled && setBusyLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [checksVenue, date]);
+
+  const eventRange = (start: string, end: string) => {
+    const s = toMinutes(start);
+    let e = toMinutes(end);
+    if (e <= s) e += 1440; // ends next day
+    return [s, e] as const;
+  };
+  const clashes = (s: number, e: number) => busy.find((b) => s < b.end && b.start < e);
+
+  const startBlockedReason = (t: string) => {
+    const m = toMinutes(t);
+    return busy.some((b) => m >= b.start && m < b.end) ? "Booked" : undefined;
+  };
+  const endBlockedReason = (t: string) => {
+    if (!startTime) return undefined;
+    const [s, e] = eventRange(startTime, t);
+    return clashes(s, e) ? "Overlaps booking" : undefined;
+  };
+
+  // Drop picked times that the newly loaded availability rules out
+  useEffect(() => {
+    if (!busy.length) return;
+    if (startTime && startBlockedReason(startTime)) {
+      setStartTime("");
+      setEndTime("");
+      toast("Tropica is already booked at that time. Please pick an available start time.", { icon: "📅" });
+    } else if (startTime && endTime && endBlockedReason(endTime)) {
+      setEndTime("");
+      toast("That end time would overlap another booking. Please pick an earlier end time.", { icon: "📅" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busy, startTime]);
 
   const handlePlaceSelect = (p: PickedPlace) => {
     setVenueName(p.name);
@@ -153,6 +223,11 @@ export default function CreateEventPage() {
 
     if (startTime === endTime) {
       toast.error("End time must be different from the start time");
+      return;
+    }
+
+    if (venueType === "tropica" && clashes(...eventRange(startTime, endTime))) {
+      toast.error("Tropica is already booked during those hours. Please pick an available time.");
       return;
     }
 
@@ -273,16 +348,59 @@ export default function CreateEventPage() {
               <label htmlFor="ev-start" className="block text-xs font-medium text-white/80 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-[#C8A96A]" /> Start Time *
               </label>
-              <TimePickerField id="ev-start" value={startTime} onChange={setStartTime} minMinutes={minStartMinutes} placeholder="Select start" />
+              <TimePickerField
+                id="ev-start"
+                value={startTime}
+                onChange={setStartTime}
+                minMinutes={minStartMinutes}
+                blockedReason={checksVenue ? startBlockedReason : undefined}
+                placeholder="Select start"
+              />
             </div>
 
             <div>
               <label htmlFor="ev-end" className="block text-xs font-medium text-white/80 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-[#C8A96A]" /> End Time *
               </label>
-              <TimePickerField id="ev-end" value={endTime} onChange={setEndTime} badge={endsNextDay ? "Next day" : undefined} placeholder="Select end" />
+              <TimePickerField
+                id="ev-end"
+                value={endTime}
+                onChange={setEndTime}
+                blockedReason={checksVenue ? endBlockedReason : undefined}
+                badge={endsNextDay ? "Next day" : undefined}
+                placeholder="Select end"
+              />
             </div>
           </div>
+
+          {venueType === "tropica" && (
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2.5 text-[11px]">
+              {!date ? (
+                <p className="text-white/50">Pick a date to see when Tropica is available.</p>
+              ) : busyLoading ? (
+                <p className="text-white/50">Checking Tropica availability…</p>
+              ) : busyError ? (
+                <p className="text-red-300/80">Couldn&apos;t load venue availability. Times will be checked when you submit.</p>
+              ) : busy.length === 0 ? (
+                <p className="text-emerald-300/80">Tropica is free all day on this date.</p>
+              ) : (
+                <div className="space-y-1.5">
+                  <p className="text-white/60">Tropica is already booked at these times (greyed out above):</p>
+                  <ul className="flex flex-wrap gap-1.5">
+                    {busy.map((b) => (
+                      <li
+                        key={`${b.start}-${b.end}`}
+                        className="rounded-md bg-red-500/10 border border-red-400/20 px-2 py-0.5 text-red-200/80"
+                        title={b.label}
+                      >
+                        {b.display}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
 
           {startTime && (
             <p className="flex items-start gap-2 text-[11px] text-white/55 bg-[#C8A96A]/5 border border-[#C8A96A]/15 rounded-xl px-3 py-2.5">

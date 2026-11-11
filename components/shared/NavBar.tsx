@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useState, useEffect } from "react";
 import { NavSpinnerLink } from "@/components/shared/NavSpinnerLink";
 import { UserProfileMenu } from "@/components/shared/UserProfileMenu";
-import { Menu, X, Sparkles } from "lucide-react";
+import { Menu, X } from "lucide-react";
 
 export const NavBar = () => {
   const pathname = usePathname();
@@ -159,14 +159,6 @@ export const NavBar = () => {
                 className="block text-center text-xs uppercase tracking-[0.2em] text-[#E5C77A] border border-[#C8A96A]/40 py-3 rounded-full hover:bg-[#C8A96A]/10 font-bold"
               >
                 Book Private Space ($50/Guest)
-              </Link>
-              <Link
-                href="/partner"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-2 text-center text-xs uppercase tracking-[0.2em] text-[#0d1612] bg-[#E5C77A] py-3 rounded-full font-black shadow-lg hover:bg-[#d8b97a]"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-[#0d1612]" />
-                <span>Become a Promoter</span>
               </Link>
             </div>
           </div>

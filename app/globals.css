@@ -123,6 +123,35 @@
   }
 }
 
+/* Tropica lounge theme (auth / invite screens) */
+@keyframes lanternFlicker {
+  0%, 100% { opacity: 0.85; }
+  45% { opacity: 1; }
+  50% { opacity: 0.78; }
+  55% { opacity: 0.95; }
+}
+
+@keyframes lanternSway {
+  0%, 100% { transform: rotate(-1.5deg); }
+  50% { transform: rotate(1.5deg); }
+}
+
+.tropica-lantern-glow {
+  animation: lanternFlicker 3.2s infinite ease-in-out;
+}
+
+.tropica-lantern-sway {
+  transform-origin: top center;
+  animation: lanternSway 6s infinite ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tropica-lantern-glow,
+  .tropica-lantern-sway {
+    animation: none;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

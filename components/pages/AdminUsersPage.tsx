@@ -8,7 +8,9 @@ import { AdminUser } from "@/types";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { cn } from "@/lib/utils";
+import { EditUserModal } from "@/components/admin/EditUserModal";
 import {
+  Pencil,
   Users,
   Search,
   Trash2,
@@ -92,6 +94,8 @@ export default function AdminUsersPage() {
     verifiedUsers: 0,
     adminUsers: 0
   });
+
+  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
 
   // Multi-select state
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -213,6 +217,8 @@ export default function AdminUsersPage() {
         onConfirm={handleConfirmDelete}
         onCancel={() => setPendingDeleteAction(null)}
       />
+
+      {editingUser && <EditUserModal user={editingUser} onClose={() => setEditingUser(null)} onSaved={() => void load()} />}
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-outline-variant/15 pb-6">
@@ -530,7 +536,16 @@ export default function AdminUsersPage() {
                       </td>
 
                       {/* Actions */}
-                      <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                      <td className="px-4 py-3.5 text-right whitespace-nowrap space-x-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setEditingUser(u)}
+                          className="p-1.5 rounded-lg border border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 transition-colors inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"
+                          title="Edit name, email and phone"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Edit</span>
+                        </button>
                         {!isSelf && (
                           <button
                             type="button"

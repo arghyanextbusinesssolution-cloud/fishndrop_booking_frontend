@@ -91,8 +91,17 @@ export function toCurrentSiteUrl(link: string | null | undefined): string {
   if (!link) return "";
   if (typeof window === "undefined") return link;
   try {
-    const url = new URL(link, window.location.origin);
-    return `${window.location.origin}${url.pathname}${url.search}${url.hash}`;
+    let value = link.trim();
+    // "www.tropica.nyc/invite/x" (no scheme) would otherwise be read as a relative path
+    if (!/^[a-z]+:\/\//i.test(value) && /^\/*(localhost|(?:[a-z0-9-]+\.)+[a-z]{2,})(:\d+)?\//i.test(value)) {
+      value = `https://${value.replace(/^\/+/, "")}`;
+    }
+    const url = new URL(value, window.location.origin);
+    const path = url.pathname
+      .replace(/\/{2,}/g, "/")
+      // Drop a domain accidentally baked into the path: "/www.tropica.nyc/invite/x" → "/invite/x"
+      .replace(/^(?:\/(?:https?:)?(?:localhost|(?:[a-z0-9-]+\.)+[a-z]{2,})(?::\d+)?)+(?=\/)/i, "");
+    return `${window.location.origin}${path}${url.search}${url.hash}`;
   } catch {
     return link;
   }

@@ -1,14 +1,29 @@
 import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 import { RegisterForm } from "@/components/auth/RegisterForm";
+import { TropicaAuthShell } from "@/components/auth/TropicaAuthShell";
 
 export default function RegisterPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
-        <h1 className="mb-5 text-2xl font-semibold">Register</h1>
-        <RegisterForm />
-        <p className="mt-4 text-sm text-[var(--text-secondary)]">Already have an account? <Link href="/login" className="text-[var(--accent)]">Login</Link></p>
-      </div>
-    </div>
+    <TropicaAuthShell
+      eyebrow="Become a member"
+      title="Join the guest list"
+      subtitle="Create your free Tropica membership to book tables, host parties and keep your passes in one place."
+      footer={
+        <div className="space-y-3 text-center">
+          <p>
+            Already a member?{" "}
+            <Link href="/login" className="text-[#E0C68E] hover:text-white transition-colors uppercase tracking-widest text-[10px] font-bold">
+              Sign in
+            </Link>
+          </p>
+          <p className="text-[10px] text-white/35 flex items-center justify-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Your details are never shared outside Tropica.
+          </p>
+        </div>
+      }
+    >
+      <RegisterForm />
+    </TropicaAuthShell>
   );
 }

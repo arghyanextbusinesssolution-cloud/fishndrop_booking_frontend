@@ -3,11 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
-import { Eye, EyeOff } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Loader2, Lock, Mail, Smartphone, User as UserIcon } from "lucide-react";
+import { tropicaField, tropicaGoldButton, tropicaInput, tropicaLabel } from "@/components/auth/TropicaAuthShell";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -54,78 +52,57 @@ export function RegisterForm() {
   };
 
   return (
-    <div className="space-y-6">
-      <form onSubmit={handleRegister} className="space-y-4 animate-in fade-in duration-300">
-        <div>
-          <Label htmlFor="name" className="text-white/80 font-semibold">Full Name</Label>
-          <Input
-            id="name"
-            type="text"
+    <form onSubmit={handleRegister} className="space-y-4 animate-in fade-in duration-300">
+      <div>
+        <label htmlFor="name" className={tropicaLabel}>Full name</label>
+        <div className={tropicaField}>
+          <UserIcon className="w-4 h-4 text-[#C8A96A]/70 shrink-0" />
+          <input id="name" type="text" required autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" className={tropicaInput} />
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="email" className={tropicaLabel}>Email</label>
+        <div className={tropicaField}>
+          <Mail className="w-4 h-4 text-[#C8A96A]/70 shrink-0" />
+          <input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={tropicaInput} />
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="password" className={tropicaLabel}>Password</label>
+        <div className={tropicaField}>
+          <Lock className="w-4 h-4 text-[#C8A96A]/70 shrink-0" />
+          <input
+            id="password"
+            type={showPassword ? "text" : "password"}
             required
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="John Doe"
-            className="bg-black/40 border-[#C8A96A]/30 text-white mt-1 text-base focus:border-[#C8A96A]"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="At least 6 characters"
+            className={tropicaInput}
           />
+          <button type="button" aria-label="Toggle password visibility" onClick={() => setShowPassword((v) => !v)} className="text-white/45 hover:text-white cursor-pointer">
+            {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+          </button>
         </div>
+      </div>
 
-        <div>
-          <Label htmlFor="email" className="text-white/80 font-semibold">Email Address</Label>
-          <Input
-            id="email"
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="john@example.com"
-            className="bg-black/40 border-[#C8A96A]/30 text-white mt-1 text-base focus:border-[#C8A96A]"
-          />
+      <div>
+        <label htmlFor="phone" className={tropicaLabel}>
+          Phone <span className="normal-case tracking-normal font-medium text-white/35">(optional)</span>
+        </label>
+        <div className={tropicaField}>
+          <Smartphone className="w-4 h-4 text-[#C8A96A]/70 shrink-0" />
+          <input id="phone" type="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 000-0000" className={tropicaInput} />
         </div>
+      </div>
 
-        <div>
-          <Label htmlFor="password" className="text-white/80 font-semibold">Password</Label>
-          <div className="relative mt-1">
-            <Input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className="bg-black/40 border-[#C8A96A]/30 text-white pr-10 text-base focus:border-[#C8A96A]"
-            />
-            <button
-              type="button"
-              aria-label="Toggle password visibility"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-        </div>
-
-        <div>
-          <Label htmlFor="phone" className="text-white/80 font-semibold">Phone Number (Optional)</Label>
-          <Input
-            id="phone"
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="+1 (555) 000-0000"
-            className="bg-black/40 border-[#C8A96A]/30 text-white mt-1 text-base focus:border-[#C8A96A]"
-          />
-        </div>
-
-        <Button
-          type="submit"
-          isLoading={registering}
-          disabled={registering || !name || !email || !password}
-          className="w-full bg-[#C8A96A] text-[#0d1612] hover:bg-[#D6B97A] font-black text-xs tracking-[0.2em] uppercase py-6 shadow-xl shadow-[#C8A96A]/20 transition-all duration-300 mt-2"
-        >
-          {registering ? "Creating Account..." : "Create Account & Sign In"}
-        </Button>
-      </form>
-    </div>
+      <button type="submit" disabled={registering || !name || !email || !password} className={`${tropicaGoldButton} mt-2`}>
+        {registering ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+        {registering ? "Creating account..." : "Join Tropica"}
+      </button>
+    </form>
   );
 }

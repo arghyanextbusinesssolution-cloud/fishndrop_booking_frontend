@@ -58,7 +58,7 @@ const SidebarItem = ({
     href={href}
     onClick={onClick}
     className={cn(
-      "flex items-center gap-4 px-8 py-4 w-full transition-all duration-500 group relative",
+      "flex items-center gap-3.5 px-7 py-3.5 w-full transition-all duration-500 group relative",
       active
         ? "bg-[#0a2e21] text-[#C8A96A]"
         : "text-[#C8A96A]/50 hover:text-[#C8A96A] hover:bg-[#0a2e21]/60"
@@ -69,14 +69,14 @@ const SidebarItem = ({
     )}
     <Icon
       className={cn(
-        "w-4 h-4 transition-colors duration-500",
+        "w-5 h-5 shrink-0 transition-colors duration-500",
         active ? "text-[#C8A96A]" : "text-[#C8A96A]/40 group-hover:text-[#C8A96A]"
       )}
       strokeWidth={1.5}
     />
     <span
       className={cn(
-        "text-[9px] uppercase tracking-[0.2em] font-bold",
+        "text-[13px] uppercase tracking-[0.1em] font-bold leading-snug",
         active ? "text-[#C8A96A]" : "text-[#C8A96A]/50"
       )}
     >
@@ -250,7 +250,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "w-64 flex flex-col py-12 fixed h-screen overflow-y-auto z-50 transition-transform duration-500 lg:translate-x-0 tracking-tight border-r border-[#C8A96A]/10",
+          "w-72 flex flex-col py-12 fixed h-screen overflow-y-auto z-50 transition-transform duration-500 lg:translate-x-0 tracking-tight border-r border-[#C8A96A]/10",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
         style={{ backgroundColor: '#0a2e21' }}
@@ -280,10 +280,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             />
           </div>
           <div className="space-y-0.5">
-            <p className="font-headline text-lg italic leading-none truncate max-w-[120px] text-[#C8A96A]">
+            <p className="font-headline text-xl italic leading-none truncate max-w-[160px] text-[#C8A96A]">
               {isAdmin ? "The Concierge" : isStaff ? (user?.name || "Staff Member") : isPromoter ? (user?.companyName || user?.name || "Promoter") : (user?.name || "Guest")}
             </p>
-            <p className="text-[8px] uppercase tracking-widest text-[#C8A96A]/50 font-bold truncate max-w-[120px]">
+            <p className="text-[11px] uppercase tracking-widest text-[#C8A96A]/60 font-bold truncate max-w-[160px]">
               {isAdmin ? "System Admin" : isStaff ? "Employee" : isApprovedPromoter ? "Event Organizer" : isPromoter ? "Pending Approval" : "Tropica Guest"}
             </p>
           </div>
@@ -306,15 +306,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="block rounded-xl border border-[#C8A96A]/30 bg-[#C8A96A]/10 hover:bg-[#C8A96A]/15 p-4 transition-colors"
               >
-                <p className="text-[8px] uppercase tracking-[0.25em] font-bold text-[#C8A96A]">
+                <p className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#C8A96A]">
                   Up next · {relativeDay(nextUp.dayKey)}
                 </p>
-                <p className="mt-1 text-sm font-semibold text-white leading-snug line-clamp-2">{nextUp.title}</p>
-                <p className="text-[10px] text-white/55 mt-0.5">
+                <p className="mt-1 text-base font-semibold text-white leading-snug line-clamp-2">{nextUp.title}</p>
+                <p className="text-xs text-white/60 mt-0.5">
                   {formatTimeTo12Hour(nextUp.startTime)} · {nextUp.badge}
                 </p>
                 {upcoming && upcoming.length > 1 && (
-                  <p className="text-[9px] text-white/40 mt-1.5">+{upcoming.length - 1} more coming up</p>
+                  <p className="text-[11px] text-white/45 mt-1.5">+{upcoming.length - 1} more coming up</p>
                 )}
               </Link>
             </div>
@@ -324,7 +324,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="px-8 pt-8">
               <Link
                 href="/"
-                className="bg-gold-gradient w-full py-4 rounded-lg text-on-primary font-label tracking-[0.2em] uppercase text-[9px] font-bold text-center block shadow-lg shadow-primary/10 hover:scale-[1.02] transition-all active:scale-95"
+                className="bg-gold-gradient w-full py-4 rounded-lg text-on-primary font-label tracking-[0.2em] uppercase text-xs font-bold text-center block shadow-lg shadow-primary/10 hover:scale-[1.02] transition-all active:scale-95"
               >
                 Book a Journey
               </Link>
@@ -337,8 +337,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             onClick={handleLogout}
             className="flex items-center gap-4 text-[#C8A96A]/40 hover:text-error group transition-colors duration-500 w-full"
           >
-            <LogOut className="w-4 h-4" strokeWidth={1.5} />
-            <span className="text-[9px] uppercase tracking-widest font-bold">
+            <LogOut className="w-5 h-5" strokeWidth={1.5} />
+            <span className="text-[13px] uppercase tracking-widest font-bold">
               Sign Out
             </span>
           </button>
@@ -346,7 +346,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-grow lg:ml-64 min-h-screen pt-16 lg:pt-0 overflow-x-auto">
+      <main className="flex-grow lg:ml-72 min-h-screen pt-16 lg:pt-0 overflow-x-auto">
         {children}
       </main>
     </div>

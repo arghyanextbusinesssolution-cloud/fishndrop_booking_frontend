@@ -9,7 +9,6 @@ import { useAuthStore } from "@/store/authStore";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/lib/axios";
 import {
-  Sparkles,
   ShieldCheck,
   Upload,
   CheckCircle2,
@@ -27,6 +26,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { TropicaAuthShell, tropicaGoldButton, tropicaInputBare } from "@/components/auth/TropicaAuthShell";
 
 const COUNTRY_OPTIONS = [
   { id: "US", code: "+1", flag: "🇺🇸", label: "United States (+1)" },
@@ -251,56 +251,47 @@ export default function PromoterRegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070B09] text-white flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-gradient-to-b from-[#C8A96A]/15 via-emerald-950/15 to-transparent blur-3xl pointer-events-none -z-0" />
-
-      {/* Brand Header */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-2xl text-center space-y-3 relative z-10">
-        <Link href="/" className="inline-block font-headline text-3xl sm:text-4xl italic text-[#C8A96A] hover:scale-105 transition-transform">
-          Tropica NYC
-        </Link>
-        <div className="inline-flex items-center gap-2 bg-[#C8A96A]/10 border border-[#C8A96A]/30 px-4 py-1.5 rounded-full text-[#E8CB8A]">
-          <Sparkles className="w-3.5 h-3.5 text-[#C8A96A]" />
-          <span className="text-[10px] uppercase font-bold tracking-[0.2em] font-label">
-            Partner &amp; Event Organizer Portal
-          </span>
+    <TropicaAuthShell
+      size="xl"
+      tagline="Partner & Organizer Portal"
+      eyebrow={activeTab === "signup" ? "Become a partner" : "Welcome back, partner"}
+      title={activeTab === "signup" ? "Promoter sign up" : "Promoter sign in"}
+      subtitle="Verify with a text code from your US, Canada or India number. Sell tickets and get paid out through Stripe Connect."
+      footer={
+        <div className="space-y-2 text-center">
+          <p>
+            Need organizer assistance?{" "}
+            <a href="mailto:events@tropica.nyc" className="text-[#E0C68E] hover:underline font-semibold">
+              events@tropica.nyc
+            </a>
+          </p>
+          <p className="text-[10px] uppercase tracking-widest font-bold">
+            <Link href="/login" className="text-[#C8A96A] hover:text-white transition-colors">
+              Guest login
+            </Link>
+            <span className="mx-2 text-white/20">•</span>
+            <Link href="/employee-login" className="text-[#C8A96A] hover:text-white transition-colors">
+              Employee login
+            </Link>
+          </p>
         </div>
-        <h1 className="text-3xl sm:text-5xl font-headline italic font-bold tracking-tight text-white">
-          Partner <span className="text-gold-gradient">Phone Verification</span>
-        </h1>
-        <p className="text-sm text-white/70 max-w-xl mx-auto font-body">
-          Sign up or log in securely via OTP with your US, Canada, or India phone number. Sell tickets and receive automated payouts via Stripe Connect.
-        </p>
+      }
+    >
+      {/* Perks */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {[
+          { Icon: Smartphone, label: "OTP sign in" },
+          { Icon: DollarSign, label: "Direct payouts" },
+          { Icon: QrCode, label: "QR door passes" },
+          { Icon: ShieldCheck, label: "Verified partners" }
+        ].map(({ Icon, label }) => (
+          <div key={label} className="flex items-center justify-center gap-1.5 rounded-xl border border-[#C8A96A]/20 bg-black/35 px-2 py-2 text-[10px] font-bold uppercase tracking-wider text-white/70">
+            <Icon className="w-3.5 h-3.5 text-[#C8A96A] shrink-0" /> {label}
+          </div>
+        ))}
       </div>
 
-      {/* Features Bar */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-3xl mt-8 grid grid-cols-2 md:grid-cols-4 gap-3 relative z-10">
-        <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 text-center space-y-1 backdrop-blur-sm">
-          <Smartphone className="w-5 h-5 text-[#C8A96A] mx-auto" />
-          <p className="font-headline text-xs font-bold text-white">OTP Verification</p>
-          <p className="text-[10px] text-white/50">US, Canada &amp; India SMS</p>
-        </div>
-        <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 text-center space-y-1 backdrop-blur-sm">
-          <DollarSign className="w-5 h-5 text-[#C8A96A] mx-auto" />
-          <p className="font-headline text-xs font-bold text-white">Direct Payouts</p>
-          <p className="text-[10px] text-white/50">Stripe Connect banking</p>
-        </div>
-        <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 text-center space-y-1 backdrop-blur-sm">
-          <QrCode className="w-5 h-5 text-[#C8A96A] mx-auto" />
-          <p className="font-headline text-xs font-bold text-white">QR Ticket Passes</p>
-          <p className="text-[10px] text-white/50">Anti-duplicate door scanner</p>
-        </div>
-        <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 text-center space-y-1 backdrop-blur-sm">
-          <ShieldCheck className="w-5 h-5 text-[#C8A96A] mx-auto" />
-          <p className="font-headline text-xs font-bold text-white">Verified Organizers</p>
-          <p className="text-[10px] text-white/50">Trusted partner network</p>
-        </div>
-      </div>
-
-      {/* Main Container */}
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-2xl relative z-10">
-        <div className="bg-[#0e1411]/90 border border-white/15 rounded-3xl p-6 sm:p-10 backdrop-blur-2xl shadow-2xl">
+      <div>
           {/* Success State */}
           {registrationSuccess ? (
             <div className="text-center py-10 space-y-4 animate-fade-in">
@@ -321,7 +312,7 @@ export default function PromoterRegisterPage() {
           ) : (
             <>
               {/* Tabs: Sign Up vs Sign In */}
-              <div className="flex rounded-2xl bg-black/40 border border-white/10 p-1.5 mb-8">
+              <div className="flex rounded-xl bg-black/50 border border-[#C8A96A]/25 p-1 mb-6">
                 <button
                   type="button"
                   onClick={() => {
@@ -329,13 +320,13 @@ export default function PromoterRegisterPage() {
                     setErrMessage(null);
                   }}
                   className={cn(
-                    "w-1/2 py-3 rounded-xl font-label text-xs uppercase tracking-wider font-bold transition-all duration-200 cursor-pointer",
+                    "w-1/2 py-2.5 rounded-lg font-label text-xs uppercase tracking-wider font-bold transition-all duration-200 cursor-pointer",
                     activeTab === "signup"
-                      ? "bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] text-[#0d1612] shadow-lg shadow-[#C8A96A]/25"
+                      ? "bg-gradient-to-b from-[#F1D9A0] to-[#C8A96A] text-[#1a1208] shadow-md shadow-[#C8A96A]/25"
                       : "text-white/60 hover:text-white"
                   )}
                 >
-                  Partner Sign Up (OTP)
+                  Sign up
                 </button>
                 <button
                   type="button"
@@ -344,20 +335,20 @@ export default function PromoterRegisterPage() {
                     setErrMessage(null);
                   }}
                   className={cn(
-                    "w-1/2 py-3 rounded-xl font-label text-xs uppercase tracking-wider font-bold transition-all duration-200 cursor-pointer",
+                    "w-1/2 py-2.5 rounded-lg font-label text-xs uppercase tracking-wider font-bold transition-all duration-200 cursor-pointer",
                     activeTab === "login"
-                      ? "bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] text-[#0d1612] shadow-lg shadow-[#C8A96A]/25"
+                      ? "bg-gradient-to-b from-[#F1D9A0] to-[#C8A96A] text-[#1a1208] shadow-md shadow-[#C8A96A]/25"
                       : "text-white/60 hover:text-white"
                   )}
                 >
-                  Partner Sign In (OTP)
+                  Sign in
                 </button>
               </div>
 
               {/* ─── STAGE 1: PHONE VERIFICATION (Required for both Sign Up and Login) ─── */}
               {!isPhoneVerified && (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="space-y-1 pb-2 border-b border-white/10 text-center sm:text-left">
+                  <div className="space-y-1 pb-2 border-b border-[#C8A96A]/15 text-center sm:text-left">
                     <h3 className="font-headline text-xl text-white font-bold">
                       {activeTab === "signup" ? "1. Verify Phone Number" : "Sign In with Mobile OTP"}
                     </h3>
@@ -375,16 +366,16 @@ export default function PromoterRegisterPage() {
                           Mobile Phone Number
                         </label>
 
-                        <div className="flex items-center rounded-2xl border border-white/15 bg-white/[0.04] p-1.5 focus-within:border-[#C8A96A] focus-within:ring-2 focus-within:ring-[#C8A96A]/20 transition-all">
+                        <div className="flex items-center rounded-xl border border-[#C8A96A]/30 bg-black/55 p-1 focus-within:border-[#E0C68E] focus-within:ring-2 focus-within:ring-[#C8A96A]/20 transition-all">
                           {/* Country Dropdown */}
-                          <div className="relative border-r border-white/10 pr-2 pl-3">
+                          <div className="relative border-r border-[#C8A96A]/20 pr-2 pl-3">
                             <select
                               value={selectedCountryId}
                               onChange={(e) => setSelectedCountryId(e.target.value)}
                               className="bg-transparent text-sm font-semibold text-white/90 outline-none cursor-pointer pr-4 appearance-none font-mono"
                             >
                               {COUNTRY_OPTIONS.map((c) => (
-                                <option key={c.id} value={c.id} className="bg-[#121614] text-white">
+                                <option key={c.id} value={c.id} className="bg-[#140f09] text-white">
                                   {c.flag} {c.code} ({c.label.split(" ")[0]})
                                 </option>
                               ))}
@@ -416,7 +407,7 @@ export default function PromoterRegisterPage() {
                       <button
                         type="submit"
                         disabled={authLoading || rawDigits.length < 7}
-                        className="w-full py-4 rounded-xl bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] text-[#0d1612] font-black font-label text-xs uppercase tracking-[0.2em] shadow-xl shadow-[#C8A96A]/30 hover:scale-[1.02] active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        className={`${tropicaGoldButton} py-4`}
                       >
                         {authLoading ? (
                           <>
@@ -451,7 +442,7 @@ export default function PromoterRegisterPage() {
                           placeholder="••••"
                           value={otpCode}
                           onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ""))}
-                          className="w-full text-center text-4xl sm:text-5xl font-mono tracking-[0.5em] bg-white/[0.05] border border-white/20 rounded-2xl py-4 text-white focus:outline-none focus:border-[#C8A96A] focus:ring-2 focus:ring-[#C8A96A]/30"
+                          className="w-full text-center text-4xl sm:text-5xl font-mono tracking-[0.5em] bg-black/55 border border-[#C8A96A]/30 rounded-xl py-4 text-white focus:outline-none focus:border-[#E0C68E] focus:ring-2 focus:ring-[#C8A96A]/30"
                         />
                       </div>
 
@@ -465,7 +456,7 @@ export default function PromoterRegisterPage() {
                       <button
                         type="submit"
                         disabled={authLoading || otpCode.length !== 4}
-                        className="w-full py-4 rounded-xl bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] text-[#0d1612] font-black font-label text-xs uppercase tracking-[0.2em] shadow-xl shadow-[#C8A96A]/30 hover:scale-[1.02] active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        className={`${tropicaGoldButton} py-4`}
                       >
                         {authLoading ? (
                           <>
@@ -527,14 +518,14 @@ export default function PromoterRegisterPage() {
                     </button>
                   </div>
 
-                  <div className="space-y-1 pb-2 border-b border-white/10">
+                  <div className="space-y-1 pb-2 border-b border-[#C8A96A]/15">
                     <h3 className="font-headline text-xl text-white font-bold">2. Partner &amp; Organizer Details</h3>
                     <p className="text-xs text-white/50">Complete your profile to create your promoter account.</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-white/80 mb-1.5 font-label flex items-center gap-1.5">
+                      <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-[#E0C68E]/80 mb-1.5 font-label flex items-center gap-1.5">
                         <User className="w-3.5 h-3.5 text-[#C8A96A]" /> Full Legal Name *
                       </label>
                       <input
@@ -544,12 +535,12 @@ export default function PromoterRegisterPage() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="e.g. Alex Rivera"
-                        className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#C8A96A]"
+                        className={tropicaInputBare}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-white/80 mb-1.5 font-label flex items-center gap-1.5">
+                      <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-[#E0C68E]/80 mb-1.5 font-label flex items-center gap-1.5">
                         <Building className="w-3.5 h-3.5 text-[#C8A96A]" /> Brand / Collective Name
                       </label>
                       <input
@@ -557,14 +548,14 @@ export default function PromoterRegisterPage() {
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
                         placeholder="e.g. Brooklyn Waves Events"
-                        className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#C8A96A]"
+                        className={tropicaInputBare}
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-white/80 mb-1.5 font-label flex items-center gap-1.5">
+                      <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-[#E0C68E]/80 mb-1.5 font-label flex items-center gap-1.5">
                         <Mail className="w-3.5 h-3.5 text-[#C8A96A]" /> Email Address *
                       </label>
                       <input
@@ -573,12 +564,12 @@ export default function PromoterRegisterPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="promoter@domain.com"
-                        className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#C8A96A]"
+                        className={tropicaInputBare}
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-wider text-white/80 mb-1.5 font-label flex items-center gap-1.5">
+                      <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-[#E0C68E]/80 mb-1.5 font-label flex items-center gap-1.5">
                         <Globe className="w-3.5 h-3.5 text-[#C8A96A]" /> Instagram or Website
                       </label>
                       <input
@@ -586,19 +577,19 @@ export default function PromoterRegisterPage() {
                         value={socialLink}
                         onChange={(e) => setSocialLink(e.target.value)}
                         placeholder="@yourbrand or website.com"
-                        className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#C8A96A]"
+                        className={tropicaInputBare}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-white/80 mb-1.5 font-label">
+                    <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-[#E0C68E]/80 mb-1.5 font-label">
                       Primary Event Genre
                     </label>
                     <select
                       value={eventGenre}
                       onChange={(e) => setEventGenre(e.target.value)}
-                      className="w-full bg-[#121614] border border-white/15 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#C8A96A] cursor-pointer"
+                      className={`${tropicaInputBare} cursor-pointer [&>option]:bg-[#140f09]`}
                     >
                       <option value="nightlife">Nightlife &amp; DJ Parties</option>
                       <option value="live_music">Live Music &amp; Acoustic</option>
@@ -609,7 +600,7 @@ export default function PromoterRegisterPage() {
                   </div>
 
                   {/* ID Document Upload */}
-                  <div className="border border-white/15 rounded-2xl p-5 bg-white/[0.02] space-y-3">
+                  <div className="border border-[#C8A96A]/20 rounded-2xl p-5 bg-black/35 space-y-3">
                     <div className="flex items-center gap-2">
                       <ShieldCheck className="w-5 h-5 text-[#C8A96A]" />
                       <span className="text-xs font-bold text-white uppercase tracking-wider font-label">
@@ -645,7 +636,7 @@ export default function PromoterRegisterPage() {
                   <button
                     type="submit"
                     disabled={isSubmitting || isUploading || !name.trim() || !email.trim()}
-                    className="w-full py-4 bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] text-[#0d1612] font-black text-xs uppercase tracking-[0.2em] rounded-xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-[#C8A96A]/30 flex items-center justify-center gap-2 disabled:opacity-40 cursor-pointer"
+                    className={`${tropicaGoldButton} py-4`}
                   >
                     {isSubmitting ? (
                       <>
@@ -662,15 +653,7 @@ export default function PromoterRegisterPage() {
               )}
             </>
           )}
-
-          <div className="mt-8 pt-6 border-t border-white/10 text-center text-xs text-white/40 font-body">
-            Need organizer assistance?{" "}
-            <a href="mailto:events@tropica.nyc" className="text-[#C8A96A] hover:underline font-semibold">
-              events@tropica.nyc
-            </a>
-          </div>
-        </div>
       </div>
-    </div>
+    </TropicaAuthShell>
   );
 }

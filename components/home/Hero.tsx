@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { NavSpinnerLink } from '@/components/shared/NavSpinnerLink';
-import { Sparkles } from 'lucide-react';
 
 interface HeroProps {
     onTableReservationClick?: () => void;
@@ -45,13 +44,6 @@ export const Hero = ({ onTableReservationClick }: HeroProps) => {
                         className="w-full sm:w-auto bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] text-[#0d1612] px-8 md:px-9 py-4 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-black hover:scale-105 transition-all shadow-xl shadow-[#C8A96A]/25"
                     >
                         BOOK EVENT ($50/GUEST)
-                    </NavSpinnerLink>
-                    <NavSpinnerLink
-                        href="/partner"
-                        className="w-full sm:w-auto bg-[#C8A96A]/15 hover:bg-[#C8A96A]/25 border border-[#C8A96A] text-[#E8CB8A] hover:text-white px-7 md:px-8 py-4 rounded-full font-label text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-black/40"
-                    >
-                        <Sparkles className="w-3.5 h-3.5 text-[#C8A96A]" />
-                        <span>BECOME A PROMOTER</span>
                     </NavSpinnerLink>
                     <NavSpinnerLink
                         href="/book-tour"

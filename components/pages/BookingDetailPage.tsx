@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Loader2,
   Mail,
+  Pencil,
   Phone,
   RefreshCw,
   Search,
@@ -24,6 +25,7 @@ import {
 import api from "@/lib/axios";
 import { formatTimeTo12Hour, toCurrentSiteUrl } from "@/lib/utils";
 import { CATERING_LABEL_MAP } from "@/lib/cateringRestaurants";
+import { EditBookingModal } from "@/components/admin/EditBookingModal";
 
 interface Guest {
   _id: string;
@@ -100,6 +102,7 @@ export default function BookingDetailPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<GuestFilter>("all");
+  const [editing, setEditing] = useState(false);
 
   const load = useCallback(
     async (quiet = false) => {
@@ -182,14 +185,24 @@ export default function BookingDetailPage() {
           </h1>
           <p className="text-xs text-white/45 font-mono">Booking #{String(b._id).slice(-6).toUpperCase()} · {b._id}</p>
         </div>
-        <button
-          onClick={() => load()}
-          disabled={refreshing}
-          className="self-start inline-flex items-center gap-1.5 text-xs bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-2 rounded-lg cursor-pointer disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} /> Refresh
-        </button>
+        <div className="self-start flex gap-2">
+          <button
+            onClick={() => setEditing(true)}
+            className="inline-flex items-center gap-1.5 text-xs font-bold bg-[#C8A96A]/15 hover:bg-[#C8A96A]/25 text-[#E0C68E] border border-[#C8A96A]/40 px-3 py-2 rounded-lg cursor-pointer"
+          >
+            <Pencil className="w-3.5 h-3.5" /> Edit booking
+          </button>
+          <button
+            onClick={() => load()}
+            disabled={refreshing}
+            className="inline-flex items-center gap-1.5 text-xs bg-white/5 hover:bg-white/10 border border-white/10 px-3 py-2 rounded-lg cursor-pointer disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} /> Refresh
+          </button>
+        </div>
       </div>
+
+      {editing && <EditBookingModal booking={b} onClose={() => setEditing(false)} onSaved={() => void load(true)} />}
 
       {/* Guests & attendance (venue bookings) */}
       {isPrivate && (

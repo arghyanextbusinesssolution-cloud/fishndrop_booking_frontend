@@ -1,16 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { TropicaAuthShell } from "@/components/auth/TropicaAuthShell";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
-  
+
   useEffect(() => {
     if (isAuthenticated) {
       if (user?.role === "admin" || user?.role === "owner") router.replace("/admin");
@@ -19,31 +19,21 @@ export default function LoginPage() {
       else router.replace("/user");
     }
   }, [isAuthenticated, router, user?.role]);
-  
+
   return (
-    <div className="flex min-h-screen items-center justify-center px-4" style={{ backgroundColor: '#0F3D2E' }}>
-      <div className="w-full max-w-md rounded-2xl border border-[#C8A96A]/20 bg-black/40 backdrop-blur-xl p-8 shadow-2xl">
-        <Link href="/" className="mb-6 flex justify-center">
-          <div className="relative w-48 h-28 md:w-52 md:h-32 hover:scale-105 transition-all duration-300">
-            <Image
-              src="/tropica-logo.png"
-              alt="Tropica Sanctuary"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-        </Link>
-        <h1 className="mb-6 text-center font-headline text-3xl italic text-white">Guest Login</h1>
-        <LoginForm />
-        <div className="mt-8 text-center space-y-4 font-body text-sm text-white/60">
+    <TropicaAuthShell
+      eyebrow="Members Lounge"
+      title="Welcome back"
+      subtitle="Sign in to manage your reservations, parties and guest passes."
+      footer={
+        <div className="space-y-4 text-center">
           <p>
             No account?{" "}
-            <Link href="/register" className="text-[#C8A96A] hover:text-white transition-colors uppercase tracking-widest text-[10px] font-bold">
-              Register
+            <Link href="/register" className="text-[#E0C68E] hover:text-white transition-colors uppercase tracking-widest text-[10px] font-bold">
+              Become a member
             </Link>
           </p>
-          <div className="pt-3 border-t border-white/10 flex flex-wrap items-center justify-center gap-3 text-[10px] uppercase font-bold tracking-widest">
+          <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] uppercase font-bold tracking-widest">
             <Link href="/partner?tab=login" className="text-[#C8A96A] hover:text-white transition-colors">
               Promoter Login
             </Link>
@@ -57,7 +47,9 @@ export default function LoginPage() {
             </Link>
           </div>
         </div>
-      </div>
-    </div>
+      }
+    >
+      <LoginForm />
+    </TropicaAuthShell>
   );
 }

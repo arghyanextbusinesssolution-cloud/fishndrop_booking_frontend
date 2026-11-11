@@ -193,6 +193,7 @@ export function TimePickerField({
   value,
   onChange,
   minMinutes,
+  blockedReason,
   badge,
   placeholder = "Select time",
   id
@@ -200,6 +201,8 @@ export function TimePickerField({
   value: string;
   onChange: (v: string) => void;
   minMinutes?: number; // slots strictly before this are disabled
+  /** Return a short reason (e.g. "Booked") to disable a slot, or undefined when it's free. */
+  blockedReason?: (t: string) => string | undefined;
   badge?: string;
   placeholder?: string;
   id?: string;
@@ -230,7 +233,9 @@ export function TimePickerField({
       {open && (
         <div ref={listRef} role="listbox" className={`${popover} left-0 right-0 max-h-64 overflow-y-auto p-1.5`}>
           {SLOTS.map((t) => {
-            const disabled = minMinutes !== undefined && toMinutes(t) < minMinutes;
+            const past = minMinutes !== undefined && toMinutes(t) < minMinutes;
+            const reason = past ? undefined : blockedReason?.(t);
+            const disabled = past || !!reason;
             const selected = t === value;
             return (
               <button
@@ -245,7 +250,7 @@ export function TimePickerField({
                   onChange(t);
                   setOpen(false);
                 }}
-                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
+                className={`w-full flex items-center justify-between gap-2 text-left px-3 py-2 rounded-lg text-sm transition-colors ${
                   selected
                     ? "bg-[#C8A96A] text-[#0a120e] font-bold"
                     : disabled
@@ -253,7 +258,10 @@ export function TimePickerField({
                     : "text-white/85 hover:bg-[#C8A96A]/15 cursor-pointer"
                 }`}
               >
-                {fmt12(t)}
+                <span className={reason && !selected ? "line-through" : ""}>{fmt12(t)}</span>
+                {reason && !selected && (
+                  <span className="text-[9px] uppercase tracking-wider font-bold text-red-400/60 no-underline">{reason}</span>
+                )}
               </button>
             );
           })}

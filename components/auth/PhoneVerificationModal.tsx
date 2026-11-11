@@ -210,7 +210,7 @@ export function PhoneVerificationModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-[#0c1612] border border-[#C8A96A]/40 rounded-2xl shadow-2xl p-6 sm:p-8 overflow-hidden text-white">
+      <div className="relative w-full max-w-md bg-gradient-to-b from-[#1a140c] via-[#0e0b07] to-[#090705] border border-[#C8A96A]/55 rounded-3xl shadow-[0_0_70px_-12px_rgba(224,184,110,0.55),inset_0_1px_0_rgba(255,235,190,0.18)] p-6 sm:p-8 overflow-hidden text-white">
         {/* Top Accent Line */}
         <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#C8A96A] to-transparent" />
 
@@ -288,7 +288,7 @@ export function PhoneVerificationModal({
                     className="bg-transparent text-sm font-bold text-[#E8CB8A] pl-2 pr-3 py-2 outline-none cursor-pointer appearance-none"
                   >
                     {COUNTRY_OPTIONS.map((c) => (
-                      <option key={c.id} value={c.id} className="bg-[#0c1612] text-white">
+                      <option key={c.id} value={c.id} className="bg-[#140f09] text-white">
                         {c.flag} {c.label}
                       </option>
                     ))}
