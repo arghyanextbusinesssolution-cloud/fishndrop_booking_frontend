@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ─────────────────────────────────────────────────────────────
@@ -19,6 +22,14 @@ export const tropicaInputBare =
 export const tropicaLabel = "block text-[11px] font-bold uppercase tracking-[0.18em] text-[#E0C68E]/80 mb-1.5";
 export const tropicaGoldButton =
   "w-full inline-flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-gradient-to-b from-[#F1D9A0] via-[#D9B872] to-[#B8934E] text-[#1a1208] text-xs font-black uppercase tracking-[0.18em] shadow-[0_8px_28px_-6px_rgba(224,184,110,0.6),inset_0_1px_0_rgba(255,245,215,0.7)] hover:brightness-110 active:scale-[0.99] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer";
+export const tropicaOtpInput =
+  "w-full text-center tracking-[0.6em] font-mono text-3xl font-black text-[#F1D9A0] rounded-xl bg-black/55 border border-[#C8A96A]/30 focus:border-[#E0C68E] focus:shadow-[0_0_0_3px_rgba(200,169,106,0.15)] py-3 outline-none placeholder:text-white/20";
+/** Selectable pill (e.g. country code). */
+export const tropicaChip = (active: boolean) =>
+  cn(
+    "flex-1 rounded-xl border py-2 text-xs font-bold cursor-pointer transition-all",
+    active ? "border-[#E0C68E] bg-[#C8A96A]/15 text-[#F1D9A0] shadow-[0_0_14px_-4px_rgba(224,184,110,0.6)]" : "border-[#C8A96A]/20 bg-black/40 text-white/60 hover:text-white"
+  );
 export const tropicaGhostButton =
   "w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-[#C8A96A]/40 bg-black/40 text-[#E0C68E] text-xs font-bold uppercase tracking-[0.15em] hover:bg-[#C8A96A]/10 hover:border-[#E0C68E] transition-all cursor-pointer";
 
@@ -125,7 +136,25 @@ function Stanchion({ className }: { className?: string }) {
   );
 }
 
-function LoungeBackdrop() {
+/** Gold-framed glass panel (same look as the auth / popup card) for content pages. */
+export function TropicaPanel({ className, children }: { className?: string; children: ReactNode }) {
+  return (
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-3xl border border-[#C8A96A]/55",
+        "bg-gradient-to-b from-[#1a140c]/85 via-[#0e0b07]/90 to-[#090705]/95 backdrop-blur-xl",
+        "shadow-[0_0_70px_-12px_rgba(224,184,110,0.5),0_30px_60px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,235,190,0.18)]",
+        className
+      )}
+    >
+      <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#F1D9A0] to-transparent" />
+      <div className="absolute inset-[5px] rounded-[1.25rem] border border-[#C8A96A]/15 pointer-events-none" />
+      <div className="relative">{children}</div>
+    </div>
+  );
+}
+
+export function LoungeBackdrop() {
   return (
     <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
       {/* teak slat wall */}
@@ -173,6 +202,77 @@ interface TropicaAuthShellProps {
   children: ReactNode;
 }
 
+function TropicaLogo({ tagline, linked = true }: { tagline: string; linked?: boolean }) {
+  const inner = (
+    <>
+      <div className="relative h-20 w-36 sm:h-24 sm:w-44 drop-shadow-[0_0_18px_rgba(255,190,90,0.45)] transition-transform duration-300 group-hover:scale-105">
+        <Image src="/tropica-logo.png" alt="Tropica" fill priority className="object-contain" />
+      </div>
+      <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.45em] text-[#E0C68E]/85 text-center">{tagline}</span>
+    </>
+  );
+  return linked ? (
+    <Link href="/" className="group flex flex-col items-center gap-2">
+      {inner}
+    </Link>
+  ) : (
+    <div className="flex flex-col items-center gap-2">{inner}</div>
+  );
+}
+
+interface GoldCardProps {
+  eyebrow?: ReactNode;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  footer?: ReactNode;
+  width: string;
+  /** Heading level: pages use h1, popups use h2. */
+  as?: "h1" | "h2";
+  onClose?: () => void;
+  closeDisabled?: boolean;
+  children: ReactNode;
+}
+
+function GoldCard({ eyebrow, title, subtitle, footer, width, as: H = "h1", onClose, closeDisabled, children }: GoldCardProps) {
+  return (
+    <div
+      onClick={(e) => e.stopPropagation()}
+      className={cn(
+        "relative mt-6 w-full overflow-hidden rounded-3xl border border-[#C8A96A]/55",
+        "bg-gradient-to-b from-[#1a140c]/85 via-[#0e0b07]/90 to-[#090705]/95 backdrop-blur-xl",
+        "shadow-[0_0_70px_-12px_rgba(224,184,110,0.55),0_30px_60px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,235,190,0.18)]",
+        width
+      )}
+    >
+      <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#F1D9A0] to-transparent" />
+      <div className="absolute inset-[5px] rounded-[1.25rem] border border-[#C8A96A]/15 pointer-events-none" />
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={closeDisabled}
+          aria-label="Close"
+          className="absolute top-3.5 right-3.5 z-10 p-1.5 rounded-full text-white/50 hover:text-white hover:bg-white/10 cursor-pointer disabled:opacity-40"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      )}
+
+      <div className="relative p-6 sm:p-8 space-y-6">
+        <div className="text-center space-y-2">
+          {eyebrow && <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.35em] text-[#E0C68E] px-6">{eyebrow}</p>}
+          <H className="font-headline text-3xl sm:text-4xl font-bold text-white">{title}</H>
+          {subtitle && <p className="text-xs sm:text-sm text-white/60 max-w-sm mx-auto">{subtitle}</p>}
+        </div>
+
+        {children}
+
+        {footer && <div className="pt-5 border-t border-[#C8A96A]/15 text-xs text-white/55">{footer}</div>}
+      </div>
+    </div>
+  );
+}
+
 export function TropicaAuthShell({ eyebrow, title, subtitle, tagline = "Private Event Space", size = "md", footer, children }: TropicaAuthShellProps) {
   const width = size === "xl" ? "max-w-2xl" : size === "lg" ? "max-w-lg" : "max-w-md";
   return (
@@ -180,39 +280,57 @@ export function TropicaAuthShell({ eyebrow, title, subtitle, tagline = "Private 
       <LoungeBackdrop />
 
       <main className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-10 sm:py-14">
-        {/* Logo */}
-        <Link href="/" className="group flex flex-col items-center gap-2">
-          <div className="relative h-20 w-36 sm:h-24 sm:w-44 drop-shadow-[0_0_18px_rgba(255,190,90,0.45)] transition-transform duration-300 group-hover:scale-105">
-            <Image src="/tropica-logo.png" alt="Tropica" fill priority className="object-contain" />
-          </div>
-          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.45em] text-[#E0C68E]/85">{tagline}</span>
-        </Link>
-
-        {/* Card */}
-        <div
-          className={cn(
-            "relative mt-6 w-full overflow-hidden rounded-3xl border border-[#C8A96A]/55",
-            "bg-gradient-to-b from-[#1a140c]/85 via-[#0e0b07]/90 to-[#090705]/95 backdrop-blur-xl",
-            "shadow-[0_0_70px_-12px_rgba(224,184,110,0.55),0_30px_60px_-20px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,235,190,0.18)]",
-            width
-          )}
-        >
-          <div className="absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#F1D9A0] to-transparent" />
-          <div className="absolute inset-[5px] rounded-[1.25rem] border border-[#C8A96A]/15 pointer-events-none" />
-
-          <div className="relative p-6 sm:p-8 space-y-6">
-            <div className="text-center space-y-2">
-              {eyebrow && <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.35em] text-[#E0C68E]">{eyebrow}</p>}
-              <h1 className="font-headline text-3xl sm:text-4xl font-bold text-white">{title}</h1>
-              {subtitle && <p className="text-xs sm:text-sm text-white/60 max-w-sm mx-auto">{subtitle}</p>}
-            </div>
-
-            {children}
-
-            {footer && <div className="pt-5 border-t border-[#C8A96A]/15 text-xs text-white/55">{footer}</div>}
-          </div>
-        </div>
+        <TropicaLogo tagline={tagline} />
+        <GoldCard eyebrow={eyebrow} title={title} subtitle={subtitle} footer={footer} width={width}>
+          {children}
+        </GoldCard>
       </main>
+    </div>
+  );
+}
+
+interface TropicaPopupProps {
+  eyebrow?: ReactNode;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  footer?: ReactNode;
+  tagline?: string;
+  /** Accessible name for the dialog. */
+  label: string;
+  onClose: () => void;
+  /** Blocks closing (e.g. while a request is in flight). */
+  busy?: boolean;
+  children: ReactNode;
+}
+
+/** Full-screen lounge popup (lanterns, palms, gold card) used for invitation / ticket join flows. */
+export function TropicaPopup({ eyebrow, title, subtitle, footer, tagline = "Private Event Space", label, onClose, busy, children }: TropicaPopupProps) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && !busy && onClose();
+    window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [busy, onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[80] overflow-y-auto bg-[#0b0704] text-white animate-in fade-in duration-300"
+      role="dialog"
+      aria-modal="true"
+      aria-label={label}
+      onClick={() => !busy && onClose()}
+    >
+      <LoungeBackdrop />
+      <div className="relative z-10 flex min-h-full flex-col items-center justify-center px-4 py-10">
+        <TropicaLogo tagline={tagline} linked={false} />
+        <GoldCard eyebrow={eyebrow} title={title} subtitle={subtitle} footer={footer} width="max-w-md" as="h2" onClose={() => !busy && onClose()} closeDisabled={busy}>
+          {children}
+        </GoldCard>
+      </div>
     </div>
   );
 }
