@@ -60,8 +60,8 @@ const SidebarItem = ({
     className={cn(
       "flex items-center gap-3.5 px-7 py-3.5 w-full transition-all duration-500 group relative",
       active
-        ? "bg-[#0a2e21] text-[#C8A96A]"
-        : "text-[#C8A96A]/50 hover:text-[#C8A96A] hover:bg-[#0a2e21]/60"
+        ? "bg-gradient-to-r from-[#C8A96A]/20 via-[#C8A96A]/[0.08] to-transparent text-[#F1D9A0]"
+        : "text-[#C8A96A]/60 hover:text-[#E0C68E] hover:bg-[#C8A96A]/[0.07]"
     )}
   >
     {active && (
@@ -70,14 +70,14 @@ const SidebarItem = ({
     <Icon
       className={cn(
         "w-5 h-5 shrink-0 transition-colors duration-500",
-        active ? "text-[#C8A96A]" : "text-[#C8A96A]/40 group-hover:text-[#C8A96A]"
+        active ? "text-[#F1D9A0] drop-shadow-[0_0_6px_rgba(255,190,90,0.6)]" : "text-[#C8A96A]/45 group-hover:text-[#E0C68E]"
       )}
       strokeWidth={1.5}
     />
     <span
       className={cn(
         "text-[13px] uppercase tracking-[0.1em] font-bold leading-snug",
-        active ? "text-[#C8A96A]" : "text-[#C8A96A]/50"
+        active ? "text-[#F1D9A0]" : "text-[#C8A96A]/65 group-hover:text-[#E0C68E]"
       )}
     >
       {label}
@@ -207,9 +207,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="flex min-h-screen relative" style={{ backgroundColor: '#0F3D2E' }}>
+    <div className="flex min-h-screen relative bg-[#0b0704]">
+      {/* Warm teak-and-lantern backdrop (same theme as sign in / invitations) */}
+      <div className="pointer-events-none fixed inset-0 z-0" aria-hidden>
+        <div className="absolute inset-0 opacity-[0.35] bg-[repeating-linear-gradient(90deg,#2b1a0e_0px,#3a2414_14px,#24150b_30px,#0d0805_32px,#0d0805_34px)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_60%_0%,rgba(255,176,80,0.12),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.75)_100%)]" />
+      </div>
       {/* Mobile Top Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 border-b border-[#C8A96A]/15 z-40 flex items-center justify-between px-4 sm:px-6 backdrop-blur-md" style={{ backgroundColor: '#0a2e21' }}>
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 border-b border-[#C8A96A]/15 z-40 flex items-center justify-between px-4 sm:px-6 backdrop-blur-md bg-[#100a05]/95">
         <Link
           href="/"
           className="flex items-center focus:outline-none"
@@ -250,10 +256,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "w-72 flex flex-col py-12 fixed h-screen overflow-y-auto z-50 transition-transform duration-500 lg:translate-x-0 tracking-tight border-r border-[#C8A96A]/10",
+          "w-72 flex flex-col py-12 fixed h-screen overflow-y-auto z-50 transition-transform duration-500 lg:translate-x-0 tracking-tight border-r border-[#C8A96A]/25 bg-gradient-to-b from-[#150e07] via-[#0f0a05] to-[#0a0603] shadow-[8px_0_40px_-12px_rgba(0,0,0,0.8)]",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
-        style={{ backgroundColor: '#0a2e21' }}
       >
         <div className="px-8 mb-16 hidden lg:block">
           <Link
@@ -273,9 +278,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="px-8 mt-4 lg:mt-0 mb-12 flex items-center gap-4 group cursor-pointer text-left">
-          <div className="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center overflow-hidden ambient-shadow">
+          <div className="w-12 h-12 rounded-full border border-[#C8A96A]/40 bg-[#C8A96A]/10 flex items-center justify-center overflow-hidden shadow-[0_0_18px_-6px_rgba(255,190,90,0.6)]">
             <UserCircle
-              className="w-7 h-7 text-on-surface-variant"
+              className="w-7 h-7 text-[#E0C68E]"
               strokeWidth={1}
             />
           </div>
@@ -332,7 +337,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           )}
         </nav>
 
-        <div className="px-8 mt-auto pt-12 border-t border-outline-variant/10">
+        <div className="px-8 mt-auto pt-8 border-t border-[#C8A96A]/15">
           <button
             onClick={handleLogout}
             className="flex items-center gap-4 text-[#C8A96A]/40 hover:text-error group transition-colors duration-500 w-full"
@@ -346,7 +351,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-grow lg:ml-72 min-h-screen pt-16 lg:pt-0 overflow-x-auto">
+      <main className="relative z-10 flex-grow lg:ml-72 min-h-screen pt-16 lg:pt-0 overflow-x-auto">
         {children}
       </main>
     </div>

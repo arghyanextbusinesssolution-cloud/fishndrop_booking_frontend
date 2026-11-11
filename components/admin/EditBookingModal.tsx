@@ -100,7 +100,7 @@ export function EditBookingModal({ booking: b, onClose, onSaved }: Props) {
       <form
         onSubmit={save}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-2xl border border-[#C8A96A]/30 bg-[#0c1612] p-5 sm:p-6 text-white space-y-5 shadow-2xl"
+        className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto rounded-2xl border border-[#C8A96A]/45 bg-gradient-to-b from-[#1a140c] via-[#0e0b07] to-[#090705] p-5 sm:p-6 text-white space-y-5 shadow-2xl"
       >
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -174,7 +174,7 @@ export function EditBookingModal({ booking: b, onClose, onSaved }: Props) {
               <label htmlFor="eb-occasion" className={label}>Occasion</label>
               <select id="eb-occasion" value={form.occasion} onChange={set("occasion")} className={`${field} capitalize cursor-pointer`}>
                 {occasions.map((o) => (
-                  <option key={o} value={o} className="bg-[#0c1612]">
+                  <option key={o} value={o} className="bg-[#140f09]">
                     {nice(o)}
                   </option>
                 ))}
