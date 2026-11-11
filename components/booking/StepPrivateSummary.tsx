@@ -72,7 +72,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
     djPrice: 300,
     photographerBasePrice: 300,
     photographerExtraHourPrice: 150,
-    minDepositAmount: 200,
+    minDepositAmount: 300,
   });
 
   useEffect(() => {
@@ -84,7 +84,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
           djPrice: data.djPrice || 300,
           photographerBasePrice: data.photographerBasePrice || 300,
           photographerExtraHourPrice: data.photographerExtraHourPrice || 150,
-          minDepositAmount: data.minDepositAmount || 200,
+          minDepositAmount: data.minDepositAmount || 300,
         });
       }
     }).catch(() => {});
@@ -856,7 +856,7 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
               onClick={() => setShowPolicyModal(true)}
               className="text-[10px] sm:text-[11px] text-[#C8A96A] underline font-semibold flex items-center justify-center gap-1.5 w-full hover:text-[#0F4C3A]"
             >
-              View Booking &amp; Payment Policy ($200 Deposit / 48-Hour Refund)
+              View Booking &amp; Payment Policy (${minDeposit} Deposit / 48-Hour Refund)
             </button>
 
             {paymentMethod === "zelle" ? (

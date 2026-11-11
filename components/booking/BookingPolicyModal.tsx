@@ -46,7 +46,7 @@ export const BookingPolicyModal = ({
 
   if (!isOpen || !mounted) return null;
 
-  const depositVal = amount !== undefined ? amount : 200;
+  const depositVal = amount !== undefined ? amount : 300;
   const totalVal = totalPrice !== undefined ? totalPrice : (500 + (durationHours > 5 ? (durationHours - 5) * 125 : 0));
   const remainingVal = remainingBalance !== undefined ? remainingBalance : Math.max(0, totalVal - depositVal);
 

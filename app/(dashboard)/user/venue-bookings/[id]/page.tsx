@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/axios";
 import { ShareInviteModal } from "@/components/booking/ShareInviteModal";
-import { formatTimeTo12Hour } from "@/lib/utils";
+import { formatTimeTo12Hour, toCurrentSiteUrl } from "@/lib/utils";
 import toast, { Toaster } from "react-hot-toast";
 import {
   Users,
@@ -79,7 +79,7 @@ export default function BookingGuestsPage() {
       setLoading(true);
       const res = await api.get(`/invitations/booking/${bookingId}/guests`);
       if (res.data.success) {
-        setData(res.data);
+        setData({ ...res.data, inviteLink: toCurrentSiteUrl(res.data.inviteLink) });
       } else {
         toast.error(res.data.message || "Failed to load guest passes");
       }

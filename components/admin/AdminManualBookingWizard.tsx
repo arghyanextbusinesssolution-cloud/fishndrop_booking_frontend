@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import api from "@/lib/axios";
-import { cn } from "@/lib/utils";
+import { cn, toCurrentSiteUrl } from "@/lib/utils";
 import {
   User,
   Phone,
@@ -43,10 +43,10 @@ interface SlotData {
 export function AdminManualBookingWizard() {
   const router = useRouter();
 
-  // Wizard Steps: 1 = Customer, 2 = Venue Schedule & Slot, 3 = Payment & Balance, 4 = Review, 5 = Confirmed
+  // Wizard Steps: 1 = Venue Schedule & Slot, 2 = Customer (phone, OTP, password), 3 = Payment & Balance, 4 = Review, 5 = Confirmed
   const [currentStep, setCurrentStep] = useState<number>(1);
 
-  // ── Step 1: Customer Details ───────────────────────────────
+  // ── Step 2: Customer Details ───────────────────────────────
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
@@ -58,10 +58,25 @@ export function AdminManualBookingWizard() {
     name?: string;
     email?: string;
     phone?: string;
+    role?: string;
+    hasPassword?: boolean;
     pastBookingsCount?: number;
   } | null>(null);
 
-  // ── Step 2: Venue Event Schedule & Slot ────────────────────
+  // Phone OTP verification (code goes to the customer's phone; admin types it in)
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpSkipped, setOtpSkipped] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+
+  // Login password the admin creates / updates for the customer (phone + password login)
+  const [customerPassword, setCustomerPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  // ── Step 1: Venue Event Schedule & Slot ────────────────────
   const [bookingDate, setBookingDate] = useState<string>(() => {
     const today = new Date();
     return today.toISOString().split("T")[0];
@@ -90,7 +105,7 @@ export function AdminManualBookingWizard() {
 
   // ── Step 3: Venue Pricing & Remaining Balance ──────────────
   const [customTotalAmount, setCustomTotalAmount] = useState<number>(500);
-  const [paidAmount, setPaidAmount] = useState<number>(200); // Standard deposit default
+  const [paidAmount, setPaidAmount] = useState<number>(300); // Standard deposit default (venue minimum)
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "card" | "zelle" | "bank_transfer" | "other">("cash");
   const [paymentPreset, setPaymentPreset] = useState<"full" | "deposit" | "unpaid" | "custom">("deposit");
   const [paymentNotes, setPaymentNotes] = useState<string>("");
@@ -101,6 +116,8 @@ export function AdminManualBookingWizard() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [createdBooking, setCreatedBooking] = useState<any>(null);
   const [accountCreatedFlag, setAccountCreatedFlag] = useState<boolean>(false);
+  const [passwordSetFlag, setPasswordSetFlag] = useState<boolean>(false);
+  const [inviteLink, setInviteLink] = useState<string>("");
 
   // Duration base prices map — $100 per hour
   const durationBasePriceMap: Record<number, number> = {
@@ -125,7 +142,7 @@ export function AdminManualBookingWizard() {
     if (paymentPreset === "full") {
       setPaidAmount(base);
     } else if (paymentPreset === "deposit") {
-      setPaidAmount(Math.min(200, base));
+      setPaidAmount(Math.min(300, base));
     } else if (paymentPreset === "unpaid") {
       setPaidAmount(0);
     }
@@ -137,7 +154,7 @@ export function AdminManualBookingWizard() {
     if (preset === "full") {
       setPaidAmount(customTotalAmount);
     } else if (preset === "deposit") {
-      setPaidAmount(Math.min(200, customTotalAmount));
+      setPaidAmount(Math.min(300, customTotalAmount));
     } else if (preset === "unpaid") {
       setPaidAmount(0);
     }
@@ -172,6 +189,12 @@ export function AdminManualBookingWizard() {
 
   // Customer phone live lookup (at least 10 digits)
   useEffect(() => {
+    // A new number needs a fresh OTP
+    setOtpSent(false);
+    setOtpCode("");
+    setOtpVerified(false);
+    setOtpSkipped(false);
+
     const clean = customerPhone.replace(/\D/g, "");
     if (clean.length >= 10) {
       let active = true;
@@ -186,6 +209,8 @@ export function AdminManualBookingWizard() {
               name: res.data.user.name,
               email: res.data.user.email,
               phone: res.data.user.phone,
+              role: res.data.user.role,
+              hasPassword: Boolean(res.data.user.hasPassword),
               pastBookingsCount: res.data.user.pastBookingsCount
             });
             if (!customerName && res.data.user.name) {
@@ -255,19 +280,51 @@ export function AdminManualBookingWizard() {
 
   const activeSlot = useCustomTime ? customTimeSlot : selectedSlot;
 
+  const phoneDigits = customerPhone.replace(/\D/g, "");
+  const isStaffAccount = Boolean(existingCustomer?.exists && existingCustomer.role && existingCustomer.role !== "user");
+
+  // Send the 4-digit code to the customer's phone
+  const handleSendOtp = async () => {
+    if (phoneDigits.length < 10) {
+      toast.error("Enter a valid phone number first");
+      return;
+    }
+    setSendingOtp(true);
+    try {
+      const res = await api.post("/auth/send-otp", { phone: customerPhone.trim() });
+      setOtpSent(true);
+      setOtpCode("");
+      toast.success("Verification code sent to the customer's phone");
+      if (res.data?.devCode) toast(`Dev code: ${res.data.devCode}`, { icon: "🔑" });
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to send verification code");
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  // Check the code without logging the admin in as the customer
+  const handleVerifyOtp = async () => {
+    if (otpCode.trim().length !== 4) {
+      toast.error("Enter the 4-digit code");
+      return;
+    }
+    setVerifyingOtp(true);
+    try {
+      await api.post("/admin/customers/verify-otp", { phone: customerPhone.trim(), otp: otpCode.trim() });
+      setOtpVerified(true);
+      setOtpSkipped(false);
+      toast.success("Phone number verified");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Invalid or expired code");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
   // Validation before proceeding
   const handleNextStep = () => {
     if (currentStep === 1) {
-      if (!customerPhone.trim()) {
-        toast.error("Please enter a customer phone number");
-        return;
-      }
-      if (!customerName.trim()) {
-        toast.error("Please enter the customer / event organizer's name");
-        return;
-      }
-      setCurrentStep(2);
-    } else if (currentStep === 2) {
       if (!bookingDate) {
         toast.error("Please select an event date");
         return;
@@ -275,6 +332,38 @@ export function AdminManualBookingWizard() {
       if (!activeSlot) {
         toast.error("Please select or enter an event start time slot");
         return;
+      }
+      if (!partySize || partySize < 2) {
+        toast.error("Please enter the number of guests");
+        return;
+      }
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      if (phoneDigits.length < 10) {
+        toast.error("Please enter a valid customer phone number");
+        return;
+      }
+      if (!otpVerified && !otpSkipped) {
+        toast.error("Verify the customer's phone with the OTP code, or choose to skip verification");
+        return;
+      }
+      if (!customerName.trim()) {
+        toast.error("Please enter the customer / event organizer's name");
+        return;
+      }
+      if (customerPassword) {
+        if (isStaffAccount) {
+          toast.error("This number belongs to a staff/admin account — its password can't be set here");
+          return;
+        }
+        if (customerPassword.length < 6) {
+          toast.error("Password must be at least 6 characters");
+          return;
+        }
+        if (customerPassword !== confirmPassword) {
+          toast.error("Passwords do not match");
+          return;
+        }
       }
       setCurrentStep(3);
     } else if (currentStep === 3) {
@@ -303,6 +392,7 @@ export function AdminManualBookingWizard() {
         customerPhone: customerPhone.trim(),
         customerName: customerName.trim(),
         customerEmail: customerEmail.trim() || undefined,
+        customerPassword: customerPassword || undefined,
         notes: [companyName ? `Company: ${companyName}` : "", notes.trim()].filter(Boolean).join(" | "),
         bookingDate,
         bookingTime: activeSlot,
@@ -333,6 +423,8 @@ export function AdminManualBookingWizard() {
         toast.success("Venue booking confirmed! Event time slot has been locked.");
         setCreatedBooking(res.data.booking);
         setAccountCreatedFlag(Boolean(res.data.accountCreated));
+        setPasswordSetFlag(Boolean(res.data.passwordSet));
+        setInviteLink(toCurrentSiteUrl(res.data.inviteLink));
         setCurrentStep(5);
       } else {
         toast.error(res.data?.message || "Booking creation failed");
@@ -364,12 +456,20 @@ export function AdminManualBookingWizard() {
     setPaymentDeadline("72_hours_before");
     setPartySize(25);
     setCustomTotalAmount(500);
-    setPaidAmount(200);
+    setPaidAmount(300);
     setPaymentPreset("deposit");
     setPaymentNotes("");
     setTransactionId("");
     setForceOverride(false);
     setCreatedBooking(null);
+    setOtpSent(false);
+    setOtpCode("");
+    setOtpVerified(false);
+    setOtpSkipped(false);
+    setCustomerPassword("");
+    setConfirmPassword("");
+    setPasswordSetFlag(false);
+    setInviteLink("");
   };
 
   return (
@@ -382,14 +482,14 @@ export function AdminManualBookingWizard() {
               <Building2 className="w-3.5 h-3.5" /> Venue Buyout & Event Management
             </span>
             <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
-              No OTP Required
+              Manual Entry · No Card Payment
             </span>
           </div>
           <h1 className="font-headline text-3xl md:text-4xl text-on-surface italic font-serif">
             Book Venue (Exclusive Buyout)
           </h1>
           <p className="text-sm text-secondary font-light">
-            Reserve the entire Tropica venue for private events, lock the time slot, create customer accounts without OTP, and record deposits with live remaining balance calculation.
+            Pick the date and time slot, verify the customer's phone, set their login password, and record whatever they paid manually. The customer logs in with phone + password and gets the guest share link in their account.
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -407,8 +507,8 @@ export function AdminManualBookingWizard() {
       {currentStep < 5 && (
         <div className="grid grid-cols-4 gap-2 text-xs font-medium">
           {[
-            { step: 1, label: "1. Customer", desc: "Phone & Account" },
-            { step: 2, label: "2. Venue Slot", desc: "Date, Time, Hours" },
+            { step: 1, label: "1. Venue Slot", desc: "Date, Time, Guests" },
+            { step: 2, label: "2. Customer", desc: "Phone, OTP, Password" },
             { step: 3, label: "3. Balance Due", desc: "Deposit & Balance" },
             { step: 4, label: "4. Review", desc: "Lock Venue" }
           ].map((item) => (
@@ -441,9 +541,9 @@ export function AdminManualBookingWizard() {
       )}
 
       {/* ───────────────────────────────────────────────────────── */}
-      {/* STEP 1: CUSTOMER & HOST DETAILS                           */}
+      {/* STEP 2: CUSTOMER — PHONE, OTP, DETAILS, PASSWORD         */}
       {/* ───────────────────────────────────────────────────────── */}
-      {currentStep === 1 && (
+      {currentStep === 2 && (
         <div className="bg-surface-container-lowest border border-outline-variant/20 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
           <div className="flex items-center justify-between border-b border-outline-variant/15 pb-4">
             <div>
@@ -452,7 +552,7 @@ export function AdminManualBookingWizard() {
                 Customer & Event Host Information
               </h2>
               <p className="text-xs text-secondary mt-0.5">
-                Enter the host's phone number. The user account is automatically created without OTP verification, or attached to their existing account.
+                Enter the host's phone number and verify it with the OTP code. Existing customers' details load automatically; new customers get an account created.
               </p>
             </div>
             <div className="px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-[10px] font-bold uppercase tracking-wider hidden sm:block">
@@ -500,11 +600,77 @@ export function AdminManualBookingWizard() {
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-2.5 text-xs text-blue-900 animate-fadeIn">
                   <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold">New User Account (OTP-Free):</span>
+                    <span className="font-bold">New Customer Account:</span>
                     <p className="mt-0.5 text-blue-800">
-                      An account will be instantly registered using this phone number. No OTP verification needed.
+                      An account will be created for this phone number when the booking is confirmed.
                     </p>
                   </div>
+                </div>
+              )}
+
+              {/* OTP Verification */}
+              {phoneDigits.length >= 10 && (
+                <div className="p-3 rounded-xl border border-outline-variant/30 bg-surface space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-on-surface flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Phone Verification (OTP)
+                    </span>
+                    {otpVerified && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" /> Verified
+                      </span>
+                    )}
+                    {otpSkipped && !otpVerified && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700">Skipped</span>
+                    )}
+                  </div>
+
+                  {!otpVerified && (
+                    <>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleSendOtp}
+                          disabled={sendingOtp}
+                          className="shrink-0 px-3 py-2 rounded-lg bg-emerald-600 text-white text-[11px] font-bold uppercase tracking-wider hover:bg-emerald-500 disabled:opacity-50 flex items-center gap-1.5"
+                        >
+                          {sendingOtp && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                          {otpSent ? "Resend Code" : "Send Code"}
+                        </button>
+                        {otpSent && (
+                          <>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={4}
+                              placeholder="4-digit code"
+                              value={otpCode}
+                              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                              className="w-full min-w-0 px-3 py-2 rounded-lg border border-outline-variant/40 bg-surface-container-lowest text-sm font-mono tracking-[0.3em] text-on-surface focus:outline-none focus:border-emerald-600"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleVerifyOtp}
+                              disabled={verifyingOtp || otpCode.length !== 4}
+                              className="shrink-0 px-3 py-2 rounded-lg border border-emerald-600 text-emerald-700 text-[11px] font-bold uppercase tracking-wider hover:bg-emerald-50 disabled:opacity-50 flex items-center gap-1.5"
+                            >
+                              {verifyingOtp && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                              Verify
+                            </button>
+                          </>
+                        )}
+                      </div>
+                      <label className="flex items-center gap-2 text-[11px] text-secondary cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={otpSkipped}
+                          onChange={(e) => setOtpSkipped(e.target.checked)}
+                          className="w-3.5 h-3.5 text-emerald-600 rounded"
+                        />
+                        Customer isn&apos;t here to read the code — skip verification
+                      </label>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -575,15 +741,72 @@ export function AdminManualBookingWizard() {
                 className="w-full px-4 py-2.5 rounded-xl border border-outline-variant/40 bg-surface focus:outline-none focus:border-emerald-600 font-body text-sm text-on-surface"
               />
             </div>
+
+            {/* Customer Login Password */}
+            <div className="col-span-full p-4 rounded-xl border border-outline-variant/30 bg-surface space-y-3">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-on-surface flex items-center gap-1.5">
+                  <Lock className="w-4 h-4 text-emerald-600" />
+                  {existingCustomer?.exists && existingCustomer.hasPassword ? "Update Login Password (Optional)" : "Create Login Password (Optional)"}
+                </span>
+                <p className="text-[11px] text-secondary mt-0.5">
+                  {isStaffAccount
+                    ? "This number belongs to a staff/admin account — its password can't be changed here."
+                    : existingCustomer?.exists && existingCustomer.hasPassword
+                    ? "This customer already has a password. Leave blank to keep it, or type a new one to replace it."
+                    : "The customer will sign in with their phone number and this password. Leave blank to let them sign in with SMS code only."}
+                </p>
+              </div>
+              {!isStaffAccount && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-outline absolute left-3.5 top-3" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="New password (min 6 characters)"
+                      autoComplete="new-password"
+                      value={customerPassword}
+                      onChange={(e) => setCustomerPassword(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 rounded-xl border border-outline-variant/40 bg-surface-container-lowest focus:outline-none focus:border-emerald-600 text-sm text-on-surface"
+                    />
+                  </div>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Confirm password"
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-4 py-2 rounded-xl border border-outline-variant/40 bg-surface-container-lowest focus:outline-none focus:border-emerald-600 text-sm text-on-surface"
+                  />
+                  <label className="flex items-center gap-2 text-[11px] text-secondary cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={showPassword}
+                      onChange={(e) => setShowPassword(e.target.checked)}
+                      className="w-3.5 h-3.5 text-emerald-600 rounded"
+                    />
+                    Show password
+                  </label>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="flex justify-end pt-4 border-t border-outline-variant/15">
+          <div className="flex justify-between pt-4 border-t border-outline-variant/15">
+            <button
+              type="button"
+              onClick={() => setCurrentStep(1)}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-outline-variant/30 text-xs font-bold uppercase tracking-wider text-secondary hover:bg-surface-container"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back</span>
+            </button>
             <button
               type="button"
               onClick={handleNextStep}
               className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider hover:bg-emerald-500 transition-all shadow-md"
             >
-              <span>Next: Venue Schedule & Time Slot</span>
+              <span>Next: Payment Entry</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -591,9 +814,9 @@ export function AdminManualBookingWizard() {
       )}
 
       {/* ───────────────────────────────────────────────────────── */}
-      {/* STEP 2: VENUE SCHEDULE & TIME SLOTS                       */}
+      {/* STEP 1: VENUE SCHEDULE & TIME SLOTS                       */}
       {/* ───────────────────────────────────────────────────────── */}
-      {currentStep === 2 && (
+      {currentStep === 1 && (
         <div className="bg-surface-container-lowest border border-outline-variant/20 rounded-2xl p-6 md:p-8 space-y-6 shadow-sm">
           <div className="flex items-center justify-between border-b border-outline-variant/15 pb-4">
             <div>
@@ -939,21 +1162,13 @@ export function AdminManualBookingWizard() {
             </div>
           </div>
 
-          <div className="flex justify-between pt-4 border-t border-outline-variant/15">
-            <button
-              type="button"
-              onClick={() => setCurrentStep(1)}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-outline-variant/30 text-xs font-bold uppercase tracking-wider text-secondary hover:bg-surface-container"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back</span>
-            </button>
+          <div className="flex justify-end pt-4 border-t border-outline-variant/15">
             <button
               type="button"
               onClick={handleNextStep}
               className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-emerald-600 text-white font-bold text-xs uppercase tracking-wider hover:bg-emerald-500 transition-all shadow-md"
             >
-              <span>Next: Pricing & Balance Due</span>
+              <span>Next: Customer & Phone Verification</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -1101,7 +1316,7 @@ export function AdminManualBookingWizard() {
                 )}
               >
                 <span className="text-xs block font-bold">Standard Deposit</span>
-                <span className="text-[10px] opacity-80">$200.00 Advance</span>
+                <span className="text-[10px] opacity-80">$300.00 Advance</span>
               </button>
 
               <button
@@ -1260,7 +1475,7 @@ export function AdminManualBookingWizard() {
               Review & Finalize Venue Buyout
             </h2>
             <p className="text-xs text-secondary mt-0.5">
-              Review all event parameters below. When confirmed, all venue tables and time slots will be locked, and the host's account registered without OTP.
+              Review all event parameters below. When confirmed, the venue time slot is locked and the booking appears in the customer's account.
             </p>
           </div>
 
@@ -1291,12 +1506,23 @@ export function AdminManualBookingWizard() {
                     <strong>Notes:</strong> {notes}
                   </p>
                 )}
+                <p>
+                  <strong>Phone Verified:</strong> {otpVerified ? "Yes (OTP)" : "Skipped by admin"}
+                </p>
+                <p>
+                  <strong>Login Password:</strong>{" "}
+                  {customerPassword
+                    ? existingCustomer?.hasPassword
+                      ? "Will be updated"
+                      : "Will be created"
+                    : existingCustomer?.hasPassword
+                    ? "Unchanged (existing password)"
+                    : "Not set — SMS code login only"}
+                </p>
                 <div className="pt-2">
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-semibold">
                     <ShieldCheck className="w-3.5 h-3.5" />
-                    {existingCustomer?.exists
-                      ? "Linking to existing member profile"
-                      : "New user account created directly (No OTP required)"}
+                    {existingCustomer?.exists ? "Linking to existing member profile" : "New customer account will be created"}
                   </span>
                 </div>
               </div>
@@ -1443,7 +1669,7 @@ export function AdminManualBookingWizard() {
             <p className="text-xs text-secondary leading-relaxed">
               The exclusive venue buyout on <strong>{bookingDate}</strong> from <strong>{formatTime12h(createdBooking.bookingTime)}</strong> to <strong>{formatTime12h(getEndTime(createdBooking.bookingTime, createdBooking.durationHours || durationHours))}</strong> has been confirmed and locked in the database.
               {accountCreatedFlag
-                ? " The customer account has been registered with phone number without OTP."
+                ? " A new customer account has been created for this phone number."
                 : " The booking is linked to the existing member account."}
             </p>
           </div>
@@ -1476,6 +1702,44 @@ export function AdminManualBookingWizard() {
                 ${createdBooking.remainingAmount?.toFixed(2) || "0.00"}
               </span>
             </div>
+          </div>
+
+          {/* Customer Login & Guest Share Link */}
+          <div className="max-w-md mx-auto p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 text-left text-xs space-y-3">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">
+              Customer Account Access
+            </span>
+            <p className="text-emerald-900">
+              <strong>Login:</strong> {createdBooking.customerPhone}{" "}
+              {passwordSetFlag
+                ? "+ the password you just set (Sign In with Password)."
+                : "via SMS code (no password set)."}
+            </p>
+            {inviteLink && (
+              <div className="space-y-1.5">
+                <span className="text-emerald-900 font-semibold block">Guest share link (also shown in the customer&apos;s account):</span>
+                <div className="flex gap-2">
+                  <input
+                    readOnly
+                    value={inviteLink}
+                    onFocus={(e) => e.target.select()}
+                    className="w-full min-w-0 px-3 py-2 rounded-lg border border-emerald-300 bg-white text-[11px] font-mono text-emerald-950"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard
+                        .writeText(inviteLink)
+                        .then(() => toast.success("Share link copied"))
+                        .catch(() => toast.error("Couldn't copy — select the link and copy it manually"));
+                    }}
+                    className="shrink-0 px-3 py-2 rounded-lg bg-emerald-600 text-white text-[11px] font-bold uppercase tracking-wider hover:bg-emerald-500"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">

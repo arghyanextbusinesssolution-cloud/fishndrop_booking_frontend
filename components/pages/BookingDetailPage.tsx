@@ -22,7 +22,7 @@ import {
   XCircle
 } from "lucide-react";
 import api from "@/lib/axios";
-import { formatTimeTo12Hour } from "@/lib/utils";
+import { formatTimeTo12Hour, toCurrentSiteUrl } from "@/lib/utils";
 import { CATERING_LABEL_MAP } from "@/lib/cateringRestaurants";
 
 interface Guest {
@@ -106,7 +106,7 @@ export default function BookingDetailPage() {
       if (!quiet) setRefreshing(true);
       try {
         const { data } = await api.get(`/admin/bookings/${id}/overview`);
-        setData(data);
+        setData({ ...data, inviteLink: data.inviteLink ? toCurrentSiteUrl(data.inviteLink) : null });
         setError(null);
       } catch (err: any) {
         setError(err.response?.data?.message || "Could not load this booking");

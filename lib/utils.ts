@@ -82,3 +82,18 @@ export function formatVenueDateTime(
 }
 
 
+
+/**
+ * Re-points a link built by the backend (e.g. venue invite links) at the domain the site is
+ * currently open on, so links never show the server's FRONTEND_BASE_URL (localhost in dev).
+ */
+export function toCurrentSiteUrl(link: string | null | undefined): string {
+  if (!link) return "";
+  if (typeof window === "undefined") return link;
+  try {
+    const url = new URL(link, window.location.origin);
+    return `${window.location.origin}${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return link;
+  }
+}

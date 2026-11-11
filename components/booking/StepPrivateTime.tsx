@@ -45,7 +45,7 @@ export const StepPrivateTime = ({
   const [maxCapacity, setMaxCapacity] = useState<number>(40);
   const [perGuestPrice, setPerGuestPrice] = useState<number>(50);
   const [extraHourPrice, setExtraHourPrice] = useState<number>(125);
-  const [minDepositAmount, setMinDepositAmount] = useState<number>(200);
+  const [minDepositAmount, setMinDepositAmount] = useState<number>(300);
 
   const [slots, setSlots] = useState<Slot[]>([]);
   const [activeTime, setActiveTime] = useState<string | null>(selectedTime);
@@ -61,7 +61,7 @@ export const StepPrivateTime = ({
           setMaxCapacity(data.totalCapacity || 40);
           setPerGuestPrice(data.perGuestPrice || 50);
           setExtraHourPrice(data.extraHourPrice || 125);
-          setMinDepositAmount(data.minDepositAmount || 200);
+          setMinDepositAmount(data.minDepositAmount || 300);
         }
       } catch (err) {
         console.error("Failed to fetch capacity:", err);
