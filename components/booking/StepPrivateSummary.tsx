@@ -206,7 +206,9 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
 
   const buildPayload = (method: "card" | "zelle", zelleUrl?: string) => {
     let formattedNotes = bookingData.notes || "";
-    if (bookingData.selectedDishes && bookingData.selectedDishes.length > 0) {
+    const hasPartnerCatering =
+      !!bookingData.cateringMenu && bookingData.cateringMenu !== "none" && bookingData.cateringMenu !== "no_catering";
+    if (hasPartnerCatering && bookingData.selectedDishes && bookingData.selectedDishes.length > 0) {
       const dishStrs = bookingData.selectedDishes.map((dish: string) => {
         const qty = bookingData.dishQuantities?.[dish];
         return qty && qty > 1 ? `${dish} (x${qty} platters)` : `${dish} (x1 platter)`;

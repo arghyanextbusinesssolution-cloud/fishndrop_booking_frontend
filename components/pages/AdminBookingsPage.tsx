@@ -89,7 +89,7 @@ function PaymentBadge({ status, remainingStatus, paymentMethod, zelleVerificatio
     return (
       <div className="flex flex-col gap-1 items-start">
         <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-purple-50 text-purple-800 border-purple-200 whitespace-nowrap inline-flex items-center justify-center shrink-0">
-          âš¡ Zelle ({zelleVerificationStatus === "verified" ? "Verified" : zelleVerificationStatus === "mismatched" ? "Mismatch" : "Pending GHL"})
+          ⚡ Zelle ({zelleVerificationStatus === "verified" ? "Verified" : zelleVerificationStatus === "mismatched" ? "Mismatch" : "Pending GHL"})
         </span>
       </div>
     );
@@ -97,14 +97,14 @@ function PaymentBadge({ status, remainingStatus, paymentMethod, zelleVerificatio
   if (paymentMethod === "cash") {
     return (
       <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-emerald-50 text-emerald-700 border-emerald-200 whitespace-nowrap inline-flex items-center justify-center shrink-0">
-        ðŸ’µ Cash
+        💵 Cash
       </span>
     );
   }
   if (paymentMethod === "bank_transfer") {
     return (
       <span className="px-3 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold bg-cyan-50 text-cyan-700 border-cyan-200 whitespace-nowrap inline-flex items-center justify-center shrink-0">
-        ðŸ¦ Transfer
+        🏦 Transfer
       </span>
     );
   }
@@ -144,7 +144,7 @@ function TypeBadge({ type }: { type: string }) {
 }
 
 function OccasionBadge({ occasion }: { occasion?: string }) {
-  if (!occasion) return <span className="text-secondary text-xs">â€”</span>;
+  if (!occasion) return <span className="text-secondary text-xs">—</span>;
   const clean = occasion.replace(/^other:\s*/i, "");
   const map: Record<string, string> = {
     baby_shower: "Baby Shower",
@@ -158,13 +158,13 @@ function OccasionBadge({ occasion }: { occasion?: string }) {
   const label = map[clean] || clean;
   return (
     <span className="px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold whitespace-nowrap inline-flex items-center gap-1 shrink-0">
-      âœ¨ {label}
+      ✨ {label}
     </span>
   );
 }
 
 function DjBadge({ needDj, bookingType }: { needDj?: boolean; bookingType: string }) {
-  if (bookingType !== "private_event") return <span className="text-secondary text-xs">â€”</span>;
+  if (bookingType !== "private_event") return <span className="text-secondary text-xs">—</span>;
   return (
     <span className={cn(
       "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] uppercase tracking-widest font-bold whitespace-nowrap shrink-0",
@@ -185,7 +185,7 @@ function getPhotographerCost(b: Booking) {
 }
 
 function PhotographerBadge({ needPhotographer, photographerHours, bookingType }: { needPhotographer?: boolean; photographerHours?: number; bookingType: string }) {
-  if (bookingType !== "private_event") return <span className="text-secondary text-xs">â€”</span>;
+  if (bookingType !== "private_event") return <span className="text-secondary text-xs">—</span>;
   const hours = photographerHours || 2;
   const cost = 300 + Math.max(0, hours - 2) * 150;
   return (
@@ -485,7 +485,7 @@ export default function AdminBookingsPage() {
           )}
         >
           <span className="text-[10px] uppercase tracking-widest text-amber-600 font-bold block mb-1">
-            âš¡ Leads (Unpaid Attempts)
+            ⚡ Leads (Unpaid Attempts)
           </span>
           <div className="flex items-baseline justify-between">
             <span className="font-headline text-3xl italic text-on-surface">{counts.leads}</span>
@@ -503,7 +503,7 @@ export default function AdminBookingsPage() {
           )}
         >
           <span className="text-[10px] uppercase tracking-widest text-emerald-600 font-bold block mb-1">
-            ðŸ’³ Bookings (Paid / Deposit)
+            💳 Bookings (Paid / Deposit)
           </span>
           <div className="flex items-baseline justify-between">
             <span className="font-headline text-3xl italic text-on-surface">{counts.bookings}</span>
@@ -521,7 +521,7 @@ export default function AdminBookingsPage() {
           )}
         >
           <span className="text-[10px] uppercase tracking-widest text-red-600 font-bold block mb-1">
-            âŒ Cancelled
+            ❌ Cancelled
           </span>
           <div className="flex items-baseline justify-between">
             <span className="font-headline text-3xl italic text-on-surface">{counts.cancelled}</span>
@@ -617,7 +617,7 @@ export default function AdminBookingsPage() {
                             <OccasionBadge occasion={b.occasion} />
                           </div>
                           <p className="text-xs text-secondary font-body">{b.customerEmail || b.user?.email}</p>
-                          <p className="text-xs font-mono text-secondary">{b.customerPhone || "â€”"}</p>
+                          <p className="text-xs font-mono text-secondary">{b.customerPhone || "—"}</p>
                         </div>
 
                         {b.offerPrice && (
@@ -637,7 +637,7 @@ export default function AdminBookingsPage() {
                             <span className="text-[9px] uppercase tracking-wider text-outline block font-bold">Party / Tables</span>
                             <span className="text-on-surface font-semibold">{b.partySize} pax</span>
                             <span className="text-[10px] text-primary block font-bold">
-                              {b.bookingType === "private_event" ? "Full Venue" : (b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "â€”")}
+                              {b.bookingType === "private_event" ? "Full Venue" : (b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—")}
                             </span>
                           </div>
                           <div>
@@ -656,7 +656,7 @@ export default function AdminBookingsPage() {
                                 )}
                                 {b.needPhotographer && (
                                   <span className="text-[8px] font-bold text-[#C8A96A] bg-[#C8A96A]/10 border border-[#C8A96A]/25 px-1 py-0.2 rounded">
-                                    Incl. ðŸ“· Photo (+${getPhotographerCost(b)})
+                                    Incl. 📷 Photo (+${getPhotographerCost(b)})
                                   </span>
                                 )}
                               </div>
@@ -831,7 +831,7 @@ export default function AdminBookingsPage() {
                               {b.customerEmail || b.user?.email}
                             </td>
                             <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap font-mono">
-                              {b.customerPhone || "â€”"}
+                              {b.customerPhone || "—"}
                             </td>
                             <td className="px-3 py-2.5 font-body text-xs text-secondary whitespace-nowrap">
                               {formatDate(b.bookingDate)}
@@ -854,7 +854,7 @@ export default function AdminBookingsPage() {
                               {b.bookingType === "private_event" ? (
                                 <span className="text-[9px] uppercase tracking-widest bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">Full Venue</span>
                               ) : (
-                                b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "â€”"
+                                b.tables.map(t => `T-${t.tableNumber}`).join(", ") || "—"
                               )}
                             </td>
                             <td className="px-3 py-2.5 whitespace-nowrap">
@@ -878,7 +878,7 @@ export default function AdminBookingsPage() {
                                     )}
                                     {b.needPhotographer && (
                                       <span className="text-[8px] font-bold text-[#C8A96A] bg-[#C8A96A]/10 border border-[#C8A96A]/25 px-1 py-0.2 rounded whitespace-nowrap inline-block">
-                                        Incl. ðŸ“· Photo (+${getPhotographerCost(b)})
+                                        Incl. 📷 Photo (+${getPhotographerCost(b)})
                                       </span>
                                     )}
                                   </div>
@@ -1032,7 +1032,7 @@ export default function AdminBookingsPage() {
                                   title="Delete Booking"
                                 >
                                   <span className="hidden lg:inline">Delete</span>
-                                  <span className="lg:hidden text-[10px]">âœ•</span>
+                                  <span className="lg:hidden text-[10px]">✕</span>
                                 </button>
                               </div>
                             </td>
@@ -1069,13 +1069,13 @@ export default function AdminBookingsPage() {
 
             <div className="space-y-1">
               <span className={`text-[10px] uppercase tracking-widest font-extrabold block ${selectedProofModal.proofType === "balance" ? "text-blue-700" : "text-purple-700"}`}>
-                {selectedProofModal.proofType === "balance" ? "ðŸ¦ Remaining Balance Zelle Proof" : "ðŸ’³ Deposit Zelle Proof"}
+                {selectedProofModal.proofType === "balance" ? "🏦 Remaining Balance Zelle Proof" : "💳 Deposit Zelle Proof"}
               </span>
               <h3 className="text-lg font-bold text-gray-900">
                 {selectedProofModal.booking.customerName}
                 {selectedProofModal.proofType === "balance"
-                  ? ` â€” Balance $${(selectedProofModal.booking.remainingAmount || 0).toLocaleString()}`
-                  : ` â€” Deposit $${(selectedProofModal.booking.depositAmount || selectedProofModal.booking.totalAmount).toLocaleString()}`
+                  ? ` — Balance $${(selectedProofModal.booking.remainingAmount || 0).toLocaleString()}`
+                  : ` — Deposit $${(selectedProofModal.booking.depositAmount || selectedProofModal.booking.totalAmount).toLocaleString()}`
                 }
               </h3>
               <p className="text-xs text-gray-500 font-mono">Booking ID: {selectedProofModal.booking._id}</p>
@@ -1124,7 +1124,7 @@ export default function AdminBookingsPage() {
 
             <div className="space-y-1">
               <span className="text-[10px] uppercase tracking-widest font-extrabold text-primary block">
-                ðŸ”„ Reschedule Booking &amp; Notify GHL
+                🔄 Reschedule Booking &amp; Notify GHL
               </span>
               <h3 className="text-lg font-bold text-on-surface">
                 {rescheduleBookingTarget.customerName}
@@ -1172,7 +1172,7 @@ export default function AdminBookingsPage() {
               </div>
 
               <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-xs text-secondary space-y-1">
-                <p className="font-bold text-primary">âœ¨ Automatic GHL Synchronization:</p>
+                <p className="font-bold text-primary">✨ Automatic GHL Synchronization:</p>
                 <p className="text-[11px]">
                   Fires &lsquo;booking_rescheduled&rsquo; to GHL with updated event end time to prevent early or wrong automated thank-you messages.
                 </p>
@@ -1213,7 +1213,7 @@ export default function AdminBookingsPage() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[10px] uppercase tracking-widest font-extrabold text-primary">
-                  ðŸ“¸ Guest Celebration Memories
+                  📸 Guest Celebration Memories
                 </span>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${mediaModalBooking.marketingConsent ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-700"}`}>
                   Marketing: {mediaModalBooking.marketingConsent ? "Approved" : "Not Provided"}
@@ -1223,7 +1223,7 @@ export default function AdminBookingsPage() {
                 {mediaModalBooking.customerName}
               </h3>
               <p className="text-xs text-secondary font-mono">
-                Event: {formatDate(mediaModalBooking.bookingDate)} â€” {mediaModalBooking.guestMedia?.length || 0} items uploaded
+                Event: {formatDate(mediaModalBooking.bookingDate)} — {mediaModalBooking.guestMedia?.length || 0} items uploaded
               </p>
             </div>
 

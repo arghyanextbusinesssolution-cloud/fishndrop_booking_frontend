@@ -403,7 +403,15 @@ export function StepAddonCardsHub({
         {/* Back link */}
         <button
           type="button"
-          onClick={() => setSubView("hub")}
+          onClick={() => {
+            // Leaving without "Confirm & Save Menu" while no restaurant is saved:
+            // discard the unsaved dish picks so they don't leak into the booking notes.
+            if (!hasCatering) {
+              setSelectedDishes([]);
+              setDishQuantities({});
+            }
+            setSubView("hub");
+          }}
           className="inline-flex items-center gap-2 text-xs font-label uppercase tracking-widest text-white/60 hover:text-[#C8A96A] transition-colors cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Add-on Options
