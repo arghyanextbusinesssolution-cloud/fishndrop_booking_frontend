@@ -20,6 +20,7 @@ import {
   Copy,
   Share2
 } from "lucide-react";
+import { LoungeBackdrop } from "@/components/auth/TropicaAuthShell";
 
 interface IssuedTicket {
   _id: string;
@@ -123,7 +124,8 @@ function TicketSuccessContent() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#070B09] flex flex-col items-center justify-center p-6 text-center space-y-4">
+      <div className="relative isolate min-h-screen bg-[#0b0704] flex flex-col items-center justify-center p-6 text-center space-y-4">
+        <LoungeBackdrop behind />
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-[#C8A96A]"></div>
         <h2 className="text-xl font-bold text-white">Verifying Stripe Payment...</h2>
         <p className="text-xs text-white/50">Issuing secure QR tickets and generating admission passes.</p>
@@ -133,7 +135,8 @@ function TicketSuccessContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#070B09] flex flex-col items-center justify-center p-6 text-center space-y-4">
+      <div className="relative isolate min-h-screen bg-[#0b0704] flex flex-col items-center justify-center p-6 text-center space-y-4">
+        <LoungeBackdrop behind />
         <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center">
           <AlertCircle className="w-6 h-6" />
         </div>
@@ -150,7 +153,8 @@ function TicketSuccessContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070B09] text-white py-12 px-4 sm:px-6">
+    <div className="relative isolate min-h-screen bg-[#0b0704] text-white py-12 px-4 sm:px-6">
+      <LoungeBackdrop behind />
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Success Banner */}
         <div className="text-center space-y-3">
@@ -229,7 +233,7 @@ function TicketSuccessContent() {
                   </div>
                   <Link
                     href="/user/tickets"
-                    className="inline-flex items-center justify-center gap-1.5 bg-[#C8A96A] hover:bg-[#d8b97a] text-[#070B09] px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider self-start sm:self-auto"
+                    className="inline-flex items-center justify-center gap-1.5 bg-[#C8A96A] hover:bg-[#d8b97a] text-[#1a1208] px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider self-start sm:self-auto"
                   >
                     <QrCode className="w-3.5 h-3.5" /> My live QR
                   </Link>
@@ -260,7 +264,7 @@ function TicketSuccessContent() {
                   <button onClick={copyShare} className="shrink-0 inline-flex items-center gap-1 px-3 rounded-lg border border-white/15 text-[11px] hover:bg-white/5 cursor-pointer">
                     {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />} Copy
                   </button>
-                  <button onClick={shareLink} className="shrink-0 inline-flex items-center gap-1 px-3 rounded-lg bg-[#C8A96A] text-[#070B09] text-[11px] font-bold cursor-pointer">
+                  <button onClick={shareLink} className="shrink-0 inline-flex items-center gap-1 px-3 rounded-lg bg-[#C8A96A] text-[#1a1208] text-[11px] font-bold cursor-pointer">
                     <Share2 className="w-3.5 h-3.5" /> Share
                   </button>
                 </div>
@@ -295,7 +299,8 @@ export default function TicketSuccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#070B09] flex items-center justify-center text-white">
+        <div className="relative isolate min-h-screen bg-[#0b0704] flex items-center justify-center text-white">
+          <LoungeBackdrop behind />
           Loading verification...
         </div>
       }

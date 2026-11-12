@@ -130,6 +130,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       ? [{ icon: DollarSign, label: "Financials", href: "/admin/financials" }]
       : []),
     { icon: CalendarDays, label: "Bookings", href: "/admin/bookings" },
+    { icon: PartyPopper, label: "Celebrations", href: "/admin/celebrations" },
     { icon: Users, label: "Users", href: "/admin/users" },
     { icon: Database, label: "Data Center", href: "/admin/data-center" },
     { icon: ShieldCheck, label: "Verify Promoters", href: "/admin/promoters" },
@@ -156,6 +157,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { icon: Ticket, label: "Verify Events", href: "/employee/events" },
     { icon: CreditCard, label: "Payments & Payouts", href: "/employee/payments" },
     { icon: QrCode, label: "Door QR Check-In", href: "/employee/check-in" },
+    { icon: PartyPopper, label: "Celebrations", href: "/employee/celebrations" },
     { icon: CalendarDays, label: "Bookings", href: "/employee/bookings" },
     { icon: TableProperties, label: "Tables", href: "/employee/tables" },
     { icon: UtensilsCrossed, label: "Restaurants & Catering", href: "/employee/catering" },

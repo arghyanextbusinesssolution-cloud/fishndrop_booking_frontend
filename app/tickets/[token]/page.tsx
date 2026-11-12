@@ -21,6 +21,7 @@ import {
   AlertCircle,
   Sparkles
 } from "lucide-react";
+import { LoungeBackdrop } from "@/components/auth/TropicaAuthShell";
 
 interface TicketData {
   _id: string;
@@ -92,7 +93,8 @@ export default function DigitalTicketPassPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#070B09]">
+      <div className="relative isolate min-h-screen bg-[#0b0704]">
+        <LoungeBackdrop behind />
         <NavBar />
         <div className="min-h-screen flex items-center justify-center">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-[#C8A96A]"></div>
@@ -103,7 +105,8 @@ export default function DigitalTicketPassPage() {
 
   if (error || !ticket) {
     return (
-      <div className="min-h-screen bg-[#070B09] flex flex-col items-center justify-center p-6 pt-28 text-center space-y-4 text-white">
+      <div className="relative isolate min-h-screen bg-[#0b0704] flex flex-col items-center justify-center p-6 pt-28 text-center space-y-4 text-white">
+        <LoungeBackdrop behind />
         <NavBar />
         <AlertCircle className="w-12 h-12 text-red-400" />
         <h1 className="text-2xl font-bold">Ticket Not Recognized</h1>
@@ -118,7 +121,8 @@ export default function DigitalTicketPassPage() {
   const { event } = ticket;
 
   return (
-    <div className="min-h-screen bg-[#070B09] text-white pt-24 md:pt-28 pb-10 px-4 sm:px-6 print:pt-4">
+    <div className="relative isolate min-h-screen bg-[#0b0704] text-white pt-24 md:pt-28 pb-10 px-4 sm:px-6 print:pt-4">
+      <LoungeBackdrop behind />
       <div className="print:hidden">
         <NavBar />
       </div>

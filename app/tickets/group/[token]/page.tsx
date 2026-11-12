@@ -8,6 +8,7 @@ import { CheckCircle2, Loader2, Printer, Users } from "lucide-react";
 import api from "@/lib/axios";
 import { NavBar } from "@/components/shared/NavBar";
 import { TicketVenueDetails, TicketBackButton } from "@/components/events/TicketVenueDetails";
+import { LoungeBackdrop } from "@/components/auth/TropicaAuthShell";
 
 const QrCodeCard = dynamic(() => import("@/components/shared/QrCodeCard"), { ssr: false });
 
@@ -52,7 +53,8 @@ export default function GroupPassPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#070B09] flex flex-col items-center justify-center gap-3 p-6 pt-28 text-center text-white">
+      <div className="relative isolate min-h-screen bg-[#0b0704] flex flex-col items-center justify-center gap-3 p-6 pt-28 text-center text-white">
+        <LoungeBackdrop behind />
         <NavBar />
         <h1 className="text-xl font-bold">Group pass unavailable</h1>
         <p className="text-xs text-white/60 max-w-sm">{error}</p>
@@ -65,7 +67,8 @@ export default function GroupPassPage() {
 
   if (!pass) {
     return (
-      <div className="min-h-screen bg-[#070B09] flex items-center justify-center">
+      <div className="relative isolate min-h-screen bg-[#0b0704] flex items-center justify-center">
+        <LoungeBackdrop behind />
         <NavBar />
         <Loader2 className="w-8 h-8 animate-spin text-[#C8A96A]" />
       </div>
@@ -76,7 +79,8 @@ export default function GroupPassPage() {
   const tiers = pass.tickets.reduce<Record<string, number>>((m, t) => ((m[t.tierName] = (m[t.tierName] || 0) + 1), m), {});
 
   return (
-    <div className="min-h-screen bg-[#070B09] text-white pt-24 md:pt-28 pb-10 px-4 print:pt-4">
+    <div className="relative isolate min-h-screen bg-[#0b0704] text-white pt-24 md:pt-28 pb-10 px-4 print:pt-4">
+      <LoungeBackdrop behind />
       <div className="print:hidden">
         <NavBar />
       </div>

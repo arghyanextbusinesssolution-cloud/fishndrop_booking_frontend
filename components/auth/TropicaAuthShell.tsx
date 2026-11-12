@@ -154,9 +154,13 @@ export function TropicaPanel({ className, children }: { className?: string; chil
   );
 }
 
-export function LoungeBackdrop() {
+/**
+ * The lounge scene. Pass `behind` when dropping it into an existing page: the page root then needs
+ * `relative isolate`, and the scene paints under all of the page's content without re-wrapping it.
+ */
+export function LoungeBackdrop({ behind = false }: { behind?: boolean }) {
   return (
-    <div className="pointer-events-none fixed inset-0 overflow-hidden" aria-hidden>
+    <div className={cn("pointer-events-none fixed inset-0 overflow-hidden print:hidden", behind && "-z-10")} aria-hidden>
       {/* teak slat wall */}
       <div className="absolute inset-0 bg-[#0b0704]" />
       <div className="absolute inset-0 opacity-70 bg-[repeating-linear-gradient(90deg,#2b1a0e_0px,#3a2414_14px,#24150b_30px,#0d0805_32px,#0d0805_34px)]" />

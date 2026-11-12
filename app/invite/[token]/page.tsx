@@ -45,7 +45,7 @@ const QrCodeCard = dynamic(() => import("@/components/shared/QrCodeCard"), {
 interface MyPass {
   passCode: string;
   qrCodeToken: string;
-  status: "approved" | "pending_approval" | "rejected" | "cancelled";
+  status: "approved" | "pending_approval" | "rejected" | "cancelled" | "removed";
   guestName: string;
   checkedIn: boolean;
   cancelDeadline?: string | null;
@@ -430,6 +430,13 @@ export default function InvitePage() {
                     Request sent! {invite.hostName} will approve you soon and
                     your door QR will appear here.
                   </p>
+                ) : pass.status === "removed" ? (
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-rose-200">You&apos;re no longer on this guest list</p>
+                    <p className="text-xs text-white/55">
+                      {invite.hostName} removed you from the list, so your door pass no longer works. Please contact {invite.hostName} if you think this is a mistake.
+                    </p>
+                  </div>
                 ) : (
                   <p className="text-sm text-rose-300">
                     The host couldn&apos;t add you to this guest list.

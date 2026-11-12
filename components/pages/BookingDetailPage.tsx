@@ -33,7 +33,7 @@ interface Guest {
   guestPhone: string;
   guestEmail?: string;
   passCode: string;
-  status: "approved" | "pending_approval" | "rejected" | "cancelled";
+  status: "approved" | "pending_approval" | "rejected" | "cancelled" | "removed";
   checkedIn: boolean;
   checkedInAt?: string;
   checkedInByName?: string;
@@ -96,6 +96,9 @@ export default function BookingDetailPage() {
   const router = useRouter();
   const id = String(params?.id || "");
   const base = pathname.startsWith("/employee") ? "/employee" : "/admin";
+  const fromCelebrations = pathname.includes("/celebrations/");
+  const backHref = fromCelebrations ? `${base}/celebrations` : `${base}/bookings`;
+  const backLabel = fromCelebrations ? "Back to celebrations" : "Back to bookings";
 
   const [data, setData] = useState<Overview | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -141,8 +144,8 @@ export default function BookingDetailPage() {
   if (error) {
     return (
       <div className="p-6 md:p-10 max-w-3xl mx-auto text-white space-y-4">
-        <button onClick={() => router.push(`${base}/bookings`)} className="inline-flex items-center gap-1.5 text-xs text-white/60 hover:text-white cursor-pointer">
-          <ArrowLeft className="w-4 h-4" /> Back to bookings
+        <button onClick={() => router.push(backHref)} className="inline-flex items-center gap-1.5 text-xs text-white/60 hover:text-white cursor-pointer">
+          <ArrowLeft className="w-4 h-4" /> {backLabel}
         </button>
         <p className="text-rose-300">{error}</p>
       </div>
@@ -169,8 +172,8 @@ export default function BookingDetailPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div className="space-y-2">
-          <button onClick={() => router.push(`${base}/bookings`)} className="inline-flex items-center gap-1.5 text-xs text-white/60 hover:text-white cursor-pointer">
-            <ArrowLeft className="w-4 h-4" /> Back to bookings
+          <button onClick={() => router.push(backHref)} className="inline-flex items-center gap-1.5 text-xs text-white/60 hover:text-white cursor-pointer">
+            <ArrowLeft className="w-4 h-4" /> {backLabel}
           </button>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full bg-[#C8A96A]/15 text-[#E0C68E]">
@@ -329,6 +332,8 @@ export default function BookingDetailPage() {
                             <span className="text-amber-300">Awaiting host</span>
                           ) : g.status === "cancelled" ? (
                             <span className="text-white/50">Not attending</span>
+                          ) : g.status === "removed" ? (
+                            <span className="text-white/50">Removed by host</span>
                           ) : (
                             <span className="text-rose-300 inline-flex items-center gap-1">
                               <XCircle className="w-3.5 h-3.5" /> Rejected

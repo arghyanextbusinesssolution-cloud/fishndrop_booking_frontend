@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import api from "@/lib/axios";
 import { CameraQrScanner } from "@/components/checkin/CameraQrScanner";
@@ -29,6 +30,7 @@ interface ScanResult {
   success: boolean;
   code: string;
   message: string;
+  admission?: { kind: "guest_pass" | "ticket" | "group"; id: string };
   ticket?: {
     ticketCode: string;
     customerName: string;
@@ -41,6 +43,9 @@ interface ScanResult {
 }
 
 export default function AdminCheckInPage() {
+  const router = useRouter();
+  const pathname = usePathname() || "";
+  const base = pathname.startsWith("/employee") ? "/employee" : pathname.startsWith("/promoter") ? "/promoter" : "/admin";
   const [activeTab, setActiveTab] = useState<"scan" | "search">("scan");
   const [inputCode, setInputCode] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -67,6 +72,8 @@ export default function AdminCheckInPage() {
       if (data.success) {
         toast.success(data.message);
         setInputCode("");
+        // Open the admitted guest's details; that page has "Scan another" to come back here
+        if (data.admission) router.push(`${base}/check-in/admitted/${data.admission.kind}/${data.admission.id}`);
       } else {
         toast.error(data.message);
       }

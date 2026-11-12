@@ -7,6 +7,7 @@ import api from "@/lib/axios";
 import { ShareInviteModal } from "@/components/booking/ShareInviteModal";
 import { formatTimeTo12Hour, toCurrentSiteUrl } from "@/lib/utils";
 import toast, { Toaster } from "react-hot-toast";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import {
   Users,
   Calendar,
@@ -23,7 +24,9 @@ import {
   ArrowLeft,
   Loader2,
   UserCheck,
-  QrCode
+  QrCode,
+  UserMinus,
+  Undo2
 } from "lucide-react";
 
 interface GuestPass {
@@ -33,7 +36,7 @@ interface GuestPass {
   guestPhone: string;
   passCode: string;
   qrCodeToken: string;
-  status: "approved" | "pending_approval" | "rejected" | "cancelled";
+  status: "approved" | "pending_approval" | "rejected" | "cancelled" | "removed";
   checkedIn: boolean;
   checkedInAt?: string;
   createdAt: string;
@@ -62,6 +65,7 @@ export default function BookingGuestsPage() {
   const [copied, setCopied] = useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<GuestPass | null>(null);
   const [shareNote, setShareNote] = useState<string | undefined>(undefined);
 
   // After payment we land here with ?share=1 (or ?share=zelle) → open the share popup
@@ -119,6 +123,24 @@ export default function BookingGuestsPage() {
     }
   };
 
+  /** Host takes a guest off the list: their QR stops working and the spot opens up. */
+  const handleRemove = async () => {
+    if (!removeTarget) return;
+    const guest = removeTarget;
+    setRemoveTarget(null);
+    setUpdatingId(guest._id);
+    try {
+      const res = await api.delete(`/invitations/passes/${guest._id}`);
+      toast.success(res.data.message || `${guest.guestName} was removed`);
+      await fetchGuests();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Could not remove this guest");
+      await fetchGuests();
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const handleNativeShare = async () => {
     if (!data?.inviteLink) return;
     if (navigator.share) {
@@ -149,6 +171,20 @@ export default function BookingGuestsPage() {
   return (
     <div className="space-y-6 animate-fade-in p-4 sm:p-6 max-w-6xl mx-auto">
       <Toaster position="top-center" />
+      <ConfirmDialog
+        open={!!removeTarget}
+        title={`Remove ${removeTarget?.guestName || "this guest"}?`}
+        message={
+          removeTarget?.checkedIn
+            ? "This guest has already checked in at the door. Removing them takes them off your guest list, voids their QR pass so it can't be used again, and opens their spot. Our staff aren't notified automatically, so let the door team know if they need to leave."
+            : "They'll be taken off your guest list and their QR door pass will stop working right away. Their spot opens up for someone else, and they won't be able to rejoin from your invite link unless you add them back."
+        }
+        confirmLabel="Remove guest"
+        cancelLabel="Keep"
+        variant="danger"
+        onConfirm={handleRemove}
+        onCancel={() => setRemoveTarget(null)}
+      />
 
       {/* Top Breadcrumb Navigation */}
       <div className="flex items-center gap-3">
@@ -378,6 +414,10 @@ export default function BookingGuestsPage() {
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
                           <Clock className="w-3 h-3" /> Pending Host
                         </span>
+                      ) : guest.status === "removed" ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/60 border border-white/15">
+                          <UserMinus className="w-3 h-3" /> Removed
+                        </span>
                       ) : guest.status === "cancelled" ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/10 text-white/60 border border-white/15">
                           <XCircle className="w-3 h-3" /> Not Attending
@@ -397,7 +437,8 @@ export default function BookingGuestsPage() {
                         <span className="text-white/40 text-[11px]">— Not Checked In</span>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                      <div className="inline-flex items-center justify-end gap-3">
                       {guest.status === "pending_approval" && (
                         <div className="inline-flex items-center gap-1.5">
                           <button
@@ -428,6 +469,29 @@ export default function BookingGuestsPage() {
                           <span>View QR</span>
                         </Link>
                       )}
+                      {(guest.status === "approved" || guest.status === "pending_approval") && (
+                        <button
+                          type="button"
+                          disabled={updatingId === guest._id}
+                          onClick={() => setRemoveTarget(guest)}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded border border-red-500/30 text-red-300 hover:bg-red-500/10 font-bold text-[10px] uppercase tracking-wider transition-colors cursor-pointer disabled:opacity-40"
+                          title="Remove from the guest list"
+                        >
+                          {updatingId === guest._id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserMinus className="w-3 h-3" />} Remove
+                        </button>
+                      )}
+                      {guest.status === "removed" && (
+                        <button
+                          type="button"
+                          disabled={updatingId === guest._id}
+                          onClick={() => handleStatusUpdate(guest._id, "approved")}
+                          className="inline-flex items-center gap-1 text-[11px] text-[#C8A96A] hover:underline cursor-pointer disabled:opacity-40"
+                          title="Put this guest back on the list with a new QR pass"
+                        >
+                          <Undo2 className="w-3 h-3" /> Add back
+                        </button>
+                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}
