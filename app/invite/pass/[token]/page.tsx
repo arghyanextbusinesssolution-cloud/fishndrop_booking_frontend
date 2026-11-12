@@ -7,6 +7,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Calendar, CheckCircle, AlertCircle, Loader2, Printer, Ticket, User } from "lucide-react";
 import { LoungeBackdrop, TropicaPanel, tropicaGhostButton } from "@/components/auth/TropicaAuthShell";
+import { formatTimeTo12Hour } from "@/lib/utils";
 
 const QrCodeCard = dynamic(() => import("@/components/shared/QrCodeCard"), { ssr: false });
 
@@ -19,10 +20,15 @@ interface PassDetails {
   status: string;
   checkedIn: boolean;
   checkedInAt?: string;
-  booking?: {
+  event?: {
+    title?: string;
+    flyerUrl?: string;
     occasion?: string;
-    eventDate?: string;
+    hostName?: string;
+    date?: string;
     startTime?: string;
+    endTime?: string;
+    cancelled?: boolean;
   };
 }
 
@@ -82,7 +88,8 @@ export default function GuestPassPage() {
   const isValid = pass.status === "approved" && !pass.checkedIn;
   const isUsed = pass.checkedIn;
   const isPending = pass.status === "pending_approval";
-  const occasion = pass.booking?.occasion?.replace(/_/g, " ");
+  const ev = pass.event;
+  const evDate = ev?.date ? new Date(ev.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "";
 
   return (
     <div className="relative min-h-screen bg-[#0b0704] text-white overflow-x-hidden print:bg-white">
@@ -98,15 +105,19 @@ export default function GuestPassPage() {
           <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.45em] text-[#E0C68E]/85">Private Event Space</span>
         </Link>
 
-        <TropicaPanel className="mt-6 w-full max-w-md p-6 sm:p-8 text-center">
-          <div className="space-y-5">
+        <TropicaPanel className="mt-6 w-full max-w-md text-center">
+          {ev?.flyerUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={ev.flyerUrl} alt="" className="block w-full max-h-80 object-contain bg-black border-b border-[#C8A96A]/30 print:hidden" />
+          )}
+          <div className="p-6 sm:p-8 space-y-5">
             <div className="space-y-2">
               <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.35em] text-[#E0C68E]">Door pass</p>
-              <h1 className="font-headline text-3xl sm:text-4xl font-bold capitalize">{occasion || "Guest pass"}</h1>
-              {pass.booking?.eventDate && (
+              <h1 className="font-headline text-3xl sm:text-4xl font-bold capitalize break-words">{ev?.title || "Guest pass"}</h1>
+              {evDate && (
                 <p className="text-xs text-white/55 inline-flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-[#C8A96A]" /> {pass.booking.eventDate}
-                  {pass.booking.startTime ? ` · ${pass.booking.startTime}` : ""}
+                  <Calendar className="w-3.5 h-3.5 text-[#C8A96A]" /> {evDate}
+                  {ev?.startTime ? ` · ${formatTimeTo12Hour(ev.startTime)}` : ""}
                 </p>
               )}
             </div>

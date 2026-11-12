@@ -12,6 +12,7 @@ interface Celebration {
   startTime: string;
   endTime?: string;
   occasion: string;
+  eventTitle?: string;
   capacity: number;
   registered: number;
   pendingApproval: number;
@@ -45,7 +46,7 @@ export default function CelebrationsPage() {
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-lg font-bold capitalize text-white">{c.occasion.replace(/_/g, " ")}</p>
+            <p className="text-lg font-bold capitalize text-white">{c.eventTitle || c.occasion.replace(/_/g, " ")}</p>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/60 mt-1">
               <span className="inline-flex items-center gap-1.5">
                 <CalendarDays className="w-3.5 h-3.5 text-[#C8A96A]" />

@@ -11,6 +11,7 @@ interface Invite {
   _id: string;
   hostName: string;
   occasion: string;
+  eventTitle?: string;
   date: string;
   startTime: string;
   endTime?: string;
@@ -46,7 +47,7 @@ export default function MyInvitesPage() {
       <div className="min-w-0 space-y-1.5">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="text-lg font-bold capitalize">
-            {i.hostName}&apos;s {i.occasion.replace(/_/g, " ")}
+            {i.eventTitle || `${i.hostName}'s ${i.occasion.replace(/_/g, " ")}`}
           </p>
           {!isPast && (
             <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#C8A96A]/15 text-[#E0C68E]">

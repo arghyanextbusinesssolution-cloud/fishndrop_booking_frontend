@@ -55,6 +55,8 @@ interface MyPass {
 interface Invitation {
   hostName: string;
   occasion: string;
+  eventTitle?: string;
+  flyerUrl?: string;
   date: string;
   startTime: string;
   endTime?: string;
@@ -272,6 +274,7 @@ export default function InvitePage() {
   }
 
   const occasion = invite.occasion.replace(/_/g, " ");
+  const partyName = invite.eventTitle?.trim() || `${invite.hostName}'s ${occasion}`;
   const dateLabel = new Date(invite.date).toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -298,18 +301,29 @@ export default function InvitePage() {
       <div className="relative z-10 pt-28 md:pt-36 pb-16 px-4">
         <div className="max-w-md mx-auto space-y-6">
           {/* Invitation card */}
-          <TropicaPanel className="p-6 sm:p-8 text-center">
-            <div className="space-y-5">
-              <div className="mx-auto w-16 h-16 rounded-full border border-[#C8A96A]/40 bg-[#C8A96A]/10 flex items-center justify-center shadow-[0_0_30px_-6px_rgba(255,190,90,0.6)]">
-                <PartyPopper className="w-8 h-8 text-[#F1D9A0]" />
-              </div>
+          <TropicaPanel className="text-center">
+            {invite.flyerUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={invite.flyerUrl} alt={`${partyName} flyer`} className="block w-full h-auto border-b border-[#C8A96A]/30" />
+            )}
+            <div className="p-6 sm:p-8 space-y-5">
+              {!invite.flyerUrl && (
+                <div className="mx-auto w-16 h-16 rounded-full border border-[#C8A96A]/40 bg-[#C8A96A]/10 flex items-center justify-center shadow-[0_0_30px_-6px_rgba(255,190,90,0.6)]">
+                  <PartyPopper className="w-8 h-8 text-[#F1D9A0]" />
+                </div>
+              )}
               <div>
                 <p className="text-[11px] uppercase tracking-[0.35em] text-[#E0C68E] font-bold">
                   You&apos;re invited
                 </p>
-                <h1 className="text-3xl sm:text-4xl font-headline font-bold capitalize mt-2">
-                  {invite.hostName}&apos;s {occasion}
+                <h1 className="text-3xl sm:text-4xl font-headline font-bold capitalize mt-2 break-words">
+                  {partyName}
                 </h1>
+                {invite.eventTitle && (
+                  <p className="text-xs text-white/55 mt-1.5 capitalize">
+                    Hosted by {invite.hostName} · {occasion}
+                  </p>
+                )}
               </div>
               <div className="text-left rounded-2xl bg-black/40 border border-[#C8A96A]/20 p-4 sm:p-5 space-y-3 text-sm">
                 <p className="flex items-center gap-2.5">
@@ -501,11 +515,7 @@ export default function InvitePage() {
           label="Join the guest list"
           busy={busy}
           onClose={() => setModalOpen(false)}
-          eyebrow={
-            <span className="capitalize">
-              {invite.hostName}&apos;s {occasion}
-            </span>
-          }
+          eyebrow={<span className="capitalize">{partyName}</span>}
           title={
             step === "phone"
               ? "Sign in with your phone"

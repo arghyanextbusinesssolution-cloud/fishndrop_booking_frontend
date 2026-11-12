@@ -329,7 +329,7 @@ export default function TicketSharePage() {
               <img
                 src={event.flyerUrl}
                 alt=""
-                className="w-full h-44 object-cover opacity-85 border-b border-[#C8A96A]/30"
+                className="block w-full h-auto border-b border-[#C8A96A]/30"
               />
             )}
             <div className="p-6 sm:p-8 text-center space-y-5">

@@ -12,13 +12,15 @@ interface Props {
   inviteLink: string;
   hostName?: string;
   occasion?: string;
+  /** Host's custom party name; used in the share message instead of "{host}'s {occasion}". */
+  eventTitle?: string;
   dateLabel?: string;
   /** Optional note shown under the title (e.g. Zelle still verifying). */
   note?: string;
 }
 
 /** "Share your invite" popup: QR + link, sendable anywhere. */
-export function ShareInviteModal({ open, onClose, inviteLink, hostName, occasion, dateLabel, note }: Props) {
+export function ShareInviteModal({ open, onClose, inviteLink, hostName, occasion, eventTitle, dateLabel, note }: Props) {
   const [qr, setQr] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -44,7 +46,8 @@ export function ShareInviteModal({ open, onClose, inviteLink, hostName, occasion
   if (!open) return null;
 
   const what = (occasion || "celebration").replace(/_/g, " ");
-  const message = `You're invited to ${hostName ? `${hostName}'s` : "my"} ${what} at Tropica NYC${
+  const partyName = eventTitle?.trim() || `${hostName ? `${hostName}'s` : "my"} ${what}`;
+  const message = `You're invited to ${partyName} at Tropica NYC${
     dateLabel ? ` on ${dateLabel}` : ""
   }! Tap to join the guest list and get your door pass: ${inviteLink}`;
 

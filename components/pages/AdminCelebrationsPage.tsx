@@ -15,6 +15,7 @@ interface Celebration {
   startTime: string;
   endTime: string;
   occasion: string;
+  eventTitle?: string;
   status: string;
   capacity: number;
   registered: number;
@@ -164,7 +165,8 @@ export default function AdminCelebrationsPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[11px] uppercase tracking-[0.2em] text-[#E0C68E] font-bold capitalize">{nice(c.occasion)}</p>
-                    <h2 className="text-xl font-headline font-bold truncate">{c.hostName}&apos;s party</h2>
+                    <h2 className="text-xl font-headline font-bold truncate">{c.eventTitle || `${c.hostName}'s party`}</h2>
+                    {c.eventTitle && <p className="text-xs text-white/50 truncate">Host: {c.hostName}</p>}
                     <p className="text-xs text-white/55 mt-1 flex flex-wrap gap-x-3 gap-y-1">
                       <span className="inline-flex items-center gap-1">
                         <CalendarDays className="w-3.5 h-3.5 text-[#C8A96A]" /> {dateLabel(c.date)}

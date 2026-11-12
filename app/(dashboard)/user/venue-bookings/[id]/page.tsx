@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/axios";
 import { ShareInviteModal } from "@/components/booking/ShareInviteModal";
+import { CelebrationDetailsCard } from "@/components/booking/CelebrationDetailsCard";
 import { formatTimeTo12Hour, toCurrentSiteUrl } from "@/lib/utils";
 import toast, { Toaster } from "react-hot-toast";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -45,7 +46,7 @@ interface GuestPass {
 interface AttendanceData {
   inviteLink: string;
   invitesActive?: boolean;
-  event?: { date: string; startTime: string; endTime?: string; occasion: string; hostName: string };
+  event?: { date: string; startTime: string; endTime?: string; occasion: string; hostName: string; eventTitle?: string; flyerUrl?: string };
   invitationToken: string;
   requireHostApproval: boolean;
   capacityLimit: number;
@@ -204,7 +205,7 @@ export default function BookingGuestsPage() {
             Event Host Dashboard
           </span>
           <h1 className="font-headline italic text-3xl sm:text-4xl text-white">
-            Guest List &amp; Invitations
+            {data?.event?.eventTitle || "Guest List & Invitations"}
           </h1>
           {data?.event && (
             <p className="text-sm text-[#E0C68E] mt-1 capitalize">
@@ -233,8 +234,19 @@ export default function BookingGuestsPage() {
         </div>
       )}
 
+      {data?.event && (
+        <CelebrationDetailsCard
+          bookingId={bookingId}
+          eventTitle={data.event.eventTitle || ""}
+          flyerUrl={data.event.flyerUrl || ""}
+          defaultTitle={`${data.event.hostName}'s ${data.event.occasion.replace(/_/g, " ")}`}
+          onSaved={(v) => setData((d) => (d && d.event ? { ...d, event: { ...d.event, ...v } } : d))}
+        />
+      )}
+
       <ShareInviteModal
         open={shareOpen}
+        eventTitle={data?.event?.eventTitle}
         onClose={() => setShareOpen(false)}
         inviteLink={data?.inviteLink || ""}
         hostName={data?.event?.hostName}
