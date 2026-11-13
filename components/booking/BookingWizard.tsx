@@ -21,6 +21,7 @@ import { StepOccasionSelection } from "./StepOccasionSelection";
 import { StepAddons } from "./StepAddons";
 import { StepCakeDetails } from "./StepCakeDetails";
 import { StepSummaryPayment } from "./StepSummaryPayment";
+import { getAttributionPayload } from "@/lib/tracking";
 
 interface BookingData {
   date: string | null;
@@ -142,7 +143,9 @@ export const BookingWizard = () => {
         customCakeDetails: bookingData.addons.includes("custom_cake") ? bookingData.customCakeDetails : undefined,
         cakePrice: bookingData.addons.includes("custom_cake") && bookingData.customCakeDetails ? bookingData.customCakeDetails.retailPrice : (bookingData.addons.includes("cake") ? 50 : 0),
         userId: user?.id,
-        allowSplit
+        allowSplit,
+        // Ad / Instagram attribution (utm_*, fbclid) — same as the private venue flow
+        ...getAttributionPayload()
       };
 
       const { data } = await api.post("/bookings/reserve", payload);

@@ -11,6 +11,7 @@ export interface AttributionData {
   utm_content?: string;
   utm_term?: string;
   fbclid?: string;
+  ttclid?: string; // TikTok Ads click id
   fbc?: string;
   fbp?: string;
   landingPage?: string;
@@ -46,6 +47,7 @@ export const initAttributionTracking = (): AttributionData => {
     const utm_content = urlParams.get("utm_content") || existing.utm_content || "";
     const utm_term = urlParams.get("utm_term") || existing.utm_term || "";
     const fbclid = urlParams.get("fbclid") || existing.fbclid || "";
+    const ttclid = urlParams.get("ttclid") || existing.ttclid || "";
 
     // Generate Facebook Click Cookie (_fbc) format if fbclid is present: fb.1.{timestamp}.{fbclid}
     let fbc = existing.fbc || getCookie("_fbc") || "";
@@ -59,13 +61,19 @@ export const initAttributionTracking = (): AttributionData => {
     const landingPage = existing.landingPage || window.location.href.split("?")[0];
     const referralUrl = existing.referralUrl || document.referrer || "";
 
+    // No UTM tags: infer the platform from the click id or the referring site
+    const ref = document.referrer || "";
+    const inferredSource = ttclid || /tiktok\.com/i.test(ref) ? "tiktok" : /instagram\.com/i.test(ref) ? "instagram" : undefined;
+    const inferredMedium = ttclid ? "paid_social" : inferredSource ? "social" : undefined;
+
     const attribution: AttributionData = {
-      utm_source: utm_source || (document.referrer.includes("instagram.com") ? "instagram" : undefined),
-      utm_medium: utm_medium || (document.referrer.includes("instagram.com") ? "social" : undefined),
+      utm_source: utm_source || inferredSource,
+      utm_medium: utm_medium || inferredMedium,
       utm_campaign: utm_campaign || undefined,
       utm_content: utm_content || undefined,
       utm_term: utm_term || undefined,
       fbclid: fbclid || undefined,
+      ttclid: ttclid || undefined,
       fbc: fbc || undefined,
       fbp: fbp || undefined,
       landingPage,
@@ -103,6 +111,7 @@ export const getAttributionPayload = (): Record<string, string> => {
     if (data.utm_content) payload.utmContent = data.utm_content;
     if (data.utm_term) payload.utmTerm = data.utm_term;
     if (data.fbclid) payload.fbclid = data.fbclid;
+    if (data.ttclid) payload.ttclid = data.ttclid;
     if (data.fbc) payload.fbc = data.fbc;
     if (data.fbp) payload.fbp = data.fbp;
     if (data.landingPage) payload.referralUrl = data.landingPage;

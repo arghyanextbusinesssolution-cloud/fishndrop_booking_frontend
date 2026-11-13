@@ -419,7 +419,7 @@ export default function BookingDetailPage() {
           {b.discountApplied ? <Row label="Discount">−{money(b.discountApplied)}</Row> : null}
           <Row label="Paid">{money(paid)}</Row>
           <Row label="Remaining">{money(b.remainingAmount)}</Row>
-          <Row label="Method">{b.paymentMethod === "zelle" ? "Zelle" : "Card"}</Row>
+          <Row label="Method">{({ zelle: "Zelle", cash: "Cash", bank_transfer: "Bank transfer", other: "Other" } as Record<string, string>)[b.paymentMethod] || "Card"}</Row>
           {b.paymentMethod === "zelle" && <Row label="Zelle status">{nice(b.zelleVerificationStatus) || "—"}</Row>}
           {b.zelleProofUrl && (
             <Row label="Zelle screenshot">

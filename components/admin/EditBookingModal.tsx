@@ -2,9 +2,19 @@
 
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { CalendarDays, Loader2, Mail, Phone, Save, User as UserIcon, X } from "lucide-react";
+import { CalendarDays, CreditCard, Loader2, Mail, Phone, Save, Sparkles, User as UserIcon, X } from "lucide-react";
 import api from "@/lib/axios";
+import { useAuthStore } from "@/store/authStore";
 
+const STATUSES = ["pending", "confirmed", "cancelled"];
+const PAY_METHODS: [string, string][] = [["card", "Card"], ["zelle", "Zelle"], ["cash", "Cash"], ["bank_transfer", "Bank transfer"], ["other", "Other"]];
+const CATERING_OPTIONS: [string, string][] = [
+  ["none", "No partner catering (self-managed)"],
+  ["jamaican_jerk_house", "Jamaican Jerk House (Caribbean)"],
+  ["east_coast_street_tacos", "East Coast Street Tacos (Mexican)"],
+  ["cooklyn_eats", "Cooklyn Eats (Soul Food)"],
+  ["custom_catering", "Custom / multi-restaurant mix"]
+];
 const OCCASIONS = ["birthday", "anniversary", "graduation", "baby_shower", "business", "quiet", "other"];
 
 const toDateInput = (d?: string) => (d ? String(d).slice(0, 10) : "");
@@ -31,8 +41,20 @@ export function EditBookingModal({ booking: b, onClose, onSaved }: Props) {
     notes: b.notes || "",
     bookingDate: toDateInput(b.bookingDate),
     bookingTime: b.bookingTime || "",
-    durationHours: String(b.durationHours || (isPrivate ? 5 : 2))
+    durationHours: String(b.durationHours || (isPrivate ? 5 : 2)),
+    status: b.status || "pending",
+    totalAmount: String(b.totalAmount ?? 0),
+    amountPaid: String(Math.max(0, (b.totalAmount || 0) - (b.remainingAmount || 0))),
+    paymentMethod: b.paymentMethod || "card",
+    paymentNote: "",
+    needDj: b.needDj ? "yes" : "no",
+    needPhotographer: b.needPhotographer ? "yes" : "no",
+    photographerHours: String(b.photographerHours || 2),
+    cateringMenu: b.cateringMenu || "none",
+    complimentaryDrinks: String(b.complimentaryDrinks ?? 0)
   };
+  const role = useAuthStore((s) => s.user?.role);
+  const canEditMoney = role === "admin" || role === "owner";
   const [form, setForm] = useState(original);
   const [updateAccount, setUpdateAccount] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,6 +63,11 @@ export function EditBookingModal({ booking: b, onClose, onSaved }: Props) {
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  const cateringOptions: [string, string][] = CATERING_OPTIONS.some(([k]) => k === original.cateringMenu)
+    ? CATERING_OPTIONS
+    : [[original.cateringMenu, original.cateringMenu.replace(/_/g, " ")], ...CATERING_OPTIONS];
+  const remaining = Math.round(((Number(form.totalAmount) || 0) - (Number(form.amountPaid) || 0)) * 100) / 100;
+  const moneyChanged = form.totalAmount !== original.totalAmount || form.amountPaid !== original.amountPaid;
   const occasions = OCCASIONS.includes(original.occasion) ? OCCASIONS : [original.occasion, ...OCCASIONS];
   const contactChanged =
     form.customerName !== original.customerName || form.customerEmail !== original.customerEmail || form.customerPhone !== original.customerPhone;
@@ -57,6 +84,26 @@ export function EditBookingModal({ booking: b, onClose, onSaved }: Props) {
       if (form[k].trim() !== original[k]) details[k] = form[k].trim();
     });
     if (form.partySize !== original.partySize) details.partySize = Number(form.partySize);
+    if (form.complimentaryDrinks !== original.complimentaryDrinks) details.complimentaryDrinks = Number(form.complimentaryDrinks);
+    if (isPrivate) {
+      if (form.needDj !== original.needDj) details.needDj = form.needDj === "yes";
+      if (form.needPhotographer !== original.needPhotographer) details.needPhotographer = form.needPhotographer === "yes";
+      if (form.photographerHours !== original.photographerHours) details.photographerHours = Number(form.photographerHours);
+      if (form.cateringMenu !== original.cateringMenu) details.cateringMenu = form.cateringMenu;
+    }
+    if (canEditMoney) {
+      if (form.status !== original.status) details.status = form.status;
+      if (form.paymentMethod !== original.paymentMethod) details.paymentMethod = form.paymentMethod;
+      if (moneyChanged) {
+        if (remaining < 0) {
+          setError("Amount paid can't be more than the total");
+          return;
+        }
+        details.totalAmount = Number(form.totalAmount);
+        details.amountPaid = Number(form.amountPaid);
+        if (form.paymentNote.trim()) details.paymentNote = form.paymentNote.trim();
+      }
+    }
 
     if (!Object.keys(details).length && !scheduleChanged) {
       onClose();
@@ -187,12 +234,117 @@ export function EditBookingModal({ booking: b, onClose, onSaved }: Props) {
             </p>
           )}
           {form.partySize !== original.partySize && (
-            <p className="text-[11px] text-white/45">Changing guests doesn&apos;t change the price. Use the offer / payment tools for that.</p>
+            <p className="text-[11px] text-white/45">Changing guests doesn&apos;t change the price{canEditMoney ? ". Adjust the total below if it should" : ""}.</p>
           )}
           <div>
             <label htmlFor="eb-notes" className={label}>Notes</label>
             <textarea id="eb-notes" rows={3} maxLength={3000} value={form.notes} onChange={set("notes")} className={`${field} resize-y`} placeholder="Special requests, seating notes…" />
           </div>
+        </section>
+
+        {/* Status & payment (admin / owner) */}
+        {canEditMoney && (
+          <section className="space-y-3 pt-4 border-t border-white/10">
+            <h3 className="text-xs font-bold flex items-center gap-2 text-[#E0C68E]">
+              <CreditCard className="w-4 h-4" /> Status &amp; payment
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div>
+                <label htmlFor="eb-status" className={label}>Status</label>
+                <select id="eb-status" value={form.status} onChange={set("status")} className={`${field} capitalize cursor-pointer`}>
+                  {STATUSES.map((s) => (
+                    <option key={s} value={s} className="bg-[#140f09]">{s}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="eb-total" className={label}>Total ($)</label>
+                <input id="eb-total" type="number" min={0} step="0.01" required value={form.totalAmount} onChange={set("totalAmount")} className={field} />
+              </div>
+              <div>
+                <label htmlFor="eb-paid" className={label}>Paid ($)</label>
+                <input id="eb-paid" type="number" min={0} step="0.01" required value={form.amountPaid} onChange={set("amountPaid")} className={field} />
+              </div>
+              <div>
+                <span className={label}>Remaining</span>
+                <p className={`px-3 py-2.5 text-sm font-semibold ${remaining < 0 ? "text-rose-300" : remaining === 0 ? "text-emerald-300" : "text-white"}`}>
+                  ${remaining.toFixed(2)}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <label htmlFor="eb-method" className={label}>Payment method</label>
+                <select id="eb-method" value={form.paymentMethod} onChange={set("paymentMethod")} className={`${field} cursor-pointer`}>
+                  {PAY_METHODS.map(([v, l]) => (
+                    <option key={v} value={v} className="bg-[#140f09]">{l}</option>
+                  ))}
+                </select>
+              </div>
+              {moneyChanged && (
+                <div className="col-span-2">
+                  <label htmlFor="eb-paynote" className={label}>Reason for change</label>
+                  <input id="eb-paynote" maxLength={300} value={form.paymentNote} onChange={set("paymentNote")} placeholder="e.g. Cash balance received at door" className={field} />
+                </div>
+              )}
+            </div>
+            {moneyChanged && (
+              <p className="text-[11px] text-white/45">
+                Payment status is set from these numbers (fully paid, deposit paid or unpaid), and the change is logged in the payment history.
+              </p>
+            )}
+            {form.status === "cancelled" && original.status !== "cancelled" && (
+              <p className="text-[11px] text-amber-200/90 bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2">
+                Cancelling frees the slot. No refund is issued automatically.
+              </p>
+            )}
+          </section>
+        )}
+
+        {/* Add-ons */}
+        <section className="space-y-3 pt-4 border-t border-white/10">
+          <h3 className="text-xs font-bold flex items-center gap-2 text-[#E0C68E]">
+            <Sparkles className="w-4 h-4" /> {isPrivate ? "Add-ons & drinks" : "Drinks"}
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {isPrivate && (
+              <>
+                <div>
+                  <label htmlFor="eb-dj" className={label}>DJ</label>
+                  <select id="eb-dj" value={form.needDj} onChange={set("needDj")} className={`${field} cursor-pointer`}>
+                    <option value="no" className="bg-[#140f09]">No</option>
+                    <option value="yes" className="bg-[#140f09]">Yes</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="eb-photo" className={label}>Photographer</label>
+                  <select id="eb-photo" value={form.needPhotographer} onChange={set("needPhotographer")} className={`${field} cursor-pointer`}>
+                    <option value="no" className="bg-[#140f09]">No</option>
+                    <option value="yes" className="bg-[#140f09]">Yes</option>
+                  </select>
+                </div>
+                {form.needPhotographer === "yes" && (
+                  <div>
+                    <label htmlFor="eb-photo-hrs" className={label}>Photo hours</label>
+                    <input id="eb-photo-hrs" type="number" min={1} max={12} value={form.photographerHours} onChange={set("photographerHours")} className={field} />
+                  </div>
+                )}
+                <div className="col-span-2">
+                  <label htmlFor="eb-catering" className={label}>Catering</label>
+                  <select id="eb-catering" value={form.cateringMenu} onChange={set("cateringMenu")} className={`${field} cursor-pointer`}>
+                    {cateringOptions.map(([v, l]) => (
+                      <option key={v} value={v} className="bg-[#140f09]">{l}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+            <div>
+              <label htmlFor="eb-drinks" className={label}>Free drinks</label>
+              <input id="eb-drinks" type="number" min={0} max={5000} value={form.complimentaryDrinks} onChange={set("complimentaryDrinks")} className={field} />
+            </div>
+          </div>
+          {isPrivate && (
+            <p className="text-[11px] text-white/45">Add-on changes don&apos;t change the price. Adjust the total above if they should.</p>
+          )}
         </section>
 
         {error && <p className="text-xs text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">{error}</p>}

@@ -34,8 +34,10 @@ import {
   Loader2,
   Camera,
   Plus,
-  CalendarClock
+  CalendarClock,
+  Pencil
 } from "lucide-react";
+import { EditBookingModal } from "@/components/admin/EditBookingModal";
 import { CalendarDropdown } from "@/components/shared/CalendarDropdown";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { exportBookingsToCSV } from "@/lib/exportCsv";
@@ -272,6 +274,19 @@ export default function AdminBookingsPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [selectedProofModal, setSelectedProofModal] = useState<{ url: string; booking: Booking; proofType?: "deposit" | "balance" } | null>(null);
   const [quoteModalBooking, setQuoteModalBooking] = useState<Booking | null>(null);
+  const [editBooking, setEditBooking] = useState<Booking | null>(null);
+
+  // Multi-select + bulk actions
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkAction, setBulkAction] = useState<"delete" | "cancel" | "mark_paid" | null>(null);
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const toggleSelected = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   // Reschedule & Guest Media Modals State
   const [rescheduleBookingTarget, setRescheduleBookingTarget] = useState<Booking | null>(null);
@@ -302,6 +317,11 @@ export default function AdminBookingsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // A new page / tab / date shows different rows — start with nothing selected
+  useEffect(() => {
+    setSelected(new Set());
+  }, [page, status, selectedDate]);
 
   const openRescheduleModal = (booking: Booking) => {
     setRescheduleBookingTarget(booking);
@@ -376,6 +396,51 @@ export default function AdminBookingsPage() {
     )
     : bookings;
 
+  const selectedBookings = filtered.filter((b) => selected.has(b._id));
+  const allOnPageSelected = filtered.length > 0 && filtered.every((b) => selected.has(b._id));
+  const toggleSelectAll = () =>
+    setSelected(allOnPageSelected ? new Set() : new Set(filtered.map((b) => b._id)));
+
+  /** Runs the chosen bulk action one booking at a time (reuses the single-booking endpoints). */
+  const runBulkAction = async () => {
+    const action = bulkAction;
+    setBulkAction(null);
+    if (!action) return;
+    const targets = selectedBookings.filter((b) =>
+      action === "cancel" ? b.status !== "cancelled" : action === "mark_paid" ? b.paymentStatus !== "paid" && b.status !== "cancelled" : true
+    );
+    const skipped = selectedBookings.length - targets.length;
+    if (!targets.length) {
+      toast.error(action === "cancel" ? "All selected bookings are already cancelled" : "Nothing to mark paid in the selection");
+      return;
+    }
+
+    setBulkRunning(true);
+    let ok = 0;
+    const failed: string[] = [];
+    for (const b of targets) {
+      try {
+        if (action === "delete") await deleteBooking(b._id);
+        else if (action === "cancel") await adminCancelBooking(b._id);
+        else
+          await api.patch(`/admin/bookings/${b._id}/mark-paid`, {
+            paymentMethod: b.paymentMethod || "cash",
+            notes: "Admin bulk-verified as fully paid"
+          });
+        ok++;
+      } catch {
+        failed.push(b.customerName || b._id.slice(-6));
+      }
+    }
+    setBulkRunning(false);
+
+    const verb = action === "delete" ? "deleted" : action === "cancel" ? "cancelled" : "marked paid";
+    if (ok) toast.success(`${ok} booking${ok === 1 ? "" : "s"} ${verb}${skipped ? ` (${skipped} skipped)` : ""}`);
+    if (failed.length) toast.error(`Failed for: ${failed.slice(0, 5).join(", ")}${failed.length > 5 ? ` +${failed.length - 5} more` : ""}`);
+    setSelected(new Set());
+    await load();
+  };
+
   const handleConfirm = async () => {
     if (!pendingAction) return;
     const { bookingId, action } = pendingAction;
@@ -433,6 +498,29 @@ export default function AdminBookingsPage() {
         variant={pendingAction?.action === "mark_paid" ? "success" : "danger"}
         onConfirm={handleConfirm}
         onCancel={() => setPendingAction(null)}
+      />
+
+      <ConfirmDialog
+        open={!!bulkAction}
+        title={
+          bulkAction === "delete"
+            ? `Delete ${selectedBookings.length} bookings`
+            : bulkAction === "mark_paid"
+            ? `Mark ${selectedBookings.length} bookings fully paid`
+            : `Cancel ${selectedBookings.length} bookings`
+        }
+        message={
+          bulkAction === "delete"
+            ? "These bookings will be permanently removed and their slots/tables released. This cannot be undone."
+            : bulkAction === "mark_paid"
+            ? "Each selected booking's remaining balance will be recorded as collected. Cancelled or already-paid bookings are skipped."
+            : "Each selected booking will be cancelled and its slot released. Guests are notified as with a single cancel. Already-cancelled ones are skipped."
+        }
+        confirmLabel={bulkAction === "delete" ? "Delete all" : bulkAction === "mark_paid" ? "Mark all paid" : "Cancel all"}
+        cancelLabel="Go back"
+        variant={bulkAction === "mark_paid" ? "success" : "danger"}
+        onConfirm={runBulkAction}
+        onCancel={() => setBulkAction(null)}
       />
 
       {/* Page Header */}
@@ -583,6 +671,63 @@ export default function AdminBookingsPage() {
 
       {/* Full Width Bookings Table */}
       <div className="w-full space-y-4">
+          {/* Bulk action bar */}
+          {filtered.length > 0 && (
+            <div
+              className={cn(
+                "flex flex-wrap items-center gap-2 rounded-xl border px-4 py-3 transition-colors",
+                selected.size > 0 ? "border-[#C8A96A]/50 bg-[#C8A96A]/10" : "border-outline-variant/10 bg-surface-container-lowest"
+              )}
+            >
+              <label className="flex items-center gap-2 text-xs font-bold text-on-surface cursor-pointer mr-2">
+                <input type="checkbox" checked={allOnPageSelected} onChange={toggleSelectAll} className="w-4 h-4 accent-[#C8A96A] cursor-pointer" />
+                {selected.size > 0 ? `${selected.size} selected` : "Select all on this page"}
+              </label>
+              {selected.size > 0 && (
+                <>
+                  <button
+                    onClick={() => setSelected(new Set())}
+                    className="text-[10px] uppercase tracking-widest font-bold text-secondary hover:text-on-surface px-2 py-1"
+                  >
+                    Clear
+                  </button>
+                  <div className="flex flex-wrap gap-2 ml-auto">
+                    <button
+                      disabled={bulkRunning}
+                      onClick={() => {
+                        exportBookingsToCSV(selectedBookings, "bookings_selected");
+                        toast.success(`Exported ${selectedBookings.length} booking(s)`);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant/30 text-on-surface text-[10px] uppercase tracking-widest font-bold hover:bg-white/5 disabled:opacity-50"
+                    >
+                      <Download className="w-3.5 h-3.5" /> Export
+                    </button>
+                    <button
+                      disabled={bulkRunning}
+                      onClick={() => setBulkAction("mark_paid")}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-400/50 text-emerald-300 text-[10px] uppercase tracking-widest font-bold hover:bg-emerald-500/10 disabled:opacity-50"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Mark paid
+                    </button>
+                    <button
+                      disabled={bulkRunning}
+                      onClick={() => setBulkAction("cancel")}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-300/50 text-red-300 text-[10px] uppercase tracking-widest font-bold hover:bg-red-500/10 disabled:opacity-50"
+                    >
+                      <XCircle className="w-3.5 h-3.5" /> Cancel
+                    </button>
+                    <button
+                      disabled={bulkRunning}
+                      onClick={() => setBulkAction("delete")}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-[10px] uppercase tracking-widest font-bold hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {bulkRunning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <X className="w-3.5 h-3.5" />} Delete
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           <div className="rounded-xl shadow-sm border border-outline-variant/10 bg-surface-container-lowest overflow-hidden">
             {filtered.length === 0 ? (
               <p className="p-10 text-center font-body text-secondary italic text-sm">
@@ -600,6 +745,13 @@ export default function AdminBookingsPage() {
                     >
                         <div className="flex items-center justify-between gap-2 flex-wrap">
                           <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={selected.has(b._id)}
+                              onChange={() => toggleSelected(b._id)}
+                              aria-label={`Select booking for ${b.customerName || "guest"}`}
+                              className="w-4 h-4 accent-[#C8A96A] cursor-pointer"
+                            />
                             <span className="text-xs font-mono text-secondary font-bold">#{(page - 1) * 10 + i + 1}</span>
                             <CategoryBadge status={b.status} paymentStatus={b.paymentStatus} />
                             <TypeBadge type={b.bookingType} />
@@ -748,6 +900,17 @@ export default function AdminBookingsPage() {
                               Verify Zelle
                             </button>
                           )}
+                          {/* Edit (all details) */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditBooking(b);
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#C8A96A] bg-[#C8A96A]/15 text-[#E0C68E] text-[9px] uppercase tracking-widest font-bold hover:bg-[#C8A96A]/25 transition-colors"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                            Edit
+                          </button>
                           {/* Reschedule */}
                           <button
                             onClick={(e) => {
@@ -803,6 +966,15 @@ export default function AdminBookingsPage() {
                   <table className="min-w-[1280px] w-full text-left">
                     <thead className="bg-surface-container border-b border-outline-variant/10">
                       <tr>
+                        <th className="pl-4 pr-1 py-3 w-8">
+                          <input
+                            type="checkbox"
+                            checked={allOnPageSelected}
+                            onChange={toggleSelectAll}
+                            aria-label="Select all bookings on this page"
+                            className="w-4 h-4 accent-[#C8A96A] cursor-pointer align-middle"
+                          />
+                        </th>
                         {["#", "Category", "Type", "Guest Name", "Occasion", "Email", "Phone", "Event Date", "Tried Date", "Time", "Party", "Tables", "DJ", "Photo", "Catering Menu", "Amount & Offer", "Payment", "Status", "Actions"].map(h => (
                           <th key={h} className="px-3 py-3 text-[9px] uppercase tracking-widest text-outline font-bold whitespace-nowrap">
                             {h}
@@ -816,8 +988,20 @@ export default function AdminBookingsPage() {
                           key={b._id}
                           onClick={(e) => openDetail(e, b._id)}
                           title="Open full booking details"
-                          className="hover:bg-surface-container/50 transition-colors cursor-pointer"
+                          className={cn(
+                            "hover:bg-surface-container/50 transition-colors cursor-pointer",
+                            selected.has(b._id) && "bg-[#C8A96A]/10"
+                          )}
                         >
+                            <td className="pl-4 pr-1 py-2.5">
+                              <input
+                                type="checkbox"
+                                checked={selected.has(b._id)}
+                                onChange={() => toggleSelected(b._id)}
+                                aria-label={`Select booking for ${b.customerName || "guest"}`}
+                                className="w-4 h-4 accent-[#C8A96A] cursor-pointer align-middle"
+                              />
+                            </td>
                             <td className="px-3 py-2.5 font-body text-xs text-secondary">{(page - 1) * 10 + i + 1}</td>
                             <td className="px-3 py-2.5"><CategoryBadge status={b.status} paymentStatus={b.paymentStatus} /></td>
                             <td className="px-3 py-2.5"><TypeBadge type={b.bookingType} /></td>
@@ -982,6 +1166,18 @@ export default function AdminBookingsPage() {
                                     <span className="hidden lg:inline">Verify</span>
                                   </button>
                                 )}
+                                {/* Edit (all details) */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditBooking(b);
+                                  }}
+                                  className="flex items-center gap-1 px-2 py-1 rounded-lg border border-[#C8A96A] bg-[#C8A96A]/15 text-[#E0C68E] text-[9px] font-bold hover:bg-[#C8A96A]/25 transition-colors"
+                                  title="Edit booking (amount, payment, add-ons, details)"
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                  <span className="hidden lg:inline">Edit</span>
+                                </button>
                                 {/* Reschedule */}
                                 <button
                                   onClick={(e) => {
@@ -1045,6 +1241,11 @@ export default function AdminBookingsPage() {
             )}
           </div>
         </div>
+
+      {/* Full Edit Booking Modal (customer, schedule, amounts, payment, status, add-ons) */}
+      {editBooking && (
+        <EditBookingModal booking={editBooking} onClose={() => setEditBooking(null)} onSaved={() => void load()} />
+      )}
 
       {/* Offer Quote Modal */}
       {quoteModalBooking && (
