@@ -105,6 +105,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             ;n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
 
               ttq.load('DAQHS6RC77U5PB607V20');
+              ttq.load('DBS7UMRC77U7DAF8LB00');
               ttq.page();
             }(window, document, 'ttq');
           `}
