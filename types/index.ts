@@ -3,7 +3,7 @@ export interface User {
   name: string;
   email: string;
   phone?: string;
-  role: "user" | "admin" | "owner" | "staff" | "promoter";
+  role: "user" | "admin" | "owner" | "staff" | "promoter" | "seo";
   companyName?: string;
   promoterStatus?: "pending" | "approved" | "rejected";
   stripeConnectAccountId?: string;

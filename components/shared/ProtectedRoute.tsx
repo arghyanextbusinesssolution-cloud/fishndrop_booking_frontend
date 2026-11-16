@@ -20,13 +20,23 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     
     // Only redirect if we're sure auth check is complete
     if (!isAuthenticated) {
-      router.replace("/login");
+      router.replace(pathname.startsWith("/seo") ? "/seo-login" : "/login");
       return;
     }
 
     // Role-based route protection
     if (user?.role) {
       const role = user.role;
+
+      // SEO logins: blog area only
+      if (role === "seo" && !pathname.startsWith("/seo")) {
+        router.replace("/seo");
+        return;
+      }
+      if (pathname.startsWith("/seo") && role !== "seo" && role !== "admin" && role !== "owner") {
+        router.replace("/user");
+        return;
+      }
 
       // Admin routes: only admin/owner
       if (pathname.startsWith("/admin") && role !== "admin" && role !== "owner") {

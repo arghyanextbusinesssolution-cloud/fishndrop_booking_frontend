@@ -1,7 +1,29 @@
-"use client";
-
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BookingWizard } from "@/components/booking/BookingWizard";
+
+export const metadata: Metadata = {
+  title: "Private Dining Reservations in Brooklyn, NYC | Tropica",
+  description:
+    "Book Private Dining Reservations in Brooklyn, NYC at Tropica. Enjoy elegant garden dining, delicious cuisine, and unforgettable celebrations.",
+  alternates: { canonical: "https://www.tropica.nyc/book-table/" },
+  openGraph: {
+    title: "Private Dining Reservations in Brooklyn, NYC | Tropica",
+    description:
+      "Book Private Dining Reservations in Brooklyn, NYC at Tropica. Enjoy elegant garden dining, delicious cuisine, and unforgettable celebrations.",
+    url: "https://www.tropica.nyc/book-table/",
+    siteName: "Tropica",
+    images: [{ url: "https://www.tropica.nyc/tropica-logo.png", alt: "Tropica — Brooklyn, NYC" }],
+    locale: "en_US",
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Private Dining Reservations in Brooklyn, NYC | Tropica",
+    description:
+      "Book Private Dining Reservations in Brooklyn, NYC at Tropica. Enjoy elegant garden dining, delicious cuisine, and unforgettable celebrations."
+  }
+};
 
 export default function BookTablePage() {
   return (

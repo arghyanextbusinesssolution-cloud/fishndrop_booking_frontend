@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const authPages = ["/login", "/register", "/admin-login", "/employee-login", "/staff-login"];
+const authPages = ["/login", "/register", "/admin-login", "/employee-login", "/staff-login", "/seo-login"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -14,6 +14,9 @@ export function middleware(request: NextRequest) {
 
   // If already logged in and visiting auth pages, redirect to role-based dashboard
   if (isAuthPage && hasSession) {
+    if (role === "seo") {
+      return NextResponse.redirect(new URL("/seo", request.url));
+    }
     if (role === "admin" || role === "owner") {
       return NextResponse.redirect(new URL("/admin", request.url));
     }
@@ -37,6 +40,20 @@ export function middleware(request: NextRequest) {
   const isEmployeeRoute = cleanPath === "/employee" || cleanPath.startsWith("/employee/");
   const isProtectedPromoterRoute =
     (cleanPath === "/promoter" || cleanPath.startsWith("/promoter/")) && cleanPath !== "/promoter/register";
+
+  const isSeoRoute = cleanPath === "/seo" || cleanPath.startsWith("/seo/");
+
+  // SEO area (blog only): needs a login; only seo / admin / owner may enter
+  if (isSeoRoute) {
+    if (!hasSession) return NextResponse.redirect(new URL("/seo-login", request.url));
+    if (!["seo", "admin", "owner"].includes(role || "")) return NextResponse.redirect(new URL("/user", request.url));
+    return NextResponse.next();
+  }
+
+  // SEO logins can only use the SEO area
+  if (role === "seo" && (isUserRoute || isAdminRoute || isEmployeeRoute || isProtectedPromoterRoute)) {
+    return NextResponse.redirect(new URL("/seo", request.url));
+  }
 
   // Require session for protected areas
   if ((isUserRoute || isAdminRoute || isEmployeeRoute || isProtectedPromoterRoute) && !hasSession) {
@@ -100,6 +117,9 @@ export const config = {
     "/admin-login",
     "/employee-login",
     "/staff-login",
+    "/seo-login",
+    "/seo",
+    "/seo/:path*",
     "/user/:path*",
     "/admin/:path*",
     "/employee/:path*",
