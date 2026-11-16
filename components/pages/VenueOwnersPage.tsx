@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { Building2, Clock, Inbox, KeyRound, Loader2, Mail, Pencil, Phone, Plus, Search, Users } from "lucide-react";
+import { Building2, Clock, Inbox, KeyRound, Loader2, Mail, Pencil, Phone, Plus, Search, Trash2, Users } from "lucide-react";
 import api from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
@@ -32,6 +32,22 @@ export default function VenueOwnersPage() {
   const [wizard, setWizard] = useState<{ open: boolean; venue: AdminVenueRow | null }>({ open: false, venue: null });
   const [resetting, setResetting] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState<AdminVenueRow | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<AdminVenueRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const deleteVenue = async (v: AdminVenueRow) => {
+    setDeleting(true);
+    try {
+      const { data } = await api.delete(`/admin/marketplace/venues/${v._id}`);
+      toast.success(data.message || "Venue owner deleted");
+      setVenues((list) => list?.filter((x) => x._id !== v._id) ?? list);
+      setConfirmDelete(null);
+    } catch (err: unknown) {
+      toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Couldn't delete this venue owner");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const load = useCallback(async () => {
     try {
@@ -225,6 +241,15 @@ export default function VenueOwnersPage() {
                       Set commission
                     </Link>
                   )}
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDelete(v)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 px-4 py-2 text-[11px] font-bold uppercase tracking-wider text-red-300 hover:bg-red-500/10"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Delete
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -274,6 +299,53 @@ export default function VenueOwnersPage() {
                   className="inline-flex items-center gap-1.5 rounded-full bg-[#C8A96A] px-6 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#0d1612]"
                 >
                   <KeyRound className="w-4 h-4" /> Send new password
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmDelete && (
+        <div
+          className="fixed inset-0 z-[80] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => !deleting && setConfirmDelete(null)}
+        >
+          <div className="w-full max-w-md bg-[#0d1612] border border-white/10 rounded-2xl overflow-hidden shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="h-1 bg-red-500" />
+            <div className="p-6 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-red-500/15 text-red-300 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.25em] text-white/40 font-bold">Delete venue owner</p>
+                  <h2 className="text-xl font-headline italic text-white">Delete {confirmDelete.name}?</h2>
+                </div>
+              </div>
+              <p className="text-sm text-white/70 leading-relaxed">
+                This permanently deletes the venue profile, the login for{" "}
+                <strong className="text-white">{confirmDelete.owner?.email || confirmDelete.ownerEmail}</strong>, and all of this venue&apos;s bookings and
+                calendar blocks. The venue disappears from the booking page. This can&apos;t be undone.
+              </p>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={() => setConfirmDelete(null)}
+                  className="rounded-full px-5 py-2.5 text-[11px] font-bold uppercase tracking-wider text-white/60 hover:text-white disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={() => deleteVenue(confirmDelete)}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-red-500 px-6 py-2.5 text-[11px] font-bold uppercase tracking-wider text-white disabled:opacity-60"
+                >
+                  {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />} Delete permanently
                 </button>
               </div>
             </div>
