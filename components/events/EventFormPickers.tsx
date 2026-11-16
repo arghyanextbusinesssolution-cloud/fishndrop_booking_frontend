@@ -279,12 +279,23 @@ export interface PickedPlace {
   address: string;
   lat?: number;
   lng?: number;
+  /** OSM only: neighborhood (e.g. Williamsburg) and city */
+  neighborhood?: string;
+  city?: string;
 }
 
 const newSession = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 
-export function PlaceAutocomplete({ onSelect, id }: { onSelect: (p: PickedPlace) => void; id?: string }) {
+export function PlaceAutocomplete({
+  onSelect,
+  id,
+  placeholder = "Search venue name or address…"
+}: {
+  onSelect: (p: PickedPlace) => void;
+  id?: string;
+  placeholder?: string;
+}) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PickedPlace[]>([]);
   const [provider, setProvider] = useState<"google" | "osm">("osm");
@@ -371,7 +382,7 @@ export function PlaceAutocomplete({ onSelect, id }: { onSelect: (p: PickedPlace)
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length && setOpen(true)}
           onKeyDown={onKeyDown}
-          placeholder="Search venue name or address…"
+          placeholder={placeholder}
           className="flex-1 min-w-0 bg-transparent py-2.5 text-sm text-white placeholder-white/30 outline-none"
         />
         {loading ? (

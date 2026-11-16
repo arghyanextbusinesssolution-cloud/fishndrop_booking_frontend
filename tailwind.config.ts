@@ -28,6 +28,13 @@ const config: Config = {
         outline: "rgb(var(--outline) / <alpha-value>)",
         "outline-variant": "rgb(var(--outline-variant) / <alpha-value>)",
         error: "rgb(var(--error) / <alpha-value>)",
+        // Booking-wizard brand tokens. Defaults = Tropica gold/green (globals.css);
+        // VenueThemeProvider overrides them when a customer picks a partner venue.
+        brand: "rgb(var(--brand) / <alpha-value>)",
+        "brand-light": "rgb(var(--brand-light) / <alpha-value>)",
+        "brand-ink": "rgb(var(--brand-ink) / <alpha-value>)",
+        "brand-fg": "rgb(var(--brand-fg) / <alpha-value>)",
+        "brand-bg": "rgb(var(--brand-bg) / <alpha-value>)",
       },
       borderRadius: {
         DEFAULT: "0.125rem",

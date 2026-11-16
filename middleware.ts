@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const authPages = ["/login", "/register", "/admin-login", "/employee-login", "/staff-login", "/seo-login"];
+const authPages = ["/login", "/register", "/admin-login", "/employee-login", "/staff-login", "/seo-login", "/partner-login"];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -25,6 +25,9 @@ export function middleware(request: NextRequest) {
     }
     if (role === "promoter") {
       return NextResponse.redirect(new URL("/promoter", request.url));
+    }
+    if (role === "venue_owner") {
+      return NextResponse.redirect(new URL("/partner-portal", request.url));
     }
     return NextResponse.redirect(new URL("/user", request.url));
   }
@@ -53,6 +56,17 @@ export function middleware(request: NextRequest) {
   // SEO logins can only use the SEO area
   if (role === "seo" && (isUserRoute || isAdminRoute || isEmployeeRoute || isProtectedPromoterRoute)) {
     return NextResponse.redirect(new URL("/seo", request.url));
+  }
+
+  // Partner portal: venue owners only (admins/staff manage venues from their own dashboards)
+  const isPartnerPortalRoute = cleanPath === "/partner-portal" || cleanPath.startsWith("/partner-portal/");
+  if (isPartnerPortalRoute) {
+    if (!hasSession) return NextResponse.redirect(new URL("/partner-login", request.url));
+    if (role !== "venue_owner") return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.next();
+  }
+  if (role === "venue_owner" && (isUserRoute || isAdminRoute || isEmployeeRoute || isProtectedPromoterRoute)) {
+    return NextResponse.redirect(new URL("/partner-portal", request.url));
   }
 
   // Require session for protected areas
@@ -123,6 +137,9 @@ export const config = {
     "/user/:path*",
     "/admin/:path*",
     "/employee/:path*",
-    "/promoter/:path*"
+    "/promoter/:path*",
+    "/partner-login",
+    "/partner-portal",
+    "/partner-portal/:path*"
   ]
 };

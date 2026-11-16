@@ -3,7 +3,8 @@ export interface User {
   name: string;
   email: string;
   phone?: string;
-  role: "user" | "admin" | "owner" | "staff" | "promoter" | "seo";
+  role: "user" | "admin" | "owner" | "staff" | "promoter" | "seo" | "venue_owner";
+  partnerVenue?: string;
   companyName?: string;
   promoterStatus?: "pending" | "approved" | "rejected";
   stripeConnectAccountId?: string;
@@ -223,4 +224,74 @@ export interface AvailabilityResponse {
 export interface ApiError {
   message: string;
   errors?: { field: string; message: string }[];
+}
+
+// ─── Venue marketplace ───────────────────────────────────────────────
+export interface VenueTheme {
+  primary: string;
+  primaryContainer: string;
+  onPrimary: string;
+  background: string;
+  surface: string;
+  onSurface: string;
+  accent: string;
+}
+
+export interface VenueDayHours {
+  day: number; // 0 = Sunday
+  open: boolean;
+  openTime: string;
+  closeTime: string; // at/before openTime = closes after midnight
+}
+
+export interface MarketplaceVenue {
+  _id: string;
+  name: string;
+  slug: string;
+  tagline?: string;
+  description: string;
+  address: string;
+  neighborhood?: string;
+  city?: string;
+  lat?: number;
+  lng?: number;
+  venueType: string;
+  amenities: string[];
+  rules: string[];
+  cancellationPolicy?: string;
+  minGuests: number;
+  maxGuests: number;
+  pricingMode: "hourly" | "flat";
+  minHours: number;
+  hourlyPrice?: number;
+  priceFrom: number;
+  regularPriceFrom: number;
+  customerDiscountPct: number;
+  depositPct: number;
+  packages: Array<{ _id: string; name: string; hours: number; description?: string; price: number; regularPrice: number }>;
+  openTime: string;
+  closeTime: string;
+  weeklyHours?: VenueDayHours[];
+  theme: VenueTheme;
+  logoUrl?: string;
+  flyerUrl?: string;
+  coverUrl?: string;
+  photos: string[];
+  available?: boolean | null;
+}
+
+export interface VenueSlot {
+  startTime: string;
+  endTime: string;
+  startMin: number;
+  endMin: number;
+}
+
+export interface CustomerPrice {
+  regularPrice: number;
+  customerPrice: number;
+  customerSavings: number;
+  depositPct: number;
+  depositAmount: number;
+  remainingAmount: number;
 }

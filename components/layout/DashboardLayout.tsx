@@ -7,6 +7,8 @@ import {
   PlusCircle,
   LogOut,
   LayoutDashboard,
+  Landmark,
+  CalendarRange,
   CalendarDays,
   User,
   Settings,
@@ -33,6 +35,7 @@ import {
   PartyPopper,
   MailOpen,
   Database,
+  Store,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -120,14 +123,18 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isStaff = user?.role === "staff";
   const isPromoter = user?.role === "promoter";
   const isApprovedPromoter = isPromoter && user?.promoterStatus === "approved";
-  const isGuestUser = !!user && !isAdmin && !isStaff && !isPromoter;
+  const isVenueOwner = user?.role === "venue_owner";
+  const isGuestUser = !!user && !isAdmin && !isStaff && !isPromoter && !isVenueOwner;
   const upcoming = useUpcomingParties(isGuestUser);
   const nextUp = upcoming?.[0];
 
   const adminNavItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
     ...(isOwnerOrAdmin
-      ? [{ icon: DollarSign, label: "Financials", href: "/admin/financials" }]
+      ? [
+          { icon: DollarSign, label: "Financials", href: "/admin/financials" },
+          { icon: Landmark, label: "External Revenue", href: "/admin/external-revenue" }
+        ]
       : []),
     { icon: CalendarDays, label: "Bookings", href: "/admin/bookings" },
     { icon: PartyPopper, label: "Celebrations", href: "/admin/celebrations" },
@@ -138,6 +145,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { icon: Percent, label: "Commission", href: "/admin/commission" },
     { icon: Ticket, label: "Verify Events", href: "/admin/events" },
     { icon: UserPlus, label: "Employees", href: "/admin/employees" },
+    { icon: Store, label: "Venue Owners", href: "/admin/venue-owners" },
     { icon: QrCode, label: "Door QR Check-In", href: "/admin/check-in" },
     { icon: UtensilsCrossed, label: "Restaurants & Catering", href: "/admin/catering" },
     { icon: TableProperties, label: "Tables", href: "/admin/tables" },
@@ -161,6 +169,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { icon: CalendarDays, label: "Bookings", href: "/employee/bookings" },
     { icon: TableProperties, label: "Tables", href: "/employee/tables" },
     { icon: UtensilsCrossed, label: "Restaurants & Catering", href: "/employee/catering" },
+    { icon: Store, label: "Venue Owners", href: "/employee/venue-owners" },
   ];
 
   const promoterNavItems = [
@@ -171,6 +180,17 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { icon: History, label: "Sales History", href: "/promoter/bookings" },
     { icon: QrCode, label: "Door QR Check-In", href: "/promoter/check-in" },
     { icon: DollarSign, label: "Stripe & Payouts", href: "/promoter/payouts" },
+  ];
+
+  // Partner venue owners (logins created by staff from "Venue Owners")
+  const venueOwnerNavItems = [
+    { icon: LayoutDashboard, label: "Dashboard", href: "/partner-portal" },
+    { icon: CalendarRange, label: "Calendar", href: "/partner-portal/calendar" },
+    { icon: MailOpen, label: "Booking Requests", href: "/partner-portal/requests" },
+    { icon: CalendarDays, label: "Bookings", href: "/partner-portal/bookings" },
+    { icon: Lock, label: "Availability", href: "/partner-portal/availability" },
+    { icon: Camera, label: "Brand & Theme", href: "/partner-portal/brand" },
+    { icon: DollarSign, label: "Stripe & Payouts", href: "/partner-portal/payouts" },
   ];
 
   const pendingPromoterNavItems = [
@@ -184,6 +204,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     { icon: PartyPopper, label: "Celebrations", href: "/user/celebrations" },
     { icon: MailOpen, label: "Invitations", href: "/user/invites" },
     { icon: UtensilsCrossed, label: "Venue Bookings", href: "/user/venue-bookings" },
+    { icon: Store, label: "Partner Venues", href: "/user/marketplace-bookings" },
     { icon: User, label: "Dining Profile", href: "/user/profile" },
   ];
 
@@ -191,6 +212,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     ? adminNavItems
     : isStaff
     ? staffNavItems
+    : isVenueOwner
+    ? venueOwnerNavItems
     : isApprovedPromoter
     ? promoterNavItems
     : isPromoter
@@ -198,7 +221,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     : userNavItems;
 
   const isActive = (href: string) => {
-    if (href === "/admin" || href === "/user" || href === "/promoter" || href === "/employee") {
+    if (href === "/admin" || href === "/user" || href === "/promoter" || href === "/employee" || href === "/partner-portal") {
       return pathname === href;
     }
     if (!(pathname === href || pathname.startsWith(`${href}/`))) return false;
@@ -288,10 +311,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </div>
           <div className="space-y-0.5">
             <p className="font-headline text-xl italic leading-none truncate max-w-[160px] text-[#C8A96A]">
-              {isAdmin ? "The Concierge" : isStaff ? (user?.name || "Staff Member") : isPromoter ? (user?.companyName || user?.name || "Promoter") : (user?.name || "Guest")}
+              {isAdmin ? "The Concierge" : isStaff ? (user?.name || "Staff Member") : isPromoter ? (user?.companyName || user?.name || "Promoter") : isVenueOwner ? (user?.name || "Venue Partner") : (user?.name || "Guest")}
             </p>
             <p className="text-[11px] uppercase tracking-widest text-[#C8A96A]/60 font-bold truncate max-w-[160px]">
-              {isAdmin ? "System Admin" : isStaff ? "Employee" : isApprovedPromoter ? "Event Organizer" : isPromoter ? "Pending Approval" : "Tropica Guest"}
+              {isAdmin ? "System Admin" : isStaff ? "Employee" : isApprovedPromoter ? "Event Organizer" : isPromoter ? "Pending Approval" : isVenueOwner ? "Venue Partner" : "Tropica Guest"}
             </p>
           </div>
         </div>
@@ -327,7 +350,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
           )}
 
-          {!isAdmin && !isStaff && !isPromoter && (
+          {!isAdmin && !isStaff && !isPromoter && !isVenueOwner && (
             <div className="px-8 pt-8">
               <Link
                 href="/"

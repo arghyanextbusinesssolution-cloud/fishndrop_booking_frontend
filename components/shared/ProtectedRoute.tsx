@@ -20,7 +20,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     
     // Only redirect if we're sure auth check is complete
     if (!isAuthenticated) {
-      router.replace(pathname.startsWith("/seo") ? "/seo-login" : "/login");
+      router.replace(pathname.startsWith("/seo") ? "/seo-login" : pathname.startsWith("/partner-portal") ? "/partner-login" : "/login");
       return;
     }
 
@@ -35,6 +35,16 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       }
       if (pathname.startsWith("/seo") && role !== "seo" && role !== "admin" && role !== "owner") {
         router.replace("/user");
+        return;
+      }
+
+      // Venue owners: partner portal only; nobody else may use it
+      if (role === "venue_owner" && !pathname.startsWith("/partner-portal")) {
+        router.replace("/partner-portal");
+        return;
+      }
+      if (pathname.startsWith("/partner-portal") && role !== "venue_owner") {
+        router.replace(role === "admin" || role === "owner" ? "/admin" : role === "staff" ? "/employee" : "/user");
         return;
       }
 

@@ -46,7 +46,19 @@ interface GuestPass {
 interface AttendanceData {
   inviteLink: string;
   invitesActive?: boolean;
-  event?: { date: string; startTime: string; endTime?: string; occasion: string; hostName: string; eventTitle?: string; flyerUrl?: string };
+  event?: {
+    kind?: "tropica" | "marketplace";
+    date: string;
+    startTime: string;
+    endTime?: string;
+    occasion: string;
+    hostName: string;
+    eventTitle?: string;
+    flyerUrl?: string;
+    venueName?: string;
+    venueAddress?: string;
+    payment?: { status: string; bookingNumber: string; total: number; paid: number; remaining: number };
+  };
   invitationToken: string;
   requireHostApproval: boolean;
   capacityLimit: number;
@@ -68,6 +80,7 @@ export default function BookingGuestsPage() {
   const [shareOpen, setShareOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<GuestPass | null>(null);
   const [shareNote, setShareNote] = useState<string | undefined>(undefined);
+  const venueLabel = data?.event?.venueName || "Tropica NYC";
 
   // After payment we land here with ?share=1 (or ?share=zelle) → open the share popup
   useEffect(() => {
@@ -147,8 +160,8 @@ export default function BookingGuestsPage() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "Tropica NYC Private Event Invitation",
-          text: "You're invited to my private event at Tropica NYC! Register for your admission pass:",
+          title: `${venueLabel} Private Event Invitation`,
+          text: `You're invited to my private event at ${venueLabel}! Register for your admission pass:`,
           url: data.inviteLink,
         });
       } catch {
@@ -212,6 +225,7 @@ export default function BookingGuestsPage() {
               {data.event.occasion.replace(/_/g, " ")} ·{" "}
               {new Date(data.event.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })} ·{" "}
               {formatTimeTo12Hour(data.event.startTime)}
+              {data.event.kind === "marketplace" && data.event.venueName && <> · {data.event.venueName}</>}
             </p>
           )}
           <p className="text-white/60 text-sm mt-1">
@@ -227,6 +241,37 @@ export default function BookingGuestsPage() {
           </button>
         )}
       </div>
+
+      {data?.event?.payment && (
+        <div
+          className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-5 py-4 ${
+            data.event.payment.remaining > 0 ? "border-amber-400/30 bg-amber-400/10" : "border-emerald-400/30 bg-emerald-500/10"
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className={`w-6 h-6 shrink-0 ${data.event.payment.remaining > 0 ? "text-amber-300" : "text-emerald-300"}`} />
+            <div>
+              <p className="text-sm font-bold text-white">
+                {data.event.payment.remaining > 0 ? "Deposit paid · booking confirmed" : "Paid in full · booking confirmed"}
+              </p>
+              <p className="text-xs text-white/60">
+                {data.event.venueName} · #{data.event.payment.bookingNumber} · Paid $
+                {data.event.payment.paid.toLocaleString("en-US", { minimumFractionDigits: 2 })} of $
+                {data.event.payment.total.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+          </div>
+          {data.event.payment.remaining > 0 ? (
+            <Link href="/user/marketplace-bookings" className="text-xs font-bold uppercase tracking-wider text-amber-200 underline">
+              Pay balance ${data.event.payment.remaining.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            </Link>
+          ) : (
+            <Link href="/user/marketplace-bookings" className="text-xs font-bold uppercase tracking-wider text-emerald-200 underline">
+              View booking
+            </Link>
+          )}
+        </div>
+      )}
 
       {data?.invitesActive === false && (
         <div className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-xs text-amber-200">
@@ -257,6 +302,7 @@ export default function BookingGuestsPage() {
             : undefined
         }
         note={shareNote}
+        venueName={venueLabel}
       />
 
       {/* Key Metric Stat Cards */}
@@ -282,7 +328,7 @@ export default function BookingGuestsPage() {
         <div className="bg-white/[0.04] border border-white/10 rounded-2xl p-5 space-y-1">
           <p className="text-xs uppercase tracking-widest text-blue-400 font-bold">Door Check-Ins</p>
           <p className="font-headline text-3xl text-blue-400 font-bold">{data?.checkedInCount || 0}</p>
-          <p className="text-[11px] text-white/40">Scanned at Tropica</p>
+          <p className="text-[11px] text-white/40">Scanned at the door</p>
         </div>
       </div>
 
@@ -328,7 +374,7 @@ export default function BookingGuestsPage() {
 
           {/* WhatsApp */}
           <a
-            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`You're invited to my private event at Tropica NYC! RSVP for your guest pass here: ${data?.inviteLink}`)}`}
+            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`You're invited to my private event at ${venueLabel}! RSVP for your guest pass here: ${data?.inviteLink}`)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-600/30 text-xs font-semibold transition-colors"
@@ -339,7 +385,7 @@ export default function BookingGuestsPage() {
 
           {/* SMS */}
           <a
-            href={`sms:?&body=${encodeURIComponent(`You're invited to my private event at Tropica NYC! Register for your pass: ${data?.inviteLink}`)}`}
+            href={`sms:?&body=${encodeURIComponent(`You're invited to my private event at ${venueLabel}! Register for your pass: ${data?.inviteLink}`)}`}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-300 hover:bg-blue-600/30 text-xs font-semibold transition-colors"
           >
             <Smartphone className="w-3.5 h-3.5" />
@@ -348,7 +394,7 @@ export default function BookingGuestsPage() {
 
           {/* Email */}
           <a
-            href={`mailto:?subject=${encodeURIComponent("Invitation: Private Event at Tropica NYC")}&body=${encodeURIComponent(`Hi,\n\nYou're invited to join my private event at Tropica NYC!\n\nPlease register here for your QR admission pass:\n${data?.inviteLink}\n\nSee you there!`)}`}
+            href={`mailto:?subject=${encodeURIComponent(`Invitation: Private Event at ${venueLabel}`)}&body=${encodeURIComponent(`Hi,\n\nYou're invited to join my private event at ${venueLabel}!\n\nPlease register here for your QR admission pass:\n${data?.inviteLink}\n\nSee you there!`)}`}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300 hover:bg-purple-600/30 text-xs font-semibold transition-colors"
           >
             <Mail className="w-3.5 h-3.5" />

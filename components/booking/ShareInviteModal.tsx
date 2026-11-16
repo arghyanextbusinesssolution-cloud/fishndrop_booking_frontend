@@ -17,10 +17,12 @@ interface Props {
   dateLabel?: string;
   /** Optional note shown under the title (e.g. Zelle still verifying). */
   note?: string;
+  /** Where the party is (partner venue name); defaults to Tropica NYC. */
+  venueName?: string;
 }
 
 /** "Share your invite" popup: QR + link, sendable anywhere. */
-export function ShareInviteModal({ open, onClose, inviteLink, hostName, occasion, eventTitle, dateLabel, note }: Props) {
+export function ShareInviteModal({ open, onClose, inviteLink, hostName, occasion, eventTitle, dateLabel, note, venueName = "Tropica NYC" }: Props) {
   const [qr, setQr] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -47,7 +49,7 @@ export function ShareInviteModal({ open, onClose, inviteLink, hostName, occasion
 
   const what = (occasion || "celebration").replace(/_/g, " ");
   const partyName = eventTitle?.trim() || `${hostName ? `${hostName}'s` : "my"} ${what}`;
-  const message = `You're invited to ${partyName} at Tropica NYC${
+  const message = `You're invited to ${partyName} at ${venueName}${
     dateLabel ? ` on ${dateLabel}` : ""
   }! Tap to join the guest list and get your door pass: ${inviteLink}`;
 
@@ -69,7 +71,7 @@ export function ShareInviteModal({ open, onClose, inviteLink, hostName, occasion
         const blob = await (await fetch(qr)).blob();
         files.push(new File([blob], "tropica-invite-qr.png", { type: "image/png" }));
       }
-      const data: ShareData = { title: "You're invited to Tropica NYC", text: message, url: inviteLink };
+      const data: ShareData = { title: `You're invited to ${venueName}`, text: message, url: inviteLink };
       if (files.length && navigator.canShare?.({ files })) data.files = files;
       if (navigator.share) await navigator.share(data);
       else await copy();
@@ -149,7 +151,7 @@ export function ShareInviteModal({ open, onClose, inviteLink, hostName, occasion
             <a href={`sms:?&body=${encodeURIComponent(message)}`} className={chip}>
               <Smartphone className="w-4 h-4 text-sky-300" /> Text message
             </a>
-            <a href={`mailto:?subject=${encodeURIComponent("You're invited to Tropica NYC")}&body=${encodeURIComponent(message)}`} className={chip}>
+            <a href={`mailto:?subject=${encodeURIComponent(`You're invited to ${venueName}`)}&body=${encodeURIComponent(message)}`} className={chip}>
               <Mail className="w-4 h-4 text-[#E0C68E]" /> Email
             </a>
             <button onClick={download} disabled={!qr} className={`${chip} disabled:opacity-40`}>

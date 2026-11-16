@@ -21,7 +21,8 @@ export function Sidebar({ closeMobile }: { closeMobile?: () => void }) {
     { href: "/user/tickets", label: "Event Tickets" },
     { href: "/user/celebrations", label: "Celebrations" },
     { href: "/user/invites", label: "Invitations" },
-    { href: "/user/venue-bookings", label: "Venue Bookings" }
+    { href: "/user/venue-bookings", label: "Venue Bookings" },
+    { href: "/user/marketplace-bookings", label: "Partner Venues" }
   ];
 
   if (user?.role === "admin" || user?.role === "owner") {

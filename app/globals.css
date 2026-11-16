@@ -6,6 +6,13 @@
 
 @layer base {
   :root {
+    /* Booking-wizard brand tokens (Tropica defaults). Partner venues override these
+       inline via VenueThemeProvider, so the whole flow takes on the venue's colors. */
+    --brand: 200 169 106;       /* #C8A96A gold */
+    --brand-light: 232 203 138; /* #E8CB8A */
+    --brand-ink: 13 22 18;      /* #0d1612 */
+    --brand-fg: 255 255 255;    /* text on the wizard background */
+    --brand-bg: 15 61 46;       /* #0F3D2E page background */
     --background: 250 249 245;
     --surface: 250 249 245;
     --surface-container: 239 238 234;

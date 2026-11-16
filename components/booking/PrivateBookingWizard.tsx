@@ -13,8 +13,58 @@ import StepPrivateSummary from "./StepPrivateSummary";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
+import { StepVenueSelect, TROPICA_VENUE_ID } from "@/components/marketplace/StepVenueSelect";
+import { StepVenueGuests } from "@/components/marketplace/StepVenueGuests";
+import { StepVenueTime } from "@/components/marketplace/StepVenueTime";
+import { StepVenueRequestSummary } from "@/components/marketplace/StepVenueRequestSummary";
+import { VenueThemeProvider } from "@/components/marketplace/VenueThemeProvider";
+import type { CustomerPrice, MarketplaceVenue } from "@/types";
+
+type StepKey =
+  | "date"
+  | "venue"
+  | "guests"
+  | "time"
+  | "verify"
+  | "birthday"
+  | "occasion"
+  | "addons"
+  | "checkout"
+  | "request";
+
+/** Tropica's own venue keeps its full flow (add-ons + deposit checkout). */
+const TROPICA_STEPS: Array<{ key: StepKey; title: string }> = [
+  { key: "date", title: "Calendar Date" },
+  { key: "venue", title: "Venue" },
+  { key: "guests", title: "Guests" },
+  { key: "time", title: "Time & Duration" },
+  { key: "verify", title: "Verification & Host" },
+  { key: "birthday", title: "Birthday" },
+  { key: "occasion", title: "Party Occasion" },
+  { key: "addons", title: "Add-ons Hub" },
+  { key: "checkout", title: "Checkout & Deposit" }
+];
+
+/** Partner venues: same flow, but it ends in a request the venue owner confirms before payment. */
+const PARTNER_STEPS: Array<{ key: StepKey; title: string }> = [
+  { key: "date", title: "Calendar Date" },
+  { key: "venue", title: "Venue" },
+  { key: "guests", title: "Guests" },
+  { key: "time", title: "Time Slot" },
+  { key: "verify", title: "Verification & Host" },
+  { key: "birthday", title: "Birthday" },
+  { key: "occasion", title: "Party Occasion" },
+  { key: "request", title: "Send Request" }
+];
 
 interface PrivateBookingData {
+  // Marketplace: which venue ("tropica" or a partner venue id) + the partner's details
+  venueId: string | null;
+  venue: MarketplaceVenue | null;
+  endTime?: string;
+  packageId?: string;
+  packageName?: string;
+  price?: CustomerPrice;
   date: string | null;
   guests: number;
   durationHours: number;
@@ -47,6 +97,8 @@ export const PrivateBookingWizard = () => {
   const { user } = useAuthStore();
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingData, setBookingData] = useState<PrivateBookingData>({
+    venueId: null,
+    venue: null,
     date: null,
     guests: MIN_PRIVATE_GUESTS,
     durationHours: 5,
@@ -76,6 +128,27 @@ export const PrivateBookingWizard = () => {
 
   const updateData = (stepData: Partial<PrivateBookingData> & Record<string, any>) => {
     setBookingData((prev) => {
+      // Switching venue invalidates the guest count / slot / price picked for the old one
+      if ("venueId" in stepData && stepData.venueId !== prev.venueId) {
+        const partner = stepData.venue as MarketplaceVenue | null;
+        return {
+          ...prev,
+          venueId: stepData.venueId ?? null,
+          venue: partner,
+          guests: partner ? partner.minGuests : MIN_PRIVATE_GUESTS,
+          durationHours: partner ? partner.minHours : 5,
+          time: null,
+          endTime: undefined,
+          packageId: undefined,
+          packageName: undefined,
+          price: undefined
+        };
+      }
+      // A new date means slots must be re-picked
+      if ("date" in stepData && stepData.date !== prev.date) {
+        return { ...prev, date: stepData.date ?? null, time: null, endTime: undefined };
+      }
+
       // If occasion was selected
       if (stepData.occasion) {
         return {
@@ -138,20 +211,30 @@ export const PrivateBookingWizard = () => {
     }
   };
 
-  const steps = [
-    { num: 1, title: "Calendar Date" },
-    { num: 2, title: "Guests" },
-    { num: 3, title: "Time & Duration" },
-    { num: 4, title: "Verification & Host" },
-    { num: 5, title: "Birthday" },
-    { num: 6, title: "Party Occasion" },
-    { num: 7, title: "Add-ons Hub" },
-    { num: 8, title: "Checkout & Deposit" }
-  ];
+  const partner = bookingData.venueId && bookingData.venueId !== TROPICA_VENUE_ID ? bookingData.venue : null;
+  const steps = (partner ? PARTNER_STEPS : TROPICA_STEPS).map((s, i) => ({ ...s, num: i + 1 }));
+  const currentKey = steps[currentStep - 1]?.key;
 
   const renderStep = () => {
-    switch (currentStep) {
-      case 1:
+    if (partner) {
+      switch (currentKey) {
+        case "guests":
+          return <StepVenueGuests venue={partner} date={bookingData.date} initialGuests={bookingData.guests} onNext={handleNext} />;
+        case "time":
+          return (
+            <StepVenueTime
+              venue={partner}
+              date={bookingData.date}
+              initial={{ time: bookingData.time ?? undefined, durationHours: bookingData.durationHours, packageId: bookingData.packageId }}
+              onNext={handleNext}
+            />
+          );
+        case "request":
+          return <StepVenueRequestSummary venue={partner} data={bookingData} />;
+      }
+    }
+    switch (currentKey) {
+      case "date":
         return (
           <StepPrivateDate
             onNext={handleNext}
@@ -160,9 +243,11 @@ export const PrivateBookingWizard = () => {
             }}
           />
         );
-      case 2:
+      case "venue":
+        return <StepVenueSelect date={bookingData.date} selectedId={bookingData.venueId} onNext={handleNext} />;
+      case "guests":
         return <StepPrivateGuests onNext={handleNext} date={bookingData.date} initialGuests={bookingData.guests} />;
-      case 3:
+      case "time":
         return (
           <StepPrivateTime
             onNext={handleNext}
@@ -172,7 +257,7 @@ export const PrivateBookingWizard = () => {
             selectedTime={bookingData.time}
           />
         );
-      case 4:
+      case "verify":
         return (
           <StepPhoneVerification
             onNext={handleNext}
@@ -181,7 +266,7 @@ export const PrivateBookingWizard = () => {
             initialEmail={bookingData.guestDetails.email}
           />
         );
-      case 5:
+      case "birthday":
         return (
           <StepBirthday
             onNext={handleNext}
@@ -189,14 +274,14 @@ export const PrivateBookingWizard = () => {
             partyDate={bookingData.date}
           />
         );
-      case 6:
+      case "occasion":
         return (
           <StepOccasionSelection
             onNext={handleNext}
             selectedOccasion={bookingData.occasion}
           />
         );
-      case 7:
+      case "addons":
         return (
           <StepAddonCardsHub
             onNext={handleNext}
@@ -209,7 +294,7 @@ export const PrivateBookingWizard = () => {
             initialCateringNotes={bookingData.cateringNotes}
           />
         );
-      case 8:
+      case "checkout":
         return (
           <StepPrivateSummary
             bookingData={bookingData}
@@ -222,19 +307,37 @@ export const PrivateBookingWizard = () => {
   };
 
   return (
+    // Once a partner venue is picked, the whole page (nav, background, wizard) takes its colors.
+    // Only the date + venue steps stay Tropica-branded until a partner is chosen.
+    <VenueThemeProvider theme={partner && currentKey !== "date" ? partner.theme : null} applyToDocument>
     <div className={cn("mx-auto flex flex-col mt-2 md:mt-4 transition-all duration-700", currentStep === steps.length ? "max-w-7xl" : "max-w-5xl")}>
+      {partner && currentKey !== "date" && currentKey !== "venue" && (
+        <div className="mb-4 flex items-center justify-center gap-3">
+          {partner.logoUrl ? (
+            <img src={partner.logoUrl} alt="" className="w-10 h-10 rounded-full object-cover border border-brand/60" />
+          ) : (
+            <span className="w-10 h-10 rounded-full bg-brand text-brand-ink flex items-center justify-center font-headline text-lg">
+              {partner.name.charAt(0)}
+            </span>
+          )}
+          <div className="text-left">
+            <p className="font-headline text-lg text-brand-fg leading-tight">{partner.name}</p>
+            <p className="text-[10px] uppercase tracking-widest text-brand-fg/50">Booked through Tropica NYC</p>
+          </div>
+        </div>
+      )}
       {/* ─── Mobile-Friendly Progress Header (< sm screens) ─── */}
       <div className="sm:hidden mb-4 px-1 space-y-2">
         <div className="flex items-center justify-between text-xs font-medium">
-          <span className="font-label text-[10px] uppercase tracking-wider text-[#C8A96A] font-bold">
+          <span className="font-label text-[10px] uppercase tracking-wider text-brand font-bold">
             Step {currentStep} of {steps.length}
           </span>
-          <span className="text-[11px] font-semibold text-white/90 truncate max-w-[200px]">
+          <span className="text-[11px] font-semibold text-brand-fg/90 truncate max-w-[200px]">
             {steps[currentStep - 1]?.title}
           </span>
         </div>
         {/* Compact Segmented Progress Bar for mobile */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
           {steps.map((step) => {
             const isCompleted = currentStep > step.num;
             const isCurrent = currentStep === step.num;
@@ -244,10 +347,10 @@ export const PrivateBookingWizard = () => {
                 className={cn(
                   "h-1.5 rounded-full transition-all duration-300",
                   isCompleted
-                    ? "bg-[#C8A96A]"
+                    ? "bg-brand"
                     : isCurrent
-                      ? "bg-[#C8A96A] ring-2 ring-[#C8A96A]/40 shadow-sm"
-                      : "bg-white/15"
+                      ? "bg-brand ring-2 ring-brand/40 shadow-sm"
+                      : "bg-brand-fg/15"
                 )}
               />
             );
@@ -260,11 +363,11 @@ export const PrivateBookingWizard = () => {
         <div className="overflow-x-auto pb-4 pt-1 scrollbar-hide">
           <div className="flex items-start justify-between relative min-w-[580px] md:min-w-0 px-3">
             {/* Background line aligned with circle center */}
-            <div className="absolute left-6 right-6 top-4 md:top-5 h-[2px] bg-white/10 -z-0" />
+            <div className="absolute left-6 right-6 top-4 md:top-5 h-[2px] bg-brand-fg/10 -z-0" />
             
             {/* Active filled line */}
             <div
-              className="absolute left-6 top-4 md:top-5 h-[2px] bg-[#C8A96A] transition-all duration-500 ease-out -z-0"
+              className="absolute left-6 top-4 md:top-5 h-[2px] bg-brand transition-all duration-500 ease-out -z-0"
               style={{ width: `calc(${((currentStep - 1) / (steps.length - 1)) * 100}% - 1.5rem)` }}
             />
 
@@ -277,18 +380,18 @@ export const PrivateBookingWizard = () => {
                     className={cn(
                       "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-headline transition-all duration-500 text-xs md:text-base shrink-0 shadow-md",
                       isCompleted
-                        ? "bg-[#C8A96A] text-[#0d1612] font-bold shadow-[0_0_15px_rgba(200,169,106,0.4)]"
+                        ? "bg-brand text-brand-ink font-bold shadow-[0_0_15px_rgb(var(--brand)/0.4)]"
                         : isCurrent
-                          ? "bg-[#0d1612] border-2 border-[#C8A96A] text-[#C8A96A] font-bold shadow-[0_0_20px_rgba(200,169,106,0.3)] ring-4 ring-[#C8A96A]/20"
-                          : "bg-[#0d1612] border-2 border-white/10 text-white/40"
+                          ? "bg-brand-ink border-2 border-brand text-brand font-bold shadow-[0_0_20px_rgb(var(--brand)/0.3)] ring-4 ring-brand/20"
+                          : "bg-brand-ink border-2 border-brand-fg/10 text-brand-fg/40"
                     )}
                   >
-                    {isCompleted ? <Check className="w-4 h-4 text-[#0d1612]" /> : step.num}
+                    {isCompleted ? <Check className="w-4 h-4 text-brand-ink" /> : step.num}
                   </div>
                   <span
                     className={cn(
                       "font-label text-[9px] md:text-[10px] uppercase tracking-wider leading-tight text-center font-medium transition-colors duration-300",
-                      isCurrent || isCompleted ? "text-[#C8A96A] font-bold" : "text-white/40"
+                      isCurrent || isCompleted ? "text-brand font-bold" : "text-brand-fg/40"
                     )}
                   >
                     {step.title}
@@ -300,21 +403,22 @@ export const PrivateBookingWizard = () => {
         </div>
       </div>
 
-      <div className="flex-1 bg-background/40 backdrop-blur-md border border-white/5 rounded-2xl p-2.5 sm:p-6 md:p-8 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#C8A96A]/50 to-transparent opacity-50" />
+      <div className="flex-1 bg-background/40 backdrop-blur-md border border-brand-fg/5 rounded-2xl p-2.5 sm:p-6 md:p-8 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand/50 to-transparent opacity-50" />
 
         {renderStep()}
 
         {/* Navigation Back / Cancel */}
-        <div className="mt-6 pt-4 border-t border-white/10 flex justify-between items-center">
+        <div className="mt-6 pt-4 border-t border-brand-fg/10 flex justify-between items-center">
           <button
             onClick={handleBack}
-            className="text-white/60 hover:text-white transition-colors font-label tracking-widest text-xs uppercase px-4 py-2 font-bold cursor-pointer"
+            className="text-brand-fg/60 hover:text-brand-fg transition-colors font-label tracking-widest text-xs uppercase px-4 py-2 font-bold cursor-pointer"
           >
             {currentStep === 1 ? "Cancel" : "Back"}
           </button>
         </div>
       </div>
     </div>
+    </VenueThemeProvider>
   );
 };

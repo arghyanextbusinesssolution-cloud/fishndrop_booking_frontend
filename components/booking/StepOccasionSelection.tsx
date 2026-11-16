@@ -82,16 +82,16 @@ export const StepOccasionSelection = ({ onNext, selectedOccasion }: StepOccasion
       {/* Header */}
       <header className="space-y-3 text-center sm:text-left">
         <div className="flex items-center justify-center sm:justify-start gap-4">
-          <span className="font-headline italic text-[#C8A96A] text-base">06.</span>
-          <div className="h-[1px] w-8 bg-white/20"></div>
-          <span className="font-label uppercase tracking-widest text-[10px] text-white/50 font-bold">
+          <span className="font-headline italic text-brand text-base">06.</span>
+          <div className="h-[1px] w-8 bg-brand-fg/20"></div>
+          <span className="font-label uppercase tracking-widest text-[10px] text-brand-fg/50 font-bold">
             Party Occasion
           </span>
         </div>
-        <h2 className="font-headline italic text-4xl md:text-5xl text-white leading-tight">
+        <h2 className="font-headline italic text-4xl md:text-5xl text-brand-fg leading-tight">
           Select Your <span className="text-gold-gradient">Party Occasion</span>
         </h2>
-        <p className="text-white/60 font-body text-base md:text-lg font-light max-w-2xl">
+        <p className="text-brand-fg/60 font-body text-base md:text-lg font-light max-w-2xl">
           Choose an occasion so our concierge and culinary teams can tailor your private sanctuary atmosphere.
         </p>
       </header>
@@ -113,12 +113,12 @@ export const StepOccasionSelection = ({ onNext, selectedOccasion }: StepOccasion
                 "group relative rounded-2xl border text-left transition-all duration-300 cursor-pointer",
                 isOther ? "col-span-2 flex items-center gap-4 p-4" : "flex flex-col gap-3 p-4 sm:p-5",
                 isSelected
-                  ? "bg-[#C8A96A]/15 border-[#C8A96A] shadow-[0_0_25px_rgba(200,169,106,0.2)]"
-                  : "bg-[#121614] border-white/10 hover:border-[#C8A96A]/40 hover:bg-white/[0.04]"
+                  ? "bg-brand/15 border-brand shadow-[0_0_25px_rgb(var(--brand)/0.2)]"
+                  : "bg-brand-ink border-brand-fg/10 hover:border-brand/40 hover:bg-brand-fg/[0.04]"
               )}
             >
               {isSelected && (
-                <span className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-[#C8A96A] text-[#0d1612]">
+                <span className="absolute top-3 right-3 flex h-5 w-5 items-center justify-center rounded-full bg-brand text-brand-ink">
                   <Check className="w-3 h-3 stroke-[3]" />
                 </span>
               )}
@@ -126,8 +126,8 @@ export const StepOccasionSelection = ({ onNext, selectedOccasion }: StepOccasion
                 className={cn(
                   "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-all duration-300",
                   isSelected
-                    ? "bg-[#C8A96A] text-[#0d1612]"
-                    : "bg-white/[0.05] border border-white/10 text-[#C8A96A] group-hover:bg-[#C8A96A]/10 group-hover:border-[#C8A96A]/30"
+                    ? "bg-brand text-brand-ink"
+                    : "bg-brand-fg/[0.05] border border-brand-fg/10 text-brand group-hover:bg-brand/10 group-hover:border-brand/30"
                 )}
               >
                 <Icon className="w-5 h-5" />
@@ -136,12 +136,12 @@ export const StepOccasionSelection = ({ onNext, selectedOccasion }: StepOccasion
                 <span
                   className={cn(
                     "block font-headline text-base sm:text-lg font-bold leading-tight transition-colors",
-                    isSelected ? "text-[#E3C281]" : "text-white group-hover:text-[#E3C281]"
+                    isSelected ? "text-brand-light" : "text-brand-fg group-hover:text-brand-light"
                   )}
                 >
                   {option.label}
                 </span>
-                <span className="mt-1 block text-[11px] sm:text-xs text-white/55 leading-snug line-clamp-2 font-body">{option.desc}</span>
+                <span className="mt-1 block text-[11px] sm:text-xs text-brand-fg/55 leading-snug line-clamp-2 font-body">{option.desc}</span>
               </span>
             </button>
           );
@@ -152,13 +152,13 @@ export const StepOccasionSelection = ({ onNext, selectedOccasion }: StepOccasion
       {selectedId === "other" && (
         <form
           onSubmit={handleCustomSubmit}
-          className="p-6 sm:p-8 bg-[#121614] rounded-3xl border border-[#C8A96A]/40 space-y-5 animate-in fade-in duration-300 shadow-2xl"
+          className="p-6 sm:p-8 bg-brand-ink rounded-3xl border border-brand/40 space-y-5 animate-in fade-in duration-300 shadow-2xl"
         >
           <div className="space-y-1.5">
-            <label className="block font-headline italic text-2xl text-white">
+            <label className="block font-headline italic text-2xl text-brand-fg">
               Tell us about your celebration
             </label>
-            <p className="text-xs text-white/60 font-body">
+            <p className="text-xs text-brand-fg/60 font-body">
               Specify your event (e.g. Engagement Party, Gender Reveal, Retirement Dinner, etc.)
             </p>
           </div>
@@ -167,12 +167,12 @@ export const StepOccasionSelection = ({ onNext, selectedOccasion }: StepOccasion
             value={customOccasion}
             onChange={(e) => setCustomOccasion(e.target.value)}
             placeholder="Type your celebration details here..."
-            className="w-full bg-white/[0.05] border border-white/15 rounded-2xl px-5 py-3.5 text-white font-body text-base placeholder:text-white/30 focus:outline-none focus:border-[#C8A96A] transition-all"
+            className="w-full bg-brand-fg/[0.05] border border-brand-fg/15 rounded-2xl px-5 py-3.5 text-brand-fg font-body text-base placeholder:text-brand-fg/30 focus:outline-none focus:border-brand transition-all"
             autoFocus
           />
           <button
             type="submit"
-            className="inline-flex items-center gap-3 px-8 py-3.5 bg-[#C8A96A] text-[#0d1612] hover:bg-[#d8b97a] font-label text-xs uppercase tracking-widest font-bold rounded-xl shadow-lg transition-all cursor-pointer"
+            className="inline-flex items-center gap-3 px-8 py-3.5 bg-brand text-brand-ink hover:bg-brand-light font-label text-xs uppercase tracking-widest font-bold rounded-xl shadow-lg transition-all cursor-pointer"
           >
             <span>Continue to Add-ons</span>
             <ArrowRight className="w-4 h-4" />

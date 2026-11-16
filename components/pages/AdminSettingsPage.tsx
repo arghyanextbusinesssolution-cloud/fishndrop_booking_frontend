@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import api from "@/lib/axios";
+import { VenueCommissionSettings } from "@/components/marketplace/admin/VenueCommissionSettings";
 import {
   DollarSign,
   TrendingUp,
@@ -344,6 +345,9 @@ export default function AdminSettingsPage() {
           {isSaving ? "Saving Configuration..." : "Save Pricing & Log Audit Trail"}
         </button>
       </form>
+
+      {/* Partner venue marketplace: per-venue commission + publish (own save per venue) */}
+      <VenueCommissionSettings />
 
       {/* Audit History Log */}
       {settings?.auditHistory && settings.auditHistory.length > 0 && (

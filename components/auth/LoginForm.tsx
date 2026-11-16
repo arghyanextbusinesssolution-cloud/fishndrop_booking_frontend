@@ -34,7 +34,7 @@ export function LoginForm() {
     try {
       const data = await login({ email, password });
       toast.success("Welcome back! Redirecting to dashboard...");
-      const destination = data.user.role === "seo" ? "/seo" : data.user.role === "admin" || data.user.role === "owner" || data.user.role === "staff" ? "/admin" : data.user.role === "promoter" ? "/promoter" : "/user";
+      const destination = data.user.role === "seo" ? "/seo" : data.user.role === "admin" || data.user.role === "owner" || data.user.role === "staff" ? "/admin" : data.user.role === "promoter" ? "/promoter" : data.user.role === "venue_owner" ? "/partner-portal" : "/user";
       try {
         router.replace(destination);
       } catch {
@@ -53,7 +53,7 @@ export function LoginForm() {
   const handleOtpSuccess = (user: any) => {
     toast.success("Welcome back! Redirecting to dashboard...");
     const role = user?.role || useAuthStore.getState().user?.role || "user";
-    const destination = role === "seo" ? "/seo" : role === "admin" || role === "owner" || role === "staff" ? "/admin" : role === "promoter" ? "/promoter" : "/user";
+    const destination = role === "seo" ? "/seo" : role === "admin" || role === "owner" || role === "staff" ? "/admin" : role === "promoter" ? "/promoter" : role === "venue_owner" ? "/partner-portal" : "/user";
     try {
       router.replace(destination);
     } catch {

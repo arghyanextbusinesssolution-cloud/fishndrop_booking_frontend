@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function BookVenuePage() {
   return (
-    <div className="theme-astral min-h-screen bg-[#0F3D2E]">
+    <div className="theme-astral min-h-screen bg-brand-bg transition-colors duration-500">
       <NavBar />
       <main className="pt-24 pb-12">
         <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">

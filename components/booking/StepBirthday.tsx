@@ -70,14 +70,14 @@ export const StepBirthday = ({ onNext, initialDob = "", partyDate }: StepBirthda
       {/* Header */}
       <header className="space-y-3 text-center">
         <div className="flex items-center justify-center gap-4">
-          <span className="font-headline italic text-[#C8A96A] text-base">05.</span>
-          <div className="h-[1px] w-8 bg-white/20"></div>
-          <span className="font-label uppercase tracking-widest text-[10px] text-white/50 font-bold">Birthday Bonus</span>
+          <span className="font-headline italic text-brand text-base">05.</span>
+          <div className="h-[1px] w-8 bg-brand-fg/20"></div>
+          <span className="font-label uppercase tracking-widest text-[10px] text-brand-fg/50 font-bold">Birthday Bonus</span>
         </div>
-        <h2 className="font-headline italic text-4xl md:text-5xl text-white leading-tight">
+        <h2 className="font-headline italic text-4xl md:text-5xl text-brand-fg leading-tight">
           When&apos;s Your <span className="text-gold-gradient">Birthday?</span>
         </h2>
-        <p className="text-white/60 font-body text-sm md:text-base font-light max-w-md mx-auto">
+        <p className="text-brand-fg/60 font-body text-sm md:text-base font-light max-w-md mx-auto">
           Add your birthday to get a special bonus when you celebrate with us. It&apos;s optional.
         </p>
       </header>
@@ -90,19 +90,19 @@ export const StepBirthday = ({ onNext, initialDob = "", partyDate }: StepBirthda
         <div
           className={cn(
             "flex items-start gap-3 rounded-2xl border p-4",
-            nearParty ? "border-emerald-400/40 bg-emerald-500/10" : "border-white/10 bg-white/[0.03]"
+            nearParty ? "border-emerald-400/40 bg-emerald-500/10" : "border-brand-fg/10 bg-brand-fg/[0.03]"
           )}
         >
           {nearParty ? (
             <PartyPopper className="w-5 h-5 text-emerald-300 shrink-0 mt-0.5" />
           ) : (
-            <Gift className="w-5 h-5 text-[#C8A96A] shrink-0 mt-0.5" />
+            <Gift className="w-5 h-5 text-brand shrink-0 mt-0.5" />
           )}
           <div className="space-y-0.5">
-            <p className="text-sm font-semibold text-white">
+            <p className="text-sm font-semibold text-brand-fg">
               {nearParty ? (days === 0 ? "Your party is on your birthday!" : "Birthday bonus unlocked!") : "Birthday saved"}
             </p>
-            <p className="text-xs text-white/60">
+            <p className="text-xs text-brand-fg/60">
               {nearParty
                 ? days === 0
                   ? "Happy birthday in advance. Our team will know it's your day."
@@ -121,7 +121,7 @@ export const StepBirthday = ({ onNext, initialDob = "", partyDate }: StepBirthda
           type="button"
           onClick={handleContinue}
           disabled={!dob || saving}
-          className="w-full py-4 rounded-xl bg-gradient-to-r from-[#C8A96A] via-[#E8CB8A] to-[#C8A96A] text-[#0d1612] font-black font-label text-xs uppercase tracking-[0.2em] shadow-xl shadow-[#C8A96A]/30 active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full py-4 rounded-xl bg-gradient-to-r from-brand via-brand-light to-brand text-brand-ink font-black font-label text-xs uppercase tracking-[0.2em] shadow-xl shadow-brand/30 active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 cursor-pointer"
         >
           <span>{saving ? "Saving…" : "Continue"}</span>
           <ArrowRight className="w-4 h-4" />
@@ -129,7 +129,7 @@ export const StepBirthday = ({ onNext, initialDob = "", partyDate }: StepBirthda
         <button
           type="button"
           onClick={() => onNext({})}
-          className="w-full py-2 text-white/50 hover:text-white font-label uppercase tracking-widest text-[11px] font-bold transition-colors cursor-pointer"
+          className="w-full py-2 text-brand-fg/50 hover:text-brand-fg font-label uppercase tracking-widest text-[11px] font-bold transition-colors cursor-pointer"
         >
           Skip for now
         </button>

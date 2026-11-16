@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarDays, CheckCircle2, ChevronRight, Clock, Loader2, PartyPopper, UserCheck, Users } from "lucide-react";
+import { CalendarDays, CheckCircle2, MapPin, ChevronRight, Clock, Loader2, PartyPopper, UserCheck, Users } from "lucide-react";
 import api from "@/lib/axios";
 import { formatTimeTo12Hour } from "@/lib/utils";
 
@@ -19,6 +19,8 @@ interface Celebration {
   checkedIn: number;
   invitesActive: boolean;
   paymentLabel: string;
+  kind?: "tropica" | "marketplace";
+  venueName?: string;
 }
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -56,11 +58,16 @@ export default function CelebrationsPage() {
                 <Clock className="w-3.5 h-3.5 text-[#C8A96A]" /> {formatTimeTo12Hour(c.startTime)}
                 {c.endTime ? ` – ${c.endTime}` : ""}
               </span>
+              {c.venueName && (
+                <span className="inline-flex items-center gap-1.5 capitalize">
+                  <MapPin className="w-3.5 h-3.5 text-[#C8A96A]" /> {c.venueName}
+                </span>
+              )}
             </div>
           </div>
           <span
             className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full shrink-0 ${
-              c.paymentLabel === "Confirmed"
+              c.paymentLabel === "Confirmed" || c.paymentLabel === "Deposit paid"
                 ? "bg-emerald-500/15 text-emerald-300"
                 : c.paymentLabel === "Zelle verifying"
                 ? "bg-sky-500/15 text-sky-300"
