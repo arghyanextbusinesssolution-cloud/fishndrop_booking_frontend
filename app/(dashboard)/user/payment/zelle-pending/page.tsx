@@ -224,7 +224,13 @@ function ZellePendingContent() {
               <p className="text-xs sm:text-sm text-gray-600 max-w-md mx-auto">
                 {isBalancePayment
                   ? <>Your <strong>remaining balance</strong> of <strong>${expectedAmount.toFixed(2)}</strong> is Pending. Our backend team verifies your Zelle email and marks your booking as <strong>fully paid</strong> automatically!</>
-                  : <>Your booking is <strong>Pending</strong>. Our backend team reads your Zelle confirmation email, matches your <strong>Booking ID</strong> and confirms your slot!</>}
+                  : <>
+                      Your booking is <strong>not confirmed yet</strong>. We&apos;re verifying your Zelle payment — as soon as it&apos;s verified
+                      we&apos;ll let you know, and your booking will be confirmed.
+                      {booking.bookingType === "private_event" && (
+                        <> Your guest invite link and QR passes open once it&apos;s confirmed.</>
+                      )}
+                    </>}
               </p>
             </div>
 

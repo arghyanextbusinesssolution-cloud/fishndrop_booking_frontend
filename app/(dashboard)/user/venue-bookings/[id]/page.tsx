@@ -58,6 +58,8 @@ interface AttendanceData {
     venueName?: string;
     venueAddress?: string;
     payment?: { status: string; bookingNumber: string; total: number; paid: number; remaining: number };
+    /** Tropica booking paid by Zelle that staff haven't verified yet → not confirmed, no invites / QR. */
+    zelle?: { state: "verifying" | "review"; amount: number };
   };
   invitationToken: string;
   requireHostApproval: boolean;
@@ -79,15 +81,15 @@ export default function BookingGuestsPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<GuestPass | null>(null);
-  const [shareNote, setShareNote] = useState<string | undefined>(undefined);
+  const [shareNote] = useState<string | undefined>(undefined);
   const venueLabel = data?.event?.venueName || "Tropica NYC";
 
   // After payment we land here with ?share=1 (or ?share=zelle) → open the share popup
   useEffect(() => {
     const share = new URLSearchParams(window.location.search).get("share");
     if (share) {
-      setShareOpen(true);
-      if (share === "zelle") setShareNote("Your Zelle payment is being verified. You can already invite guests.");
+      // Old Zelle links (?share=zelle): booking isn't confirmed yet, so don't open the invite popup — the banner explains
+      if (share !== "zelle") setShareOpen(true);
       window.history.replaceState(null, "", window.location.pathname);
     }
   }, []);
@@ -273,10 +275,27 @@ export default function BookingGuestsPage() {
         </div>
       )}
 
-      {data?.invitesActive === false && (
-        <div className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-xs text-amber-200">
-          Invitations open once your deposit is paid (or your Zelle screenshot is submitted).
+      {data?.event?.zelle ? (
+        <div className="flex items-start gap-3 rounded-2xl border border-amber-400/30 bg-amber-400/10 px-5 py-4">
+          <Clock className="w-6 h-6 shrink-0 text-amber-300 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-sm font-bold text-white">
+              {data.event.zelle.state === "review" ? "Booking not confirmed — payment under review" : "Booking not confirmed yet — verifying your Zelle payment"}
+            </p>
+            <p className="text-xs text-white/70">
+              {data.event.zelle.state === "review"
+                ? "We couldn't match your Zelle payment yet. Our team is reviewing it and will contact you."
+                : `We received your Zelle screenshot for $${data.event.zelle.amount.toLocaleString("en-US")}. As soon as the payment is verified we'll let you know — then your booking is confirmed.`}{" "}
+              Your guest invite link and QR passes open once it&apos;s confirmed.
+            </p>
+          </div>
         </div>
+      ) : (
+        data?.invitesActive === false && (
+          <div className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-xs text-amber-200">
+            Invitations and QR passes open once your payment is confirmed.
+          </div>
+        )
       )}
 
       {data?.event && (

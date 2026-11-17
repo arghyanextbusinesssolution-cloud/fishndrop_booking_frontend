@@ -339,8 +339,8 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
         value: customDeposit
       });
       toast.success("Zelle screenshot submitted! We're verifying your payment.");
-      // Host dashboard → share-your-invite popup (Zelle status shown there)
-      router.push(`/user/celebrations/${bookingId}?share=zelle`);
+      // Not confirmed until the team verifies the transfer → "being verified" page (no invites / QR yet)
+      router.push(`/user/payment/zelle-pending?bookingId=${bookingId}`);
     } catch (err: any) {
       console.error("Zelle submit failed:", err);
       toast.error("Failed to complete Zelle booking.");
