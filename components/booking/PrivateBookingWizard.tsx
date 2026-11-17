@@ -13,6 +13,7 @@ import StepPrivateSummary from "./StepPrivateSummary";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
+import api from "@/lib/axios";
 import { StepVenueSelect, TROPICA_VENUE_ID } from "@/components/marketplace/StepVenueSelect";
 import { StepVenueGuests } from "@/components/marketplace/StepVenueGuests";
 import { StepVenueTime } from "@/components/marketplace/StepVenueTime";
@@ -194,6 +195,19 @@ export const PrivateBookingWizard = () => {
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
   }, [currentStep]);
 
+  // Only show the "Venue" step when at least one partner venue is live; otherwise it's Tropica only.
+  const [hasPartnerVenues, setHasPartnerVenues] = useState<boolean | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get("/marketplace/venues")
+      .then(({ data }) => !cancelled && setHasPartnerVenues((data?.venues || []).length > 0))
+      .catch(() => !cancelled && setHasPartnerVenues(false));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleNext = (stepData: any = {}) => {
     updateData(stepData);
     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
@@ -212,7 +226,9 @@ export const PrivateBookingWizard = () => {
   };
 
   const partner = bookingData.venueId && bookingData.venueId !== TROPICA_VENUE_ID ? bookingData.venue : null;
-  const steps = (partner ? PARTNER_STEPS : TROPICA_STEPS).map((s, i) => ({ ...s, num: i + 1 }));
+  const steps = (partner ? PARTNER_STEPS : TROPICA_STEPS)
+    .filter((s) => s.key !== "venue" || hasPartnerVenues !== false)
+    .map((s, i) => ({ ...s, num: i + 1 }));
   const currentKey = steps[currentStep - 1]?.key;
 
   const renderStep = () => {

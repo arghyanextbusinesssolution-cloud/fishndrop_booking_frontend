@@ -247,7 +247,9 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
       couponCode: appliedCoupon?.code || undefined,
       paymentMethod: method,
       zelleProofUrl: zelleUrl || undefined,
-      ...attribution
+      ...attribution,
+      // Booking prepared by the AI in a DM: lets the server use its 30-minute hold
+      ...(bookingData.aiDraftCode ? { aiDraftCode: bookingData.aiDraftCode, utmMedium: attribution.utmMedium || "ai_dm" } : {})
     };
   };
 
