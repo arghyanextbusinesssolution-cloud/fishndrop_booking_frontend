@@ -9,6 +9,8 @@ import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { Hero } from "@/components/home/Hero";
 import { NavSpinnerLink } from "@/components/shared/NavSpinnerLink";
 import { cn } from "@/lib/utils";
+import { AssistantBubble } from "./AssistantBubble";
+import { CallToBookPopup } from "./CallToBookPopup";
 
 export default function HomePageClient() {
   const router = useRouter();
@@ -100,6 +102,10 @@ export default function HomePageClient() {
         </main>
         <Footer showCta={false} />
       </div>
+
+      {/* "Call us directly to book" popup (once per visit) + bottom-right assistant (its greeting is skipped here — the popup greets) */}
+      {!isLoading && !showDisclaimer && <CallToBookPopup />}
+      {!isLoading && <AssistantBubble showGreeting={false} />}
     </div>
   );
 }

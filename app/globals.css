@@ -222,3 +222,50 @@ h4,
 .overflow-x-auto::-webkit-scrollbar-thumb:hover {
   @apply bg-outline-variant/80;
 }
+/* ── Homepage assistant bubble ─────────────────────────────────────────── */
+@keyframes assistantPop {
+  0% { opacity: 0; transform: translateY(14px) scale(0.92); }
+  60% { opacity: 1; transform: translateY(-2px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes assistantRise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes assistantDrop {
+  from { opacity: 0; transform: translateY(-6px) scaleY(0.96); }
+  to { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+@keyframes assistantPulse {
+  0% { box-shadow: 0 0 0 0 rgba(200, 169, 106, 0.55); }
+  70% { box-shadow: 0 0 0 16px rgba(200, 169, 106, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(200, 169, 106, 0); }
+}
+@keyframes assistantSpin {
+  from { transform: rotate(-90deg) scale(0.6); opacity: 0; }
+  to { transform: rotate(0) scale(1); opacity: 1; }
+}
+.assistant-pop { animation: assistantPop 0.42s cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: bottom right; }
+.assistant-rise { animation: assistantRise 0.38s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.assistant-drop { animation: assistantDrop 0.22s ease-out both; transform-origin: top; }
+.assistant-pulse { animation: assistantPulse 2.2s ease-out infinite; }
+.assistant-icon-in { animation: assistantSpin 0.3s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .assistant-pop, .assistant-rise, .assistant-drop, .assistant-pulse, .assistant-icon-in { animation: none; }
+}
+/* Chrome autofill paints fields pale blue — keep them on-theme */
+.assistant-field:-webkit-autofill,
+.assistant-field:-webkit-autofill:hover,
+.assistant-field:-webkit-autofill:focus {
+  -webkit-text-fill-color: #ffffff;
+  -webkit-box-shadow: 0 0 0 1000px #17201c inset;
+  caret-color: #ffffff;
+  transition: background-color 9999s ease-out 0s;
+}
+/* Options slide in one after another */
+.assistant-stagger > * { animation: assistantRise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.assistant-stagger > *:nth-child(1) { animation-delay: 0.08s; }
+.assistant-stagger > *:nth-child(2) { animation-delay: 0.16s; }
+.assistant-stagger > *:nth-child(3) { animation-delay: 0.24s; }
+.assistant-stagger > *:nth-child(4) { animation-delay: 0.32s; }
+@media (prefers-reduced-motion: reduce) { .assistant-stagger > * { animation: none; } }

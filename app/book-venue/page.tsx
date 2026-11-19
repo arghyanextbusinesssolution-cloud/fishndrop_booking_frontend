@@ -1,5 +1,6 @@
 import { PrivateBookingWizard } from "@/components/booking/PrivateBookingWizard";
 import { NavBar } from "@/components/shared/NavBar";
+import { AssistantBubble } from "@/components/home/AssistantBubble";
 
 export const metadata = {
   title: "Book The Venue | Tropica",
@@ -15,6 +16,8 @@ export default function BookVenuePage() {
           <PrivateBookingWizard />
         </div>
       </main>
+      {/* Bottom-right assistant: call · inquiry · walkthrough while they book */}
+      <AssistantBubble />
     </div>
   );
 }
