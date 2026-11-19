@@ -11,7 +11,6 @@ import {
   Sparkles,
   Clock,
   Plus,
-  Minus,
   Trash2,
   Sliders,
   CheckCircle2,
@@ -19,7 +18,14 @@ import {
   Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CATERING_RESTAURANTS, CateringRestaurant, getCateringRestaurant } from "@/lib/cateringRestaurants";
+import {
+  CATERING_QUOTE_NOTE,
+  CATERING_RESTAURANTS,
+  CateringRestaurant,
+  PORTION_OPTIONS,
+  PortionOption,
+  getCateringRestaurant
+} from "@/lib/cateringRestaurants";
 import { RestaurantNoticeModal } from "./RestaurantNoticeModal";
 
 interface StepAddonCardsHubProps {
@@ -29,9 +35,15 @@ interface StepAddonCardsHubProps {
     photographerHours: number;
     cateringMenu: string;
     selectedDishes: string[];
+    /** How many PEOPLE each dish should serve (not platters). */
     dishQuantities: Record<string, number>;
+    /** Optional portion style per dish: individual / half_tray / full_tray ("" = restaurant decides). */
+    dishPortions: Record<string, PortionOption>;
     cateringNotes: string;
   }) => void;
+  /** Party size — the default "serves N people" for each dish. */
+  guestCount?: number;
+  initialDishPortions?: Record<string, PortionOption>;
   initialNeedDj?: boolean;
   initialNeedPhotographer?: boolean;
   initialPhotographerHours?: number;
@@ -49,7 +61,9 @@ export function StepAddonCardsHub({
   initialCateringMenu = "none",
   initialSelectedDishes = [],
   initialDishQuantities = {},
-  initialCateringNotes = ""
+  initialCateringNotes = "",
+  initialDishPortions = {},
+  guestCount = 10
 }: StepAddonCardsHubProps) {
   // Navigation inside the Addon Step: "hub" | "dj" | "photography" | "restaurant"
   const [subView, setSubView] = useState<"hub" | "dj" | "photography" | "restaurant">("hub");
@@ -66,7 +80,9 @@ export function StepAddonCardsHub({
   const [cateringMenu, setCateringMenu] = useState<string>(initialCateringMenu || "none");
   const [selectedDishes, setSelectedDishes] = useState<string[]>(initialSelectedDishes || []);
   const [dishQuantities, setDishQuantities] = useState<Record<string, number>>(initialDishQuantities || {});
+  const [dishPortions, setDishPortions] = useState<Record<string, PortionOption>>(initialDishPortions || {});
   const [cateringNotes, setCateringNotes] = useState<string>(initialCateringNotes || "");
+  const defaultServings = Math.max(1, guestCount || 10);
 
   // Restaurant menu sub-view internal state (Multiple selection allowed)
   const [tempRestaurantIds, setTempRestaurantIds] = useState<string[]>(() => {
@@ -115,6 +131,7 @@ export function StepAddonCardsHub({
       cateringMenu,
       selectedDishes,
       dishQuantities,
+      dishPortions,
       cateringNotes
     });
   };
@@ -377,23 +394,27 @@ export function StepAddonCardsHub({
           const nextQty = { ...dishQuantities };
           delete nextQty[dishName];
           setDishQuantities(nextQty);
+          const nextPortions = { ...dishPortions };
+          delete nextPortions[dishName];
+          setDishPortions(nextPortions);
           return next;
         } else {
-          setDishQuantities((q) => ({ ...q, [dishName]: 1 }));
+          // Default: the dish serves the whole party — the customer can change it
+          setDishQuantities((q) => ({ ...q, [dishName]: defaultServings }));
           return [...prev, dishName];
         }
       });
     };
 
-    const updateQuantity = (dishName: string, delta: number) => {
-      setDishQuantities((prev) => {
-        const cur = prev[dishName] || 1;
-        const nextVal = Math.max(1, cur + delta);
-        return { ...prev, [dishName]: nextVal };
-      });
+    /** How many people this dish should serve (1–500). */
+    const setServings = (dishName: string, raw: string) => {
+      const n = Math.round(Number(raw.replace(/\D/g, "")));
+      setDishQuantities((prev) => ({ ...prev, [dishName]: Number.isFinite(n) && n > 0 ? Math.min(500, n) : 0 }));
     };
 
     const handleConfirmMenu = () => {
+      // An emptied "serves" box falls back to the party size
+      setDishQuantities((prev) => Object.fromEntries(selectedDishes.map((d) => [d, prev[d] > 0 ? prev[d] : defaultServings])));
       setCateringMenu(tempRestaurantIds.join(","));
       setSubView("hub");
     };
@@ -427,18 +448,22 @@ export function StepAddonCardsHub({
             </span>
           </div>
           <h2 className="font-headline italic text-4xl text-white">
-            Curate Restaurant &amp; Menu Platters
+            Request Catering From Our Partner Restaurants
           </h2>
           <p className="text-white/60 font-body text-base">
-            Select one or multiple partner restaurants to combine distinct culinary flavors for your event.
+            Pick a restaurant, choose your dishes, tell us how many people each dish should serve, and add any special
+            instructions. We&apos;ll get you an accurate quote.
           </p>
+          <div className="rounded-2xl border border-[#C8A96A]/30 bg-[#C8A96A]/10 px-4 py-3 text-xs sm:text-sm text-white/80 leading-relaxed">
+            {CATERING_QUOTE_NOTE}
+          </div>
         </header>
 
         {/* Step 1: Restaurant Selector Cards (Multiple Allowed) */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <label className="font-label text-xs uppercase tracking-widest text-white/80 font-bold block">
-              1. Select Catering Restaurant Partners (Multiple Selection Allowed):
+              1. Choose Your Restaurant (you can pick more than one):
             </label>
             <span className="text-[11px] text-[#C8A96A] font-bold font-label">
               {tempRestaurantIds.length} Selected
@@ -494,14 +519,17 @@ export function StepAddonCardsHub({
           <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-white/10 gap-2">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#C8A96A] font-label block">
-                Menu Curation
+                2–4. Dishes, Servings &amp; Portions
               </span>
               <h3 className="font-headline text-xl sm:text-2xl text-white">
-                Signature Event Platters
+                Choose Your Dishes
               </h3>
+              <p className="text-[11px] sm:text-xs text-white/50 mt-0.5">
+                For each dish, enter how many people it should serve and (optionally) a portion style.
+              </p>
             </div>
             <span className="text-[11px] sm:text-xs font-label font-bold px-2.5 py-1 rounded-full bg-[#C8A96A]/15 border border-[#C8A96A]/30 text-[#E3C281] shrink-0">
-              {selectedDishes.length} {selectedDishes.length === 1 ? "platter" : "platters"} chosen
+              {selectedDishes.length} {selectedDishes.length === 1 ? "dish" : "dishes"} chosen
             </span>
           </div>
 
@@ -566,7 +594,7 @@ export function StepAddonCardsHub({
                     <div className="grid gap-2 sm:gap-2.5">
                       {cat.items.map((item) => {
                         const isSelected = selectedDishes.includes(item.name);
-                        const qty = dishQuantities[item.name] || 1;
+                        const servings = dishQuantities[item.name];
 
                         return (
                           <div
@@ -609,36 +637,42 @@ export function StepAddonCardsHub({
                                 <p className="text-[11px] sm:text-xs text-white/50 line-clamp-2 mt-1 leading-relaxed">
                                   {item.desc}
                                 </p>
+
+                                {/* Serving quantity (people) + optional portion style */}
+                                {isSelected && (
+                                  <div
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="mt-2.5 flex flex-wrap items-center gap-2 text-xs cursor-default"
+                                  >
+                                    <label className="inline-flex items-center gap-1.5 bg-black/50 border border-[#C8A96A]/40 rounded-lg pl-2.5 pr-1 py-1">
+                                      <span className="text-white/60">Serves</span>
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={servings ? String(servings) : ""}
+                                        onChange={(e) => setServings(item.name, e.target.value)}
+                                        placeholder={String(defaultServings)}
+                                        aria-label={`How many people should ${item.name} serve`}
+                                        className="w-12 bg-white/10 rounded px-1.5 py-0.5 text-center font-bold text-[#E3C281] outline-none focus:ring-1 focus:ring-[#C8A96A]"
+                                      />
+                                      <span className="text-white/60 pr-1">people</span>
+                                    </label>
+                                    <select
+                                      value={dishPortions[item.name] || ""}
+                                      onChange={(e) => setDishPortions((p) => ({ ...p, [item.name]: e.target.value as PortionOption }))}
+                                      aria-label={`Portion style for ${item.name}`}
+                                      className="bg-black/50 border border-white/15 rounded-lg px-2 py-1.5 text-white/80 outline-none focus:border-[#C8A96A] cursor-pointer"
+                                    >
+                                      {PORTION_OPTIONS.map((o) => (
+                                        <option key={o.value} value={o.value} className="bg-[#121614]">
+                                          {o.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                )}
                               </div>
                             </div>
-
-                            {/* Platter Quantity Stepper if selected */}
-                            {isSelected && (
-                              <div
-                                onClick={(e) => e.stopPropagation()}
-                                className="flex items-center gap-1 bg-black/60 border border-[#C8A96A]/40 rounded-lg p-0.5 shrink-0 ml-1.5 self-center sm:self-start mt-0.5 shadow-sm"
-                              >
-                                <button
-                                  type="button"
-                                  onClick={() => updateQuantity(item.name, -1)}
-                                  className="w-6 h-6 rounded bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-colors cursor-pointer"
-                                  aria-label="Decrease quantity"
-                                >
-                                  <Minus className="w-3 h-3" />
-                                </button>
-                                <span className="font-mono text-xs font-bold px-1 text-[#E3C281] min-w-[20px] text-center">
-                                  {qty}x
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => updateQuantity(item.name, 1)}
-                                  className="w-6 h-6 rounded bg-white/10 hover:bg-white/20 active:scale-95 text-white flex items-center justify-center transition-colors cursor-pointer"
-                                  aria-label="Increase quantity"
-                                >
-                                  <Plus className="w-3 h-3" />
-                                </button>
-                              </div>
-                            )}
                           </div>
                         );
                       })}
@@ -652,7 +686,7 @@ export function StepAddonCardsHub({
           {/* Dietary Notes */}
           <div className="space-y-2 pt-4 border-t border-white/10">
             <label className="font-label text-xs uppercase tracking-widest text-white/80 font-bold block">
-              Dietary Restrictions or Special Instructions (Optional):
+              5. Special Instructions (dietary needs, allergies, serving time — optional):
             </label>
             <textarea
               value={cateringNotes}
@@ -672,6 +706,8 @@ export function StepAddonCardsHub({
               onClick={() => {
                 setCateringMenu("none");
                 setSelectedDishes([]);
+                setDishQuantities({});
+                setDishPortions({});
                 setSubView("hub");
               }}
               className="w-full sm:w-1/3 py-3.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 font-label uppercase tracking-widest text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
@@ -685,7 +721,8 @@ export function StepAddonCardsHub({
             onClick={handleConfirmMenu}
             className="flex-1 py-4 rounded-xl bg-[#C8A96A] text-[#0d1612] hover:bg-[#d8b97a] font-label uppercase tracking-widest text-xs font-bold transition-all shadow-[0_0_20px_rgba(200,169,106,0.3)] hover:shadow-[0_0_30px_rgba(200,169,106,0.5)] flex items-center justify-center gap-2 cursor-pointer"
           >
-            <Check className="w-4 h-4" /> Confirm &amp; Save Menu ({selectedDishes.length} Dishes &bull; {tempRestaurantIds.length} Partners)
+            <Check className="w-4 h-4" /> Save Catering Request ({selectedDishes.length} Dishes &bull; {tempRestaurantIds.length}{" "}
+            {tempRestaurantIds.length === 1 ? "Restaurant" : "Restaurants"})
           </button>
         </div>
       </div>
@@ -706,7 +743,7 @@ export function StepAddonCardsHub({
         }}
         restaurantName={getSelectedRestaurantNames()}
         restaurantEmoji="🍽️"
-        restaurantCuisine="Curated Event Menus & Platters"
+        restaurantCuisine="Partner Restaurant Catering"
       />
 
       {/* Header — Crown + Add-Ons */}

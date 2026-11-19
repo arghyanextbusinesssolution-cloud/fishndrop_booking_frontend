@@ -8,7 +8,7 @@ export const Footer = ({ showCta = true }: { showCta?: boolean }) => {
       {showCta && (
       <section className="w-full py-20 px-4 flex flex-col items-center text-center bg-[#0F3D2E] border-b border-[#C8A96A]/10">
         <h2 className="font-headline text-3xl md:text-5xl text-[#C8A96A] mb-4">
-          Reserve Your Private Private Space Experience
+          Reserve Your Private Space Experience
         </h2>
         <p className="font-body text-[#C8A96A]/80 text-sm md:text-base mb-10 max-w-2xl italic">
           Perfect for intimate dinners, celebrations, and unforgettable evenings.

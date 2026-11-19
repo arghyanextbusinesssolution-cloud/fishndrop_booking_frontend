@@ -44,7 +44,13 @@ import {
 import { CalendarDropdown } from "@/components/shared/CalendarDropdown";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { exportBookingsToCSV } from "@/lib/exportCsv";
-import { CATERING_LABEL_MAP, CATERING_RESTAURANTS, parseCateringDetails, getCateringRestaurant } from "@/lib/cateringRestaurants";
+import {
+  CATERING_LABEL_MAP,
+  CATERING_RESTAURANTS,
+  describeDishAmount,
+  parseCateringDetails,
+  getCateringRestaurant
+} from "@/lib/cateringRestaurants";
 import { OfferQuoteModal } from "@/components/admin/OfferQuoteModal";
 import { EditBookingMenuModal } from "@/components/booking/EditBookingMenuModal";
 import { QuoteHistoryTimeline } from "@/components/booking/QuoteHistoryTimeline";
@@ -564,7 +570,8 @@ export default function AdminCateringPage() {
                                 {group.restaurant.name}
                               </h4>
                               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#C8A96A]/15 text-[#E8CB8A] border border-[#C8A96A]/30 font-bold">
-                                {group.dishes.length} {group.dishes.length === 1 ? "dish" : "dishes"} • {group.totalPlatters} {group.totalPlatters === 1 ? "platter" : "platters"}
+                                {group.dishes.length} {group.dishes.length === 1 ? "dish" : "dishes"}
+                                {catering.mode === "platters" && <> • {group.totalPlatters} {group.totalPlatters === 1 ? "platter" : "platters"}</>}
                               </span>
                             </div>
 
@@ -611,7 +618,7 @@ export default function AdminCateringPage() {
                                 >
                                   <span>{dish}</span>
                                   <span className="text-[10px] font-bold text-[#0F2D24] bg-gradient-to-r from-[#C8A96A] to-[#E8CB8A] px-2 py-0.5 rounded-md font-mono shadow-sm">
-                                    x{qty} {qty === 1 ? "platter" : "platters"}
+                                    {describeDishAmount(qty, catering.dishPortions[dish], catering.mode)}
                                   </span>
                                 </span>
                               );
@@ -1130,12 +1137,19 @@ export default function AdminCateringPage() {
                               <div key={gIdx} className="space-y-1">
                                 <div className="text-[10px] text-[#C8A96A] font-bold flex items-center justify-between">
                                   <span>{group.restaurant.emoji} {group.restaurant.name}:</span>
-                                  <span className="text-[9px] text-outline font-mono">{group.totalPlatters} platters</span>
+                                  <span className="text-[9px] text-outline font-mono">
+                                    {catering.mode === "platters" ? `${group.totalPlatters} platters` : `${group.dishes.length} dishes`}
+                                  </span>
                                 </div>
                                 <div className="flex flex-wrap gap-1">
                                   {group.dishes.map((d, i) => (
                                     <span key={i} className="text-[9px] bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-white/90">
-                                      {d} <strong className="text-[#C8A96A] font-bold">x{group.dishQuantities[d] || 1}</strong>
+                                      {d}{" "}
+                                      <strong className="text-[#C8A96A] font-bold">
+                                        {catering.mode === "platters"
+                                          ? `x${group.dishQuantities[d] || 1}`
+                                          : describeDishAmount(group.dishQuantities[d] || 1, catering.dishPortions[d])}
+                                      </strong>
                                     </span>
                                   ))}
                                 </div>

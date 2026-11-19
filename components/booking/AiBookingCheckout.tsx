@@ -8,6 +8,7 @@ import api from "@/lib/axios";
 import { cn, formatBookingDate, formatTimeTo12Hour } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { MIN_PRIVATE_GUESTS } from "./StepPrivateGuests";
+import { describeDishAmount } from "@/lib/cateringRestaurants";
 import { StepPhoneVerification } from "./StepPhoneVerification";
 import { StepBirthday } from "./StepBirthday";
 import StepPrivateSummary from "./StepPrivateSummary";
@@ -34,6 +35,13 @@ interface AiDraft {
   needDj: boolean;
   needPhotographer: boolean;
   photographerHours: number;
+  /** Partner catering chosen in the chat ("jamaican_jerk_house,cooklyn_eats") + dish names. */
+  cateringMenu?: string;
+  selectedDishes?: string[];
+  /** People each dish should serve + optional portion style + special instructions */
+  dishPeople?: Record<string, number>;
+  dishPortions?: Record<string, string>;
+  cateringNotes?: string;
   fullName?: string;
   phone?: string;
   email?: string;
@@ -105,10 +113,13 @@ export default function AiBookingCheckout() {
       needDj: draft.needDj,
       needPhotographer: draft.needPhotographer,
       photographerHours: draft.photographerHours || 2,
-      cateringMenu: "none",
-      selectedDishes: [],
-      dishQuantities: {},
-      cateringNotes: draft.notes || "",
+      // Dishes picked in the chat → same fields as a website booking (the team quotes catering later)
+      cateringMenu: draft.cateringMenu && draft.selectedDishes?.length ? draft.cateringMenu : "none",
+      selectedDishes: draft.selectedDishes || [],
+      // People each dish should serve (defaults to the party size when the chat didn't say)
+      dishQuantities: Object.fromEntries((draft.selectedDishes || []).map((d) => [d, draft.dishPeople?.[d] || draft.guests])),
+      dishPortions: draft.dishPortions || {},
+      cateringNotes: [draft.cateringNotes, draft.notes].filter(Boolean).join(" · "),
       needDecoration: false,
       guestDetails: {
         name: guest.name,
@@ -203,6 +214,19 @@ export default function AiBookingCheckout() {
           label="Estimate"
           value={`${money(q.total)} · ${money(q.deposit)} deposit`}
         />
+        {!!draft.selectedDishes?.length && (
+          <p className="sm:col-span-4 text-xs text-brand-fg/70">
+            <span className="text-brand font-semibold">Catering request:</span>{" "}
+            {draft.selectedDishes
+              .map((d) => `${d} (${describeDishAmount(draft.dishPeople?.[d] || draft.guests, draft.dishPortions?.[d])})`)
+              .join(", ")}
+            {draft.cateringNotes ? ` — ${draft.cateringNotes}` : ""}{" "}
+            <span className="text-brand-fg/50">
+              — our team confirms quantities, portions and price with the restaurant and sends you a separate quote (not part of today&apos;s
+              deposit)
+            </span>
+          </p>
+        )}
         {(draft.needDj || draft.needPhotographer) && (
           <p className="sm:col-span-4 text-xs text-brand-fg/60 flex flex-wrap gap-3">
             {draft.needDj && (

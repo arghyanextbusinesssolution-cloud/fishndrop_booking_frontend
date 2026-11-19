@@ -95,6 +95,11 @@ export interface Booking {
   needPhotographer?: boolean;
   photographerHours?: number;
   cateringMenu?: string;
+  /** People each dish should serve (cateringFormat "servings"); platters on older bookings */
+  dishQuantities?: Record<string, number>;
+  /** Requested portion style per dish: "individual" | "half_tray" | "full_tray" (not guaranteed) */
+  dishPortions?: Record<string, string>;
+  cateringFormat?: "servings";
   offerPrice?: number;
   negotiationNotes?: string;
   offerStatus?: "pending" | "offered" | "accepted" | "declined";

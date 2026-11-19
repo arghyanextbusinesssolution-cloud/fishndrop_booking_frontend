@@ -106,7 +106,7 @@ export function RestaurantNoticeModal({
                 Venue Booking Covers Venue Only
               </p>
               <p className="text-[11px] text-white/70 mt-0.5 leading-snug">
-                The food platters are <strong>not included</strong> in the venue fee and are billed separately.
+                Catering is a <strong>separate add-on</strong> — it&apos;s not included in the venue fee and is billed separately.
               </p>
             </div>
           </div>
@@ -121,7 +121,8 @@ export function RestaurantNoticeModal({
                 We Will Review &amp; Send Final Quote
               </p>
               <p className="text-[11px] text-white/70 mt-0.5 leading-snug">
-                Pick your menu dishes; our team will review and <strong>notify you with final itemized pricing</strong>.
+                Choose your dishes and how many people each should serve. Our team confirms quantities, portions, availability and
+                price with the restaurant, then <strong>sends you a separate catering quote by SMS or email</strong> for approval.
               </p>
             </div>
           </div>
@@ -136,7 +137,7 @@ export function RestaurantNoticeModal({
                 Confirm, Pay &amp; Delivered Fresh
               </p>
               <p className="text-[11px] text-white/80 mt-0.5 leading-snug">
-                Once paid, the kitchen prepares and <strong>delivers platters hot directly to your event</strong>.
+                Once you approve and pay the quote, the restaurant prepares your order and <strong>delivers it hot to your event</strong>.
               </p>
             </div>
           </div>

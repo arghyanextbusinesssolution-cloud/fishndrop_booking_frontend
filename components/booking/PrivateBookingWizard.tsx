@@ -76,7 +76,10 @@ interface PrivateBookingData {
   photographerHours: number;
   cateringMenu: string;
   selectedDishes?: string[];
+  /** How many PEOPLE each dish should serve. */
   dishQuantities?: Record<string, number>;
+  /** Optional portion style per dish ("individual" | "half_tray" | "full_tray"). */
+  dishPortions?: Record<string, string>;
   cateringNotes?: string;
   needDecoration: boolean;
   decorationStyle?: string;
@@ -307,7 +310,9 @@ export const PrivateBookingWizard = () => {
             initialCateringMenu={bookingData.cateringMenu}
             initialSelectedDishes={bookingData.selectedDishes}
             initialDishQuantities={bookingData.dishQuantities}
+            initialDishPortions={bookingData.dishPortions as Record<string, "" | "individual" | "half_tray" | "full_tray">}
             initialCateringNotes={bookingData.cateringNotes}
+            guestCount={bookingData.guests}
           />
         );
       case "checkout":

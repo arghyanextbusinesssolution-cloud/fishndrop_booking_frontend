@@ -38,7 +38,7 @@ interface StepPrivateSummaryProps {
 
 const stripePromise = getStripe();
 
-import { CATERING_LABEL_MAP } from "@/lib/cateringRestaurants";
+import { CATERING_LABEL_MAP, CATERING_QUOTE_NOTE, describeDishAmount, formatDishForNotes } from "@/lib/cateringRestaurants";
 
 
 const calculateEndTime = (startSlot: string, duration: number): string => {
@@ -209,10 +209,10 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
     const hasPartnerCatering =
       !!bookingData.cateringMenu && bookingData.cateringMenu !== "none" && bookingData.cateringMenu !== "no_catering";
     if (hasPartnerCatering && bookingData.selectedDishes && bookingData.selectedDishes.length > 0) {
-      const dishStrs = bookingData.selectedDishes.map((dish: string) => {
-        const qty = bookingData.dishQuantities?.[dish];
-        return qty && qty > 1 ? `${dish} (x${qty} platters)` : `${dish} (x1 platter)`;
-      });
+      // "Fried Chicken (for 15 people · Half tray)" — people served, not platters (no prices / portion guarantees)
+      const dishStrs = bookingData.selectedDishes.map((dish: string) =>
+        formatDishForNotes(dish, bookingData.dishQuantities?.[dish], bookingData.dishPortions?.[dish])
+      );
       const dishStr = `[Dishes: ${dishStrs.join(", ")}]`;
       formattedNotes = formattedNotes ? `${formattedNotes} | ${dishStr}` : dishStr;
     }
@@ -243,6 +243,9 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
       photographerHours: bookingData.needPhotographer ? (bookingData.photographerHours || 2) : 0,
       cateringMenu: bookingData.cateringMenu || "jamaican_jerk_house",
       dishQuantities: bookingData.dishQuantities || {},
+      dishPortions: bookingData.dishPortions || {},
+      // Quantities are "people served" (new catering request format)
+      cateringFormat: hasPartnerCatering ? "servings" : undefined,
       customDepositAmount: customDeposit,
       couponCode: appliedCoupon?.code || undefined,
       paymentMethod: method,
@@ -715,13 +718,14 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
               <div className="p-2.5 rounded-lg bg-white border border-[#1a1c1b]/10 space-y-1.5">
                 <div className="flex items-center justify-between">
                   <p className="text-[9px] uppercase tracking-widest text-[#1a1c1b]/50 font-bold flex items-center gap-1">
-                    <ChefHat className="w-3 h-3 text-[#C8A96A]" /> Selected Event Dishes ({bookingData.selectedDishes.length})
+                    <ChefHat className="w-3 h-3 text-[#C8A96A]" /> Catering Request ({bookingData.selectedDishes.length}{" "}
+                    {bookingData.selectedDishes.length === 1 ? "dish" : "dishes"})
                   </p>
-                  <span className="text-[9px] text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded font-bold">Add-on (Extra Cost)</span>
+                  <span className="text-[9px] text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded font-bold">Separate add-on · quoted later</span>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {bookingData.selectedDishes.map((dish: string, i: number) => {
-                    const qty = bookingData.dishQuantities?.[dish] || 1;
+                    const people = bookingData.dishQuantities?.[dish] || bookingData.guests || 1;
                     return (
                       <span
                         key={i}
@@ -729,14 +733,14 @@ export default function StepPrivateSummary({ bookingData, onBack }: StepPrivateS
                       >
                         <span>✓ {dish}</span>
                         <span className="font-bold text-amber-800 bg-amber-500/20 px-1 rounded text-[9px]">
-                          {qty} {qty === 1 ? "platter" : "platters"}
+                          {describeDishAmount(people, bookingData.dishPortions?.[dish])}
                         </span>
                       </span>
                     );
                   })}
                 </div>
                 <p className="text-[10px] text-[#1a1c1b]/60 italic font-body pt-0.5">
-                  * Note: The website payment covers venue rental only. Catering dishes are an add-on; the restaurant partner will contact you directly with dish pricing.
+                  * Today&apos;s payment covers the venue only. {CATERING_QUOTE_NOTE}
                 </p>
               </div>
             )}

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Booking } from "@/types";
 import api from "@/lib/axios";
 import toast from "react-hot-toast";
-import { parseCateringDetails } from "@/lib/cateringRestaurants";
+import { parseCateringDetails, portionLabel } from "@/lib/cateringRestaurants";
 import { formatTimeTo12Hour, formatBookingDate } from "@/lib/utils";
 import {
   X,
@@ -51,10 +51,13 @@ export function OfferQuoteModal({ isOpen, booking, onClose, onSuccess }: OfferQu
   const markupFee = 50;
   const totalCustomerQuote = parsedBase > 0 ? parsedBase + markupFee : 0;
 
+  // New requests: quantity = people to serve (steps of 5); older bookings: platters
+  const servingsMode = cateringInfo.mode === "servings";
+  const step = servingsMode ? 5 : 1;
   const updateDishQty = (dishName: string, delta: number) => {
     setDishQtys((prev) => {
       const current = prev[dishName] || 1;
-      const nextVal = Math.max(1, Math.min(50, current + delta));
+      const nextVal = Math.max(1, Math.min(servingsMode ? 500 : 50, current + delta * step));
       return { ...prev, [dishName]: nextVal };
     });
   };
@@ -194,7 +197,9 @@ export function OfferQuoteModal({ isOpen, booking, onClose, onSuccess }: OfferQu
                       )}
                     </div>
                     <span className="text-[10px] text-white/40 font-mono">
-                      {group.dishes.reduce((sum, d) => sum + (dishQtys[d] || 1), 0)} platters
+                      {servingsMode
+                        ? `${group.dishes.length} ${group.dishes.length === 1 ? "dish" : "dishes"}`
+                        : `${group.dishes.reduce((sum, d) => sum + (dishQtys[d] || 1), 0)} platters`}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-2 pt-0.5">
@@ -211,7 +216,7 @@ export function OfferQuoteModal({ isOpen, booking, onClose, onSuccess }: OfferQu
                               type="button"
                               onClick={() => updateDishQty(dish, -1)}
                               className="w-4 h-4 flex items-center justify-center rounded text-white/60 hover:text-white hover:bg-white/10"
-                              title="Decrease platters"
+                              title={servingsMode ? "Fewer people" : "Decrease platters"}
                             >
                               <Minus className="w-2.5 h-2.5" />
                             </button>
@@ -222,13 +227,17 @@ export function OfferQuoteModal({ isOpen, booking, onClose, onSuccess }: OfferQu
                               type="button"
                               onClick={() => updateDishQty(dish, 1)}
                               className="w-4 h-4 flex items-center justify-center rounded text-white/60 hover:text-white hover:bg-white/10"
-                              title="Increase platters"
+                              title={servingsMode ? "More people" : "Increase platters"}
                             >
                               <Plus className="w-2.5 h-2.5" />
                             </button>
                           </div>
                           <span className="text-[10px] text-white/40">
-                            {qty === 1 ? "platter" : "platters"}
+                            {servingsMode
+                              ? `${qty === 1 ? "person" : "people"}${cateringInfo.dishPortions[dish] ? ` · ${portionLabel(cateringInfo.dishPortions[dish])}` : ""}`
+                              : qty === 1
+                                ? "platter"
+                                : "platters"}
                           </span>
                         </div>
                       );
@@ -329,7 +338,7 @@ export function OfferQuoteModal({ isOpen, booking, onClose, onSuccess }: OfferQu
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g., Includes full Jerk Chicken buffet for 40 guests, 2 customized platters, plus complimentary island punch."
+              placeholder="e.g., Jerk Chicken for 40 guests (2 full trays) and Mac &amp; Cheese for 20 (1 half tray), confirmed with Jamaican Jerk House — delivered hot at 7 PM."
               className="w-full p-3 bg-surface-container-lowest border border-outline-variant/20 rounded-xl text-on-surface text-xs font-body focus:outline-none focus:border-primary/50 transition-colors"
             />
           </div>

@@ -8,13 +8,15 @@ import {
   CATERING_LABEL_MAP,
   getCateringRestaurant,
   parseCateringDetails,
-  formatCateringNotes
+  formatCateringNotes,
+  CATERING_QUOTE_NOTE,
+  PORTION_OPTIONS,
+  PortionOption
 } from "@/lib/cateringRestaurants";
 import {
   UtensilsCrossed,
   X,
   Plus,
-  Minus,
   Check,
   Save,
   Loader2,
@@ -42,8 +44,11 @@ export function EditBookingMenuModal({
 }: EditBookingMenuModalProps) {
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string>("none");
   const [selectedDishes, setSelectedDishes] = useState<string[]>([]);
+  /** People each dish should serve */
   const [dishQuantities, setDishQuantities] = useState<Record<string, number>>({});
+  const [dishPortions, setDishPortions] = useState<Record<string, PortionOption>>({});
   const [dietaryNotes, setDietaryNotes] = useState<string>("");
+  const partySize = Math.max(1, booking?.partySize || 10);
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [customDishInput, setCustomDishInput] = useState<string>("");
   const [saving, setSaving] = useState(false);
@@ -53,7 +58,13 @@ export function EditBookingMenuModal({
       const parsed = parseCateringDetails(booking);
       setSelectedRestaurantId(parsed.restaurantKey || "none");
       setSelectedDishes(parsed.dishes || []);
-      setDishQuantities(parsed.dishQuantities || {});
+      // Older bookings counted platters — start those at the party size in the new "people" format
+      setDishQuantities(
+        parsed.mode === "servings"
+          ? parsed.dishQuantities || {}
+          : Object.fromEntries((parsed.dishes || []).map((d) => [d, Math.max(1, booking.partySize || 10)]))
+      );
+      setDishPortions(parsed.dishPortions || {});
       setDietaryNotes(parsed.dietaryNotes || "");
     }
   }, [booking, isOpen]);
@@ -83,7 +94,7 @@ export function EditBookingMenuModal({
         });
         return prev.filter((d) => d !== dishName);
       } else {
-        setDishQuantities((q) => ({ ...q, [dishName]: 1 }));
+        setDishQuantities((q) => ({ ...q, [dishName]: partySize }));
         return [...prev, dishName];
       }
     });
@@ -96,14 +107,17 @@ export function EditBookingMenuModal({
       delete next[dishName];
       return next;
     });
+    setDishPortions((p) => {
+      const next = { ...p };
+      delete next[dishName];
+      return next;
+    });
   };
 
-  const updateDishQty = (dishName: string, delta: number) => {
-    setDishQuantities((prev) => {
-      const current = prev[dishName] || 1;
-      const nextVal = Math.max(1, Math.min(50, current + delta));
-      return { ...prev, [dishName]: nextVal };
-    });
+  /** How many people this dish should serve (1–500); empty box falls back to the party size on save. */
+  const setServings = (dishName: string, raw: string) => {
+    const n = Math.round(Number(raw.replace(/\D/g, "")));
+    setDishQuantities((prev) => ({ ...prev, [dishName]: Number.isFinite(n) && n > 0 ? Math.min(500, n) : 0 }));
   };
 
   const handleAddCustomDish = () => {
@@ -114,7 +128,7 @@ export function EditBookingMenuModal({
       return;
     }
     setSelectedDishes((prev) => [...prev, trimmed]);
-    setDishQuantities((q) => ({ ...q, [trimmed]: 1 }));
+    setDishQuantities((q) => ({ ...q, [trimmed]: partySize }));
     setCustomDishInput("");
     toast.success(`Added "${trimmed}" to menu`);
   };
@@ -123,12 +137,16 @@ export function EditBookingMenuModal({
     setSaving(true);
     try {
       const parsed = parseCateringDetails(booking);
-      const updatedNotes = formatCateringNotes(parsed.baseNotes, selectedDishes, dietaryNotes, dishQuantities);
+      const people = Object.fromEntries(selectedDishes.map((d) => [d, dishQuantities[d] > 0 ? dishQuantities[d] : partySize]));
+      const portions = Object.fromEntries(selectedDishes.filter((d) => dishPortions[d]).map((d) => [d, dishPortions[d]]));
+      const updatedNotes = formatCateringNotes(parsed.baseNotes, selectedDishes, dietaryNotes, people, portions);
 
       const { data } = await api.patch(`/bookings/${booking._id}/menu`, {
         cateringMenu: selectedRestaurantId,
         notes: updatedNotes,
-        dishQuantities
+        dishQuantities: people,
+        dishPortions: portions,
+        cateringFormat: "servings"
       });
 
       if (data.success && data.booking) {
@@ -300,37 +318,38 @@ export function EditBookingMenuModal({
             {selectedDishes.length > 0 ? (
               <div className="p-3.5 rounded-xl bg-black/40 border border-[#C8A96A]/25 flex flex-wrap gap-2">
                 {selectedDishes.map((dish) => {
-                  const qty = dishQuantities[dish] || 1;
+                  const people = dishQuantities[dish];
                   return (
                     <span
                       key={dish}
-                      className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#C8A96A]/20 text-white border border-[#C8A96A]/40"
+                      className="inline-flex flex-wrap items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-[#C8A96A]/20 text-white border border-[#C8A96A]/40"
                     >
                       <span>{dish}</span>
-                      <div className="flex items-center gap-1 bg-black/50 px-1 py-0.5 rounded border border-white/20">
-                        <button
-                          type="button"
-                          onClick={() => updateDishQty(dish, -1)}
-                          className="w-3.5 h-3.5 flex items-center justify-center rounded text-white/60 hover:text-white"
-                          title="Decrease platters"
-                        >
-                          <Minus className="w-2.5 h-2.5" />
-                        </button>
-                        <span className="font-bold text-[#C8A96A] text-[10px] min-w-[12px] text-center">
-                          {qty}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => updateDishQty(dish, 1)}
-                          className="w-3.5 h-3.5 flex items-center justify-center rounded text-white/60 hover:text-white"
-                          title="Increase platters"
-                        >
-                          <Plus className="w-2.5 h-2.5" />
-                        </button>
-                      </div>
-                      <span className="text-[10px] text-white/40">
-                        {qty === 1 ? "platter" : "platters"}
-                      </span>
+                      <label className="inline-flex items-center gap-1 bg-black/50 px-1.5 py-0.5 rounded border border-white/20 text-[10px] text-white/60">
+                        serves
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={people ? String(people) : ""}
+                          placeholder={String(partySize)}
+                          onChange={(e) => setServings(dish, e.target.value)}
+                          aria-label={`How many people should ${dish} serve`}
+                          className="w-9 bg-white/10 rounded px-1 text-center font-bold text-[#C8A96A] outline-none"
+                        />
+                        people
+                      </label>
+                      <select
+                        value={dishPortions[dish] || ""}
+                        onChange={(e) => setDishPortions((p) => ({ ...p, [dish]: e.target.value as PortionOption }))}
+                        aria-label={`Portion style for ${dish}`}
+                        className="bg-black/50 border border-white/20 rounded px-1 py-0.5 text-[10px] text-white/80 outline-none"
+                      >
+                        {PORTION_OPTIONS.map((o) => (
+                          <option key={o.value} value={o.value} className="bg-[#121614]">
+                            {o.label}
+                          </option>
+                        ))}
+                      </select>
                       <button
                         type="button"
                         onClick={() => removeDish(dish)}
@@ -477,6 +496,7 @@ export function EditBookingMenuModal({
               placeholder="e.g. 2 guests with shellfish allergies, medium spice for jerk dishes, serve entrees at 7:30 PM..."
               className="w-full bg-black/50 border border-white/15 focus:border-[#C8A96A] rounded-xl p-3 text-xs text-white placeholder:text-white/30 outline-none transition-all resize-none"
             />
+            <p className="text-[10px] text-white/50 leading-relaxed">{CATERING_QUOTE_NOTE}</p>
           </section>
         </div>
 

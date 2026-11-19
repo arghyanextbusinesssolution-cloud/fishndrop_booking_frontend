@@ -341,9 +341,39 @@ export const formatRestaurantKeyLabel = (key?: string): string => {
   return key;
 };
 
+/* ------------------------------------------------------------------------------------------
+ * Catering REQUEST format (Nov 2026): per dish the customer says how many PEOPLE it should serve
+ * and, optionally, the portion style. No prices or guaranteed portion sizes are shown — the team
+ * (Sarah) confirms quantities, portions, availability and price with the restaurant and sends a
+ * separate catering quote. Older bookings stored "platters" instead; both are still read.
+ * ------------------------------------------------------------------------------------------ */
+export type PortionOption = "" | "individual" | "half_tray" | "full_tray";
+
+export const PORTION_OPTIONS: { value: PortionOption; label: string }[] = [
+  { value: "", label: "Restaurant's recommendation" },
+  { value: "individual", label: "Individual servings" },
+  { value: "half_tray", label: "Half tray" },
+  { value: "full_tray", label: "Full tray" }
+];
+
+export const portionLabel = (p?: string): string => PORTION_OPTIONS.find((o) => o.value === p)?.label || "";
+
+/** "for 15 people · Half tray" (new format) or "2 platters" (older bookings). */
+export const describeDishAmount = (qty: number, portion?: string, mode: "servings" | "platters" = "servings"): string => {
+  if (mode === "platters") return `${qty} ${qty === 1 ? "platter" : "platters"}`;
+  const p = portion ? portionLabel(portion) : "";
+  return `for ${qty} ${qty === 1 ? "person" : "people"}${p && portion ? ` · ${p}` : ""}`;
+};
+
+/** Customer-facing promise used wherever catering is requested. */
+export const CATERING_QUOTE_NOTE =
+  "No prices are shown and portion sizes aren't guaranteed — restaurants portion differently. Our team confirms quantities, portion sizes, availability and the total price with the restaurant, then sends you a separate catering quote by SMS or email for approval. Catering is a separate add-on from your venue booking.";
+
 export interface CateringDishItem {
   name: string;
   quantity: number;
+  /** Only for new-format requests. */
+  portion?: PortionOption;
 }
 
 export interface CateringRestaurantGroup {
@@ -392,19 +422,37 @@ export function findRestaurantForDish(dishName: string): CateringRestaurant | nu
   return null;
 }
 
+const portionFromLabel = (label?: string): PortionOption => {
+  const l = (label || "").toLowerCase();
+  if (/half/.test(l)) return "half_tray";
+  if (/full/.test(l)) return "full_tray";
+  if (/individual|single|plate/.test(l)) return "individual";
+  return "";
+};
+
 export function parseCateringDetails(booking: {
   cateringMenu?: string;
   notes?: string;
   dishes?: string[];
   dishQuantities?: Record<string, number> | Map<string, number>;
+  dishPortions?: Record<string, string> | Map<string, string>;
+  cateringFormat?: string;
 }) {
   const restaurantKey = booking?.cateringMenu || "none";
   const restaurantLabel = formatRestaurantKeyLabel(restaurantKey);
-  
+
   let dishes: string[] = [];
   let dishQuantities: Record<string, number> = {};
+  let dishPortions: Record<string, PortionOption> = {};
+  // New bookings say how many PEOPLE each dish serves; older ones counted "platters"
+  let mode: "servings" | "platters" = booking?.cateringFormat === "servings" ? "servings" : "platters";
   let dietaryNotes = "";
   let baseNotes = booking?.notes || "";
+
+  if (booking?.dishPortions) {
+    const raw = booking.dishPortions instanceof Map ? Object.fromEntries(booking.dishPortions.entries()) : booking.dishPortions;
+    for (const [k, v] of Object.entries(raw || {})) dishPortions[k] = portionFromLabel(v) || (v as PortionOption);
+  }
 
   // Merge explicit dishQuantities if already present
   if (booking?.dishQuantities) {
@@ -431,6 +479,15 @@ export function parseCateringDetails(booking: {
         .filter(Boolean);
 
       const parsedFromNotes = rawDishes.map((raw) => {
+        // New format: "Dish Name (for 15 people)" or "Dish Name (for 15 people · Half tray)"
+        const servingsMatch = raw.match(/^(.*?)\s*\(for\s+(\d+)\s+(?:people|persons?|guests?)(?:\s*[·;\/]\s*([^)]+))?\)$/i);
+        if (servingsMatch) {
+          mode = "servings";
+          const cleanName = servingsMatch[1].trim();
+          if (dishQuantities[cleanName] === undefined) dishQuantities[cleanName] = parseInt(servingsMatch[2], 10) || 1;
+          if (servingsMatch[3] && !dishPortions[cleanName]) dishPortions[cleanName] = portionFromLabel(servingsMatch[3]);
+          return cleanName;
+        }
         // Match patterns: "Dish Name (x2 platters)", "Dish Name (x2)", "Dish Name x2", "Dish Name (2 platters)"
         const qtyMatch =
           raw.match(/^(.*?)\s*\(?(?:x|\bqty:?)\s*(\d+)(?:\s*(?:platters?|plates?))?\)?$/i) ||
@@ -477,7 +534,8 @@ export function parseCateringDetails(booking: {
 
   const dishItems: CateringDishItem[] = dishes.map((name) => ({
     name,
-    quantity: dishQuantities[name] || 1
+    quantity: dishQuantities[name] || 1,
+    portion: dishPortions[name] || ""
   }));
 
   // ================= GROUP DISHES BY RESTAURANT =================
@@ -545,6 +603,11 @@ export function parseCateringDetails(booking: {
     restaurantLabel,
     dishes,
     dishQuantities,
+    dishPortions,
+    /** "servings" = quantities are people per dish (new); "platters" = older bookings */
+    mode,
+    /** "for 15 people · Half tray" / "2 platters" for one dish */
+    describe: (dish: string) => describeDishAmount(dishQuantities[dish] || 1, dishPortions[dish], mode),
     dishItems,
     dietaryNotes,
     baseNotes,
@@ -552,11 +615,16 @@ export function parseCateringDetails(booking: {
   };
 }
 
+/** One dish in the notes tag: "Fried Chicken (for 15 people · Half tray)". */
+export const formatDishForNotes = (dish: string, people?: number, portion?: string) =>
+  `${dish} (for ${Math.max(1, people || 1)} ${people === 1 ? "person" : "people"}${portion ? ` · ${portionLabel(portion)}` : ""})`;
+
 export function formatCateringNotes(
   baseNotes: string,
   dishes: string[],
   dietaryNotes: string,
-  dishQuantities?: Record<string, number>
+  dishQuantities?: Record<string, number>,
+  dishPortions?: Record<string, string>
 ): string {
   const parts: string[] = [];
   const cleanBase = (baseNotes || "")
@@ -569,13 +637,8 @@ export function formatCateringNotes(
   
   if (cleanBase) parts.push(cleanBase);
   if (dishes && dishes.length > 0) {
-    const dishStrs = dishes.map((d) => {
-      const qty = dishQuantities?.[d];
-      if (qty && qty > 1) {
-        return `${d} (x${qty} platters)`;
-      }
-      return `${d} (x1 platter)`;
-    });
+    // Always written in the new "how many people" format
+    const dishStrs = dishes.map((d) => formatDishForNotes(d, dishQuantities?.[d], dishPortions?.[d]));
     parts.push(`[Dishes: ${dishStrs.join(", ")}]`);
   }
   if (dietaryNotes && dietaryNotes.trim()) parts.push(`[Dietary: ${dietaryNotes.trim()}]`);
