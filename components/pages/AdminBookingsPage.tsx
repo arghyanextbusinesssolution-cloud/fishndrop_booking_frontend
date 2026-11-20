@@ -20,6 +20,7 @@ import {
   UtensilsCrossed,
   CheckCircle2,
   Eye,
+  EyeOff,
   ShieldCheck,
   X,
   DollarSign,
@@ -876,6 +877,15 @@ export default function AdminBookingsPage() {
                               Deposit Proof
                             </button>
                           )}
+                          {b.paymentMethod === "zelle" && !b.zelleProofUrl && (
+                            <span
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-dashed border-white/25 text-white/50 text-[9px] uppercase tracking-widest font-bold"
+                              title="The customer never uploaded a Zelle screenshot for this booking"
+                            >
+                              <EyeOff className="w-3.5 h-3.5" />
+                              No screenshot
+                            </span>
+                          )}
                           {b.remainingZelleProofUrl && (
                             <button
                               onClick={(e) => {
@@ -1137,6 +1147,16 @@ export default function AdminBookingsPage() {
                                     <Eye className="w-3 h-3" />
                                     <span className="hidden lg:inline">Dep.</span>
                                   </button>
+                                )}
+                                {/* Zelle booking with no uploaded screenshot (e.g. verified manually) */}
+                                {b.paymentMethod === "zelle" && !b.zelleProofUrl && (
+                                  <span
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg border border-dashed border-white/25 text-white/50 text-[9px] font-bold"
+                                    title="The customer never uploaded a Zelle screenshot for this booking"
+                                  >
+                                    <EyeOff className="w-3 h-3" />
+                                    <span className="hidden lg:inline">No screenshot</span>
+                                  </span>
                                 )}
                                 {/* Balance Proof - icon only */}
                                 {b.remainingZelleProofUrl && (
