@@ -1083,10 +1083,20 @@ export default function AdminBookingsPage() {
                                   </span>
                                 ) : null}
                                 {b.bookingType === "private_event" && (
-                                  <div className="flex gap-1 pt-0.5">
+                                  <div className="flex flex-wrap gap-1 pt-0.5">
                                     {(b.depositAmount ?? 0) > 0 && <span className="text-[9px] text-primary uppercase tracking-widest font-bold whitespace-nowrap">${b.depositAmount} Dep.</span>}
-                                    {(b.remainingAmount ?? 0) > 0 && <span className="text-[9px] text-blue-600 uppercase tracking-widest font-bold whitespace-nowrap">${b.remainingAmount} Bal.</span>}
+                                    {(b.remainingAmount ?? 0) > 0 ? (
+                                      <span className="text-[9px] text-blue-600 uppercase tracking-widest font-bold whitespace-nowrap">${b.remainingAmount} Bal.</span>
+                                    ) : (b.paymentStatus === "paid" || (b as any).remainingPaymentStatus === "paid") ? (
+                                      <span className="text-[9px] text-emerald-400 uppercase tracking-widest font-bold whitespace-nowrap">Paid in full · $0 bal.</span>
+                                    ) : null}
                                   </div>
+                                )}
+                                {b.bookingType === "private_event" && ((b as any).paymentBreakdown?.length ?? 0) > 0 && (
+                                  <span className="text-[8px] text-white/45 font-mono block pt-0.5">
+                                    {((b as any).paymentBreakdown as { status?: string }[]).filter((p) => p.status !== "pending").length} verified payment(s)
+                                    {((b as any).paymentBreakdown as { status?: string }[]).some((p) => p.status === "pending") && " · 1+ awaiting check"}
+                                  </span>
                                 )}
                                 {b.paymentDueDate && (b.remainingAmount ?? 0) > 0 && (
                                   <span className="text-[8px] text-amber-700 font-mono block pt-0.5">

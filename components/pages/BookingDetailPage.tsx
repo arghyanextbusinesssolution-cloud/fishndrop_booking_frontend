@@ -15,6 +15,7 @@ import {
   Mail,
   Pencil,
   Phone,
+  ReceiptText,
   RefreshCw,
   Search,
   Sparkles,
@@ -77,6 +78,160 @@ function Tile({ label, value, sub, accent }: { label: string; value: string | nu
         {value}
       </p>
       {sub && <p className="text-[11px] text-white/45 mt-0.5">{sub}</p>}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ Payment history helpers */
+type PaymentEntry = {
+  amount: number;
+  paymentMethod?: string;
+  paymentType?: string;
+  status?: string;
+  transactionId?: string;
+  proofUrl?: string;
+  notes?: string;
+  paidAt?: string;
+  verifiedBy?: string;
+  verifiedByName?: string;
+  verifiedAt?: string;
+};
+
+const PAYMENT_TYPE_LABEL: Record<string, string> = {
+  deposit: "Deposit",
+  balance_partial: "Balance (part)",
+  balance_full: "Balance (final)",
+  food_catering: "Catering",
+  manual: "Extra / add-on"
+};
+const METHOD_LABEL: Record<string, string> = { card: "Card", zelle: "Zelle", cash: "Cash", bank_transfer: "Bank transfer", other: "Other" };
+
+/** How a payment was verified — explicit on new records, inferred on older ones. */
+const verificationOf = (p: PaymentEntry): { label: string; tone: "auto" | "staff" | "card" | "pending" } => {
+  if (p.status === "pending") return { label: "Awaiting verification", tone: "pending" };
+  const tx = String(p.transactionId || "");
+  const n = String(p.notes || "").toLowerCase();
+  const by = p.verifiedBy;
+  if (by === "zelle_webhook" || (!by && (/^GHL-ZEL/i.test(tx) || /via ghl|ghl zelle|zelle webhook|bank of america|sent you \$/.test(n))))
+    return { label: "Automatically by the Zelle webhook (bank alert)", tone: "auto" };
+  if (by === "stripe" || (!by && (/^(pi_|cs_|ch_)/.test(tx) || p.paymentMethod === "card"))) return { label: "Card payment (Stripe)", tone: "card" };
+  if (by === "admin" || (!by && /admin|manual|staff|verified as/.test(n)))
+    return { label: `Manually by ${p.verifiedByName || "an admin"}`, tone: "staff" };
+  return { label: "Recorded", tone: "staff" };
+};
+
+const fmtDateTime = (iso?: string) =>
+  iso
+    ? new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York" })
+    : "—";
+
+interface PaymentHistoryBooking {
+  paymentBreakdown?: PaymentEntry[];
+  remainingAmount?: number;
+  zelleProofUrl?: string;
+  remainingZelleProofUrl?: string;
+  foodZelleProofUrl?: string;
+}
+
+function PaymentHistory({ booking }: { booking: PaymentHistoryBooking }) {
+  const entries: PaymentEntry[] = [...(booking.paymentBreakdown || [])].sort(
+    (a: PaymentEntry, b: PaymentEntry) => new Date(a.paidAt || 0).getTime() - new Date(b.paidAt || 0).getTime()
+  );
+  const verified = entries.filter((p) => p.status !== "pending");
+  const pending = entries.filter((p) => p.status === "pending");
+  const received = verified.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  const pendingSum = pending.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const proofFor = (p: PaymentEntry) =>
+    p.proofUrl ||
+    (p.paymentMethod === "zelle"
+      ? p.paymentType === "deposit"
+        ? booking.zelleProofUrl
+        : p.paymentType?.startsWith("balance")
+          ? booking.remainingZelleProofUrl
+          : p.paymentType === "food_catering"
+            ? booking.foodZelleProofUrl
+            : undefined
+      : undefined);
+  const toneCls = { auto: "text-sky-300", staff: "text-amber-200", card: "text-emerald-300", pending: "text-orange-300" } as const;
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-sm font-bold flex items-center gap-2">
+          <ReceiptText className="w-4 h-4 text-[#C8A96A]" /> Payment history
+        </h2>
+        <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
+          <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">
+            {verified.length} verified {verified.length === 1 ? "payment" : "payments"} · {usd(received)}
+          </span>
+          {pending.length > 0 && (
+            <span className="px-2.5 py-1 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/25">
+              {pending.length} awaiting check · {usd(pendingSum)}
+            </span>
+          )}
+          <span
+            className={
+              Number(booking.remainingAmount || 0) > 0
+                ? "px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-200 border border-amber-500/25"
+                : "px-2.5 py-1 rounded-full bg-white/10 text-white/80 border border-white/15"
+            }
+          >
+            {Number(booking.remainingAmount || 0) > 0 ? `${usd(Number(booking.remainingAmount))} remaining` : "Nothing remaining"}
+          </span>
+        </div>
+      </div>
+
+      {entries.length === 0 ? (
+        <p className="text-sm text-white/50">No payments recorded yet.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
+            <thead>
+              <tr className="text-left text-[10px] uppercase tracking-widest text-white/40 border-b border-white/10">
+                <th className="py-2 pr-3 font-bold">Date</th>
+                <th className="py-2 pr-3 font-bold">Type</th>
+                <th className="py-2 pr-3 font-bold">Method</th>
+                <th className="py-2 pr-3 font-bold text-right">Amount</th>
+                <th className="py-2 pr-3 font-bold">Verified</th>
+                <th className="py-2 font-bold">Proof</th>
+              </tr>
+            </thead>
+            <tbody>
+              {entries.map((p, i) => {
+                const v = verificationOf(p);
+                const proof = proofFor(p);
+                return (
+                  <tr key={i} className="border-b border-white/5 last:border-0 align-top">
+                    <td className="py-2.5 pr-3 text-white/70 whitespace-nowrap">{fmtDateTime(p.paidAt)}</td>
+                    <td className="py-2.5 pr-3">{PAYMENT_TYPE_LABEL[p.paymentType || ""] || "Payment"}</td>
+                    <td className="py-2.5 pr-3 text-white/70">{METHOD_LABEL[p.paymentMethod || ""] || "—"}</td>
+                    <td className="py-2.5 pr-3 text-right font-semibold whitespace-nowrap">{usd(Number(p.amount) || 0)}</td>
+                    <td className="py-2.5 pr-3">
+                      <span className={`font-medium ${toneCls[v.tone]}`}>{v.label}</span>
+                      {p.status !== "pending" && (p.verifiedAt || p.paidAt) && (
+                        <span className="block text-[11px] text-white/40">{fmtDateTime(p.verifiedAt || p.paidAt)} (NY)</span>
+                      )}
+                      {p.transactionId && <span className="block text-[10px] text-white/30 font-mono break-all">{p.transactionId}</span>}
+                    </td>
+                    <td className="py-2.5 whitespace-nowrap">
+                      {proof ? (
+                        <a href={proof} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[#E0C68E] hover:underline">
+                          Screenshot <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : p.paymentMethod === "zelle" ? (
+                        <span className="text-white/35 text-xs">{v.tone === "auto" ? "Not needed — bank alert" : "No screenshot"}</span>
+                      ) : (
+                        <span className="text-white/25">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -431,6 +586,8 @@ export default function BookingDetailPage() {
           {b.zelleNotes && <Row label="Zelle note">{b.zelleNotes}</Row>}
         </div>
       </div>
+
+      <PaymentHistory booking={b} />
 
       {isPrivate && (
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
